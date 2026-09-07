@@ -154,7 +154,12 @@ export default function App() {
   }, [canGoBack, goBack, setShowExitConfirm, setShowKeypad, setShowAccountPicker, setShowRecordTimePicker, setShowRecordDatePicker, setShowCalendar, showExitConfirm, showKeypad, showAccountPicker, showRecordTimePicker, showRecordDatePicker, showCalendar, updateInfo, updateFlow.phase, closeUpdateModal]);
 
   const handleRecordSuccess = useCallback(() => {
-    resetHistory('/');
+    if (editTransaction) {
+      // 编辑保存：返回进入编辑前的页面（首页/全部记录/明细/搜索等）
+      goBack();
+    } else {
+      resetHistory('/');
+    }
     setToastMessage(editTransaction ? '修改成功' : '记账成功');
     setTimeout(() => setToastMessage(null), 2000);
     setEditTransaction(null);
@@ -193,10 +198,6 @@ export default function App() {
       handlePageChange('/account-detail');
     }, 0);
   }, [handlePageChange, setSelectedAccountId]);
-
-  const handleViewAllRecords = useCallback(() => {
-    handlePageChange('/all-records');
-  }, [handlePageChange]);
 
   const handleConfirmExit = useCallback(() => {
     CapApp.exitApp();
@@ -380,7 +381,9 @@ export default function App() {
     setQuickRecordAccountId(null);
     setQuickRecordDateTime(new Date());
     setQuickRecordCurrency('CNY');
-    
+    // 记账成功后回到页面顶部，确保余额卡片在可视区域内
+    window.scrollTo(0, 0);
+
     setToastMessage('记账成功');
     setTimeout(() => setToastMessage(null), 2000);
   }, [quickRecordAmount, quickRecordCategoryId, quickRecordAccountId, quickRecordType, quickRecordNote, quickRecordDateTime, quickRecordCurrency, addTransaction, setToastMessage]);
@@ -411,7 +414,6 @@ export default function App() {
             onGoToTemplates={() => handlePageChange('/templates')}
             onGoToCurrencyConverter={() => handlePageChange('/currency-converter')}
             onEditTransaction={handleEditTransaction}
-            onViewAllRecords={handleViewAllRecords}
             onGoToSettings={() => handlePageChange('/settings')}
             onGoToSearch={() => handlePageChange('/search')}
             onShowOCRModal={() => setShowOCRModal(true)}

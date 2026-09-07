@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 
-const mainPages = ['/', '/record', '/categories', '/statistics', '/accounts'];
+// '/record'（记账/编辑页）作为普通入栈页面：编辑保存后可返回进入前的来源页
+const mainPages = ['/', '/categories', '/statistics', '/accounts'];
 
 interface HistoryState {
   currentPage: string;

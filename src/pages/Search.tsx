@@ -19,7 +19,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
     const timer = setTimeout(() => {
       inputRef.current?.focus();
     }, 300);

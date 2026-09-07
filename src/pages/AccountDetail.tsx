@@ -26,7 +26,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
   const deleteTransfer = useStore((state) => state.deleteTransfer);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
     if (accountId) {
       const account = getAccount(accountId);
       setCurrentAccount(account || null);

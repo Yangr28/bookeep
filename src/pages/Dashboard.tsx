@@ -11,6 +11,9 @@ import Empty from '../components/Empty';
 import { TransactionType, Transaction } from '../types';
 import { currencies, getCurrencySymbol, getRate, convertToCNY, getCurrencyName } from '../utils/currency';
 
+// 仅首次启动进入首页时自动聚焦智能记账输入框；返回首页时不再弹出键盘
+let hasAutoFocusedOnLaunch = false;
+
 interface DashboardProps {
   onViewDetail: (filterType: 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance') => void;
   onGoToAccounts?: () => void;
@@ -21,7 +24,6 @@ interface DashboardProps {
   onGoToTemplates?: () => void;
   onGoToCurrencyConverter?: () => void;
   onEditTransaction?: (transaction: Transaction) => void;
-  onViewAllRecords?: () => void;
   onGoToSettings?: () => void;
   onGoToSearch?: () => void;
   onShowOCRModal?: () => void;
@@ -55,7 +57,6 @@ const DashboardComponent = ({
   onGoToTemplates,
   onGoToCurrencyConverter,
   onEditTransaction,
-  onViewAllRecords,
   onGoToSettings,
   onGoToSearch,
   onShowOCRModal,
@@ -136,9 +137,14 @@ const DashboardComponent = ({
   const filteredCategories = categories.filter((c) => c.type === quickRecordType);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
+    // 仅首次启动时自动聚焦，返回首页不弹键盘
+    const shouldFocus = !hasAutoFocusedOnLaunch;
+    hasAutoFocusedOnLaunch = true;
     const timer = setTimeout(() => {
-      smartInputRef.current?.focus();
+      if (shouldFocus) {
+        smartInputRef.current?.focus();
+      }
     }, 300);
     return () => clearTimeout(timer);
   }, []);
@@ -628,10 +634,6 @@ const DashboardComponent = ({
       <div className="px-4 mt-6 pb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">最近记录</h2>
-          <button
-            onClick={onViewAllRecords}
-            className="px-3 py-1.5 text-purple-500 text-xs font-medium bg-purple-50 dark:bg-purple-900/30 rounded-full hover:bg-purple-100 dark:hover:bg-purple-800/30 active:bg-purple-200 transition-colors"
-          >查看全部</button>
         </div>
         
         {orderedTransactions.length === 0 ? (

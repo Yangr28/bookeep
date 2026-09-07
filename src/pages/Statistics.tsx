@@ -12,7 +12,7 @@ interface StatisticsProps {
 
 const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) => {
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, []);
   const selectedMonth = selectedDate.getMonth();
   const selectedYear = selectedDate.getFullYear();

@@ -20,7 +20,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
   const [note, setNote] = useState('');
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, []);
 
   const fromAccount = accounts.find((a) => a.id === fromAccountId);

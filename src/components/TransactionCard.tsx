@@ -18,7 +18,10 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled }: T
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [translateX, setTranslateX] = useState(0);
   const startX = useRef(0);
+  const startY = useRef(0);
   const currentX = useRef(0);
+  // 手势方向锁：'x' 横滑展开操作，'y' 纵向滚动（不响应），null 待判定
+  const axis = useRef<'x' | 'y' | null>(null);
 
   const handleDelete = () => {
     setShowDeleteConfirm(true);
@@ -32,26 +35,40 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled }: T
   const handleTouchStart = (e: React.TouchEvent) => {
     if (disabled) return;
     startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
     currentX.current = translateX;
+    axis.current = null;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (disabled) return;
-    const diff = e.touches[0].clientX - startX.current;
-    let newTranslate = currentX.current + diff;
+    const dx = e.touches[0].clientX - startX.current;
+    const dy = e.touches[0].clientY - startY.current;
+    // 先判定手势方向：纵向滚动列表时不触发横滑，避免误触编辑/删除
+    if (!axis.current) {
+      if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
+        axis.current = 'y';
+      } else if (Math.abs(dx) > 8) {
+        axis.current = 'x';
+      }
+    }
+    if (axis.current !== 'x') return;
+    let newTranslate = currentX.current + dx;
     newTranslate = Math.max(-60, Math.min(60, newTranslate));
     setTranslateX(newTranslate);
   };
 
   const handleTouchEnd = () => {
     if (disabled) return;
-    if (translateX > 30) {
+    // 滑动超过一半距离才展开操作按钮，轻微误触自动回弹
+    if (translateX > 40) {
       setTranslateX(60);
-    } else if (translateX < -30) {
+    } else if (translateX < -40) {
       setTranslateX(-60);
     } else {
       setTranslateX(0);
     }
+    axis.current = null;
   };
 
   const category = useStore((state) => state.getCategoryById(transaction.categoryId));
@@ -108,7 +125,7 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled }: T
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <p className="font-medium text-gray-800 dark:text-white truncate">{category?.name || '未知'}</p>
+              <p className="font-medium text-gray-800 dark:text-white truncate">{category?.name || '未分类'}</p>
               <span
                 className={`font-semibold flex-shrink-0 ml-2 truncate ${
                   isIncome ? 'text-emerald-600' : 'text-red-500'

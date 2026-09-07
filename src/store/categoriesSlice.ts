@@ -7,6 +7,8 @@ export interface CategoriesSlice {
   categories: Category[];
   addCategory: (category: Omit<Category, 'id'>) => void;
   deleteCategory: (id: string) => void;
+  /** 撤销删除：把分类放回原位置（记录的分类 ID 未变，可完全恢复） */
+  restoreCategory: (category: Category, index?: number) => void;
   getCategoryById: (id: string) => Category | undefined;
   setCategories: (categories: Category[]) => void;
 }
@@ -31,6 +33,16 @@ export const createCategoriesSlice: StateCreator<CategoriesSlice> = (set, get) =
   deleteCategory: (id) => {
     set((state) => {
       const updated = state.categories.filter((c) => c.id !== id);
+      saveCategories(updated);
+      return { categories: updated };
+    });
+  },
+
+  restoreCategory: (category, index) => {
+    set((state) => {
+      const updated = [...state.categories];
+      const insertAt = index === undefined || index < 0 || index > updated.length ? updated.length : index;
+      updated.splice(insertAt, 0, category);
       saveCategories(updated);
       return { categories: updated };
     });

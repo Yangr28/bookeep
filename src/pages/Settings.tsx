@@ -16,7 +16,7 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate }: Setti
   const [showChangelog, setShowChangelog] = useState(false);
   
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, []);
   const transactions = useStore((state) => state.transactions);
   const accounts = useStore((state) => state.accounts);

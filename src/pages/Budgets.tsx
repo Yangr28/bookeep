@@ -20,7 +20,7 @@ export const Budgets = ({ onBack }: BudgetsProps) => {
   const calculateBudgetUsage = useStore((state) => state.calculateBudgetUsage);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, []);
 
   const expenseCategories = categories.filter((c) => c.type === 'expense');

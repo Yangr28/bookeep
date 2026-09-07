@@ -40,7 +40,7 @@ const bankOptions = ['招商银行', '工商银行', '建设银行', '农业银�
 
 export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accountId: string) => void }) => {
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, []);
 
   const { 

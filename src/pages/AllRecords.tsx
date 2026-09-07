@@ -15,14 +15,17 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
   const transactions = useStore((state) => state.transactions);
   const transfers = useStore((state) => state.transfers);
   const accounts = useStore((state) => state.accounts);
+  const categories = useStore((state) => state.categories);
   const deleteTransaction = useStore((state) => state.deleteTransaction);
   const deleteTransfer = useStore((state) => state.deleteTransfer);
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  // 分类筛选：'all' 全部 | 'uncategorized' 未分类 | 分类 id
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, []);
 
   const getAccountById = (id: string) => accounts.find((a) => a.id === id);
@@ -73,9 +76,20 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
   const filteredRecords = allRecords.filter((record) => {
     const date = new Date(record.createdAt);
     const dateStr = date.toISOString().split('T')[0];
-    
+
     if (startDate && dateStr < startDate) return false;
     if (endDate && dateStr > endDate) return false;
+
+    // 分类筛选：转账无分类，筛选分类时隐藏
+    if (categoryFilter !== 'all') {
+      if (record.type !== 'transaction' || !record.transaction) return false;
+      const recordCategory = categories.find((c) => c.id === record.transaction!.categoryId);
+      if (categoryFilter === 'uncategorized') {
+        if (recordCategory) return false;
+      } else if (record.transaction.categoryId !== categoryFilter) {
+        return false;
+      }
+    }
     return true;
   });
 
@@ -94,7 +108,14 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
   const handleResetFilter = () => {
     setStartDate('');
     setEndDate('');
+    setCategoryFilter('all');
   };
+
+  const categoryFilterChips = [
+    { value: 'all', label: '全部' },
+    ...categories.map((c) => ({ value: c.id, label: c.name, color: c.color })),
+    { value: 'uncategorized', label: '未分类' },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
@@ -131,7 +152,7 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={18} className="text-gray-500" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">日期筛选</span>
-            {(startDate || endDate) && (
+            {(startDate || endDate || categoryFilter !== 'all') && (
               <button
                 onClick={handleResetFilter}
                 className="ml-auto text-xs text-red-500 hover:text-red-600"
@@ -193,6 +214,34 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
                 onChange={(e) => setEndDate(e.target.value)}
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
               />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0">分类</span>
+            <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1">
+              {categoryFilterChips.map((chip) => {
+                const active = categoryFilter === chip.value;
+                return (
+                  <button
+                    key={chip.value}
+                    onClick={() => setCategoryFilter(chip.value)}
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                      active
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {'color' in chip && chip.color && (
+                      <span
+                        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: chip.color }}
+                      />
+                    )}
+                    {chip.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

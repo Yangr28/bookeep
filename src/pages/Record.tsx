@@ -29,7 +29,7 @@ const RecordComponent = ({ editTransaction, selectedDateTime, selectedAccountId,
   const [showSmartResult, setShowSmartResult] = useState(false);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
     if (editTransaction) {
       onTypeChange(editTransaction.type);
       onCategoryChange(editTransaction.categoryId);

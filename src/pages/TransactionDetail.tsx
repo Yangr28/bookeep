@@ -42,7 +42,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
   };
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, []);
 
   const transactions = useStore((state) => state.transactions);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { TransactionType } from '../types';
+import { TransactionType, Category } from '../types';
 import { Plus, X, Palette } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
 
@@ -10,7 +10,7 @@ interface CategoriesProps {
 
 export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, []);
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -23,8 +23,38 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
   });
 
   const categories = useStore((state) => state.categories);
+  const transactions = useStore((state) => state.transactions);
   const addCategory = useStore((state) => state.addCategory);
   const deleteCategory = useStore((state) => state.deleteCategory);
+  const restoreCategory = useStore((state) => state.restoreCategory);
+
+  // 待确认删除的分类 / 刚删除可撤销的分类
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [recentDeleted, setRecentDeleted] = useState<{ category: Category; index: number } | null>(null);
+
+  // 撤销窗口 5 秒后自动消失
+  useEffect(() => {
+    if (!recentDeleted) return;
+    const timer = setTimeout(() => setRecentDeleted(null), 5000);
+    return () => clearTimeout(timer);
+  }, [recentDeleted]);
+
+  const recordCountOf = (categoryId: string) =>
+    transactions.filter((t) => t.categoryId === categoryId).length;
+
+  const confirmDeleteCategory = () => {
+    if (!categoryToDelete) return;
+    const index = categories.findIndex((c) => c.id === categoryToDelete.id);
+    deleteCategory(categoryToDelete.id);
+    setRecentDeleted({ category: categoryToDelete, index });
+    setCategoryToDelete(null);
+  };
+
+  const handleUndoDelete = () => {
+    if (!recentDeleted) return;
+    restoreCategory(recentDeleted.category, recentDeleted.index);
+    setRecentDeleted(null);
+  };
 
   const incomeCategories = categories.filter((c) => c.type === 'income');
   const expenseCategories = categories.filter((c) => c.type === 'expense');
@@ -90,9 +120,9 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      deleteCategory(category.id);
+                      setCategoryToDelete(category);
                     }}
-                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                    className="absolute -top-1.5 -right-1.5 p-1.5 bg-red-500 text-white rounded-full shadow-md"
                   >
                     <X size={12} />
                   </button>
@@ -139,9 +169,9 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      deleteCategory(category.id);
+                      setCategoryToDelete(category);
                     }}
-                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                    className="absolute -top-1.5 -right-1.5 p-1.5 bg-red-500 text-white rounded-full shadow-md"
                   >
                     <X size={12} />
                   </button>
@@ -297,6 +327,52 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {categoryToDelete && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setCategoryToDelete(null)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-2xl p-6 mx-4 w-full max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">删除分类</h3>
+            <p className="text-gray-600 dark:text-gray-300 mt-3">
+              确定删除分类「{categoryToDelete.name}」吗？
+            </p>
+            <p className="text-sm text-red-500 dark:text-red-400 mt-2">
+              该分类下有 {recordCountOf(categoryToDelete.id)} 条记录，删除后这些记录将归入「未分类」。
+            </p>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setCategoryToDelete(null)}
+                className="flex-1 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmDeleteCategory}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+              >
+                删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {recentDeleted && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-black/90 text-white pl-5 pr-2 py-2.5 rounded-full z-[90] flex items-center gap-3 shadow-2xl">
+          <span className="text-sm whitespace-nowrap">已删除「{recentDeleted.category.name}」</span>
+          <button
+            onClick={handleUndoDelete}
+            className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium transition-colors whitespace-nowrap"
+          >
+            撤销
+          </button>
         </div>
       )}
     </div>

@@ -130,7 +130,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
   }, []);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
     setCustomRates(getCustomRates());
     setLastUpdate(getLastUpdateTime());
     // 如果没有缓存或缓存过期，自动获取
