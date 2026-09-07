@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#99000000"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:background="@drawable/quick_record_bg"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="24dp">
+
+        <!-- 顶部手柄 -->
+        <View
+            android:layout_width="36dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:background="#E5E7EB"
+            android:backgroundTint="#D1D5DB" />
+
+        <!-- 标题 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:gravity="center"
+                android:text="📒"
+                android:textSize="20sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="智能记账"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:layout_marginLeft="8dp" />
+
+        </LinearLayout>
+
+        <!-- 输入框容器 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#F9FAFB"
+            android:padding="2dp"
+            android:layout_marginBottom="14dp">
+
+            <EditText
+                android:id="@+id/quick_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="如：午餐20 工商午餐15.5 加油300"
+                android:textSize="15sp"
+                android:textColor="#111827"
+                android:textColorHint="#9CA3AF"
+                android:background="?android:attr/selectableItemBackground"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="14dp"
+                android:singleLine="true"
+                android:imeOptions="actionDone"
+                android:inputType="text" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="💡 支持智能识别分类、金额、账户，如：地铁8 建行晚餐55"
+                android:textSize="11sp"
+                android:textColor="#9CA3AF"
+                android:paddingHorizontal="14dp"
+                android:paddingBottom="10dp" />
+
+        </LinearLayout>
+
+        <!-- 按钮 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/btn_cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="取消"
+                android:textSize="14sp"
+                android:textColor="#6B7280"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:minWidth="72dp"
+                android:minHeight="42dp"
+                android:paddingHorizontal="20dp"
+                android:layout_marginRight="4dp" />
+
+            <Button
+                android:id="@+id/btn_submit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="智能解析"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:background="@drawable/quick_record_btn_submit"
+                android:minWidth="100dp"
+                android:minHeight="42dp"
+                android:paddingHorizontal="22dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
