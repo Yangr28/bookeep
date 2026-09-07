@@ -12,6 +12,15 @@ interface SettingsProps {
   onCheckUpdate: () => void;
 }
 
+const GITHUB_REPO = (import.meta.env.VITE_GITHUB_REPO as string | undefined)?.trim();
+
+/** 从 GitHub Releases 拉取的更新日志条目 */
+interface FetchedRelease {
+  version: string;
+  date: string;
+  notes: string[];
+}
+
 export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate }: SettingsProps) => {
   const [showChangelog, setShowChangelog] = useState(false);
   
@@ -83,6 +92,42 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate }: Setti
         // Web 环境使用构建版本号
       });
   }, []);
+
+  // 从 GitHub Releases 拉取更新日志（与发版自动同步；失败时回退到内置日志）
+  const [releases, setReleases] = useState<FetchedRelease[] | null>(null);
+
+  useEffect(() => {
+    if (!showChangelog || !GITHUB_REPO) return;
+    let cancelled = false;
+    fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=30`, {
+      headers: { Accept: 'application/vnd.github+json' },
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then(
+        (data: Array<{ tag_name: string; body: string | null; published_at: string; draft: boolean }>) => {
+          if (cancelled || !Array.isArray(data)) return;
+          const list = data
+            .filter((rel) => !rel.draft)
+            .map((rel) => ({
+              version: (rel.tag_name || '').replace(/^v/, ''),
+              date: (rel.published_at || '').split('T')[0],
+              notes: (rel.body || '')
+                .split('\n')
+                .map((l) => l.trim())
+                .filter(Boolean)
+                .map((l) => l.replace(/^\d+\.\s*/, '')),
+            }))
+            .filter((rel) => rel.version);
+          if (list.length > 0) setReleases(list);
+        },
+      )
+      .catch(() => {
+        // 网络异常时保留内置更新日志
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showChangelog]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
@@ -165,31 +210,28 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate }: Setti
           </div>
           
           <button
-            onClick={onCheckUpdate}
-            className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
-              <RefreshCw size={22} className="text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="font-semibold text-gray-800 dark:text-white">检查更新</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">当前版本 v{appVersion}</p>
-            </div>
-            <span className="text-gray-400 text-xl">›</span>
-          </button>
-
-          <button
             onClick={() => setShowChangelog(true)}
             className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl">
-              <Info size={22} className="text-purple-600" />
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
+              <Info size={22} className="text-indigo-600 dark:text-indigo-400" />
             </div>
             <div className="flex-1 text-left">
-              <p className="font-semibold text-gray-800 dark:text-white">关于 Bookeep</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">更新日志与版本信息</p>
+              <p className="font-semibold text-gray-800 dark:text-white">版本与更新</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">当前版本 v{appVersion} · 更新日志</p>
             </div>
-            <span className="text-gray-400 text-xl">›</span>
+            <span
+              role="button"
+              aria-label="检查更新"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCheckUpdate();
+              }}
+              className="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-full active:bg-indigo-100 dark:active:bg-indigo-900/50 transition-colors flex-shrink-0"
+            >
+              <RefreshCw size={12} />
+              检查更新
+            </span>
           </button>
           
           <button 
@@ -227,14 +269,107 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate }: Setti
           <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
               <h3 className="text-lg font-bold text-gray-800 dark:text-white">版本更新日志</h3>
-              <button
-                onClick={() => setShowChangelog(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-              >
-                <X size={20} className="text-gray-500" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={onCheckUpdate}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                >
+                  <RefreshCw size={12} />
+                  检查更新
+                </button>
+                <button
+                  onClick={() => setShowChangelog(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                >
+                  <X size={20} className="text-gray-500" />
+                </button>
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {releases ? (
+                releases.map((rel) => (
+                  <div key={rel.version}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 text-xs font-medium rounded-full">v{rel.version}</span>
+                      {rel.version === appVersion && (
+                        <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-full">当前版本</span>
+                      )}
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{rel.date}</span>
+                    </div>
+                    <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                      {rel.notes.map((line, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              ) : (
+              <>
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 text-xs font-medium rounded-full">v4.4.6</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-09-07</span>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>分类删除按钮恢复隐藏样式，配合确认弹窗与撤销机制防误删</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>侧滑返回改为边缘手势触发，与系统返回手感对齐，避免误触</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>交易明细页新增分类筛选，支持筛选未分类记录</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 text-xs font-medium rounded-full">v4.4.5</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-09-07</span>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>修复记账完成后首页余额卡片显示丢失的问题</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>合并首页重复的交易明细入口</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>修复进入明细页先滚动到页面中部再跳顶部的问题</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>全部交易明细新增分类筛选（含未分类）</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>修复列表滑动误触编辑或删除的问题</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>编辑记录保存后返回进入前的页面</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>优化键盘自动弹出时机，仅在首次启动时聚焦</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span>分类删除增加二次确认与撤销机制，防误删</span>
+                  </li>
+                </ul>
+              </div>
+
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 text-xs font-medium rounded-full">v4.4.4</span>
@@ -603,6 +738,8 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate }: Setti
                   </li>
                 </ul>
               </div>
+              </>
+              )}
             </div>
             <div className="p-4 border-t border-gray-100 dark:border-gray-700">
               <button
