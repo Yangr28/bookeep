@@ -6,7 +6,10 @@ interface UseSwipeBackOptions {
   threshold?: number;
 }
 
-export const useSwipeBack = ({ onSwipeBack, enabled = true, threshold = 30 }: UseSwipeBackOptions) => {
+/** 侧滑起手区：仅屏幕两侧边缘内起手才触发，与系统返回手势区域对齐，避免误触 */
+const EDGE_ZONE_PX = 36;
+
+export const useSwipeBack = ({ onSwipeBack, enabled = true, threshold = 60 }: UseSwipeBackOptions) => {
   const startX = useRef(0);
   const startY = useRef(0);
   const isSwiping = useRef(false);
@@ -24,7 +27,7 @@ export const useSwipeBack = ({ onSwipeBack, enabled = true, threshold = 30 }: Us
     const touch = e.touches[0];
     const touchX = touch.clientX;
     const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
-    const swipeZoneWidth = Math.min(screenWidth * 0.2, 150);
+    const swipeZoneWidth = EDGE_ZONE_PX;
     
     const isFromLeft = touchX < swipeZoneWidth;
     const isFromRight = touchX > screenWidth - swipeZoneWidth;
@@ -51,8 +54,7 @@ export const useSwipeBack = ({ onSwipeBack, enabled = true, threshold = 30 }: Us
     const deltaY = touch.clientY - startY.current;
     const absDeltaX = Math.abs(deltaX);
     const absDeltaY = Math.abs(deltaY);
-    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
-    const swipeZoneWidth = Math.min(screenWidth * 0.2, 150);
+    const swipeZoneWidth = EDGE_ZONE_PX;
     
     if (absDeltaX > 10 && absDeltaX > absDeltaY * 1.5) {
       isHorizontalSwipe.current = true;

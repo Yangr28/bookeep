@@ -122,7 +122,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                       e.stopPropagation();
                       setCategoryToDelete(category);
                     }}
-                    className="absolute -top-1.5 -right-1.5 p-1.5 bg-red-500 text-white rounded-full shadow-md"
+                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
                   >
                     <X size={12} />
                   </button>
@@ -171,7 +171,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                       e.stopPropagation();
                       setCategoryToDelete(category);
                     }}
-                    className="absolute -top-1.5 -right-1.5 p-1.5 bg-red-500 text-white rounded-full shadow-md"
+                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
                   >
                     <X size={12} />
                   </button>
