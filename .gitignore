@@ -15,6 +15,10 @@ dist-ssr
 # 应用内更新发布产物（dist zip / update.json）
 release-assets
 
+# APK 安装包不进仓库（发布走 GitHub Releases）
+*.apk
+build-outputs
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
