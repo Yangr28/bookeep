@@ -24,7 +24,7 @@ const idleFlow: UpdateFlowState = { phase: 'idle', kind: null, percent: 0, error
 
 /**
  * 应用内更新流程管理：
- * - check(manual)：检查更新，自动模式受"跳过版本"和 4 小时节流约束
+ * - check(manual)：检查更新，自动模式受"跳过版本"和 10 分钟节流约束
  * - startUpdate：执行下载 + 激活/安装，进度通过 flow 暴露
  */
 export function useUpdateCheck() {

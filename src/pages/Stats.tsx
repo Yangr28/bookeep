@@ -185,7 +185,7 @@ export const Stats = ({ onBack }: StatsProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white px-6 pt-8 pb-6">
+      <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white px-6 pt-8 pb-6 safe-top">
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}

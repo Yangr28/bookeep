@@ -131,7 +131,7 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate }: Setti
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white px-6 pt-8 pb-6">
+      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white px-6 pt-8 pb-6 safe-top">
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}

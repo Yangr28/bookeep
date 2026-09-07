@@ -89,7 +89,7 @@ const RecordComponent = ({ editTransaction, selectedDateTime, selectedAccountId,
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <div className="flex-1 overflow-y-auto pb-[100px]">
-        <div className="bg-white dark:bg-gray-800 px-6 pt-8 pb-6">
+        <div className="bg-white dark:bg-gray-800 px-6 pt-8 pb-6 safe-top">
           <h1 className="text-xl font-bold text-gray-800 dark:text-white text-center mb-4 tracking-tight">
             {isEditMode ? '编辑记录' : '记账'}
           </h1>

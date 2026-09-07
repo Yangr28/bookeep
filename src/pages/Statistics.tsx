@@ -68,7 +68,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white px-6 pt-8 pb-6 rounded-b-3xl">
+      <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white px-6 pt-8 pb-6 rounded-b-3xl safe-top">
         <h1 className="text-2xl font-bold tracking-tight">统计报表</h1>
         <p className="text-emerald-100 text-sm mt-2 leading-relaxed">查看您的财务数据</p>
       </div>

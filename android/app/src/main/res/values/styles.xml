@@ -13,6 +13,11 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- 边到边：系统栏透明，由页面头部渐变延伸到状态栏后面 -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- 页面头部均为彩色渐变，状态栏固定使用白色图标（配合顶部渐变遮罩保证可读性） -->
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
 

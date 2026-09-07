@@ -27,6 +27,30 @@ body {
   background-color: #f9fafb;
 }
 
+/* 安全区适配：安卓系统栏透明（边到边）后，页面头部/底部导航需让出状态栏/导航栏高度。
+   safe-top 用 max 保证无安全区时（Web 环境）仍保留约 pt-8 的原始留白 */
+.safe-top {
+  padding-top: max(env(safe-area-inset-top, 0px), 2rem);
+}
+
+/* 底栏原 pb 约为 1rem，安全区高度在其上叠加 */
+.safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
+/* 状态栏遮罩：边到边模式下覆盖状态栏区域，白色图标在任何页面背景上都可读 */
+.status-bar-scrim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0));
+  z-index: 40;
+  pointer-events: none;
+}
+
+
 @keyframes bounce-in {
   0% {
     transform: scale(0.5);

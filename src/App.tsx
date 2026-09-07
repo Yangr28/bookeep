@@ -258,15 +258,24 @@ export default function App() {
     markReady();
   }, [markReady]);
 
-  // 启动解锁后延迟自动检查更新（4 小时节流，失败静默）
+  // 启动解锁后延迟自动检查更新（10 分钟节流；api.github.com 国内不稳定，失败自动重试 3 次）
   useEffect(() => {
     if (!appUnlocked) return;
-    const timer = setTimeout(() => {
+    let retries = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const attemptCheck = () => {
       checkUpdate(false).catch(() => {
-        // 网络异常等情况静默处理
+        if (retries < 2) {
+          retries += 1;
+          retryTimer = setTimeout(attemptCheck, 2500);
+        }
       });
-    }, 3000);
-    return () => clearTimeout(timer);
+    };
+    const timer = setTimeout(attemptCheck, 3000);
+    return () => {
+      clearTimeout(timer);
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, [appUnlocked, checkUpdate]);
 
   // 设置页手动检查更新
@@ -546,6 +555,8 @@ export default function App() {
 
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 relative ${isSwiping || hasModalOpen ? 'overflow-hidden' : ''}`}>
+      {/* 状态栏遮罩：边到边模式下保证白色状态栏图标在任何页面背景上都可读 */}
+      <div className="status-bar-scrim" />
       {canGoBack() && (
         <>
           <div 

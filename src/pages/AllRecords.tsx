@@ -119,7 +119,7 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 pt-8 pb-6">
+      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 pt-8 pb-6 safe-top">
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={onBack}

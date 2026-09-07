@@ -319,7 +319,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <div className="p-6 pt-8">
+      <div className="p-6 pt-8 safe-top">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">资产</h1>

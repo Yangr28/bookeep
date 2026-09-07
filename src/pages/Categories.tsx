@@ -86,7 +86,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-white dark:bg-gray-800 px-6 pt-8 pb-6">
+      <div className="bg-white dark:bg-gray-800 px-6 pt-8 pb-6 safe-top">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">分类管理</h1>
         <p className="text-gray-400 dark:text-gray-500 text-sm mt-2 leading-relaxed">管理您的收支分类</p>
       </div>

@@ -288,7 +288,7 @@ const DashboardComponent = ({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 overflow-y-auto">
-      <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white px-6 pt-8 pb-6 rounded-b-3xl">
+      <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white px-6 pt-8 pb-6 rounded-b-3xl safe-top">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">财务概览</h1>

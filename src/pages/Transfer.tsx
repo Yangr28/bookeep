@@ -171,7 +171,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 safe-bottom">
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}

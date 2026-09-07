@@ -234,7 +234,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
       {/* 头部 */}
-      <div className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white px-6 pt-8 pb-6">
+      <div className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white px-6 pt-8 pb-6 safe-top">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button

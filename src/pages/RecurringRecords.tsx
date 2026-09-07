@@ -96,7 +96,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-6">
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-6 safe-top">
         <div className="flex items-center gap-3 mb-4">
           <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors">
             <ArrowLeft size={24} />

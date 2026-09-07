@@ -47,7 +47,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-white dark:bg-gray-800 px-4 pt-8 pb-4 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 px-4 pt-8 pb-4 shadow-sm safe-top">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}

@@ -399,7 +399,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
       </div>
 
       {isMultiSelect && selectedIds.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 safe-bottom shadow-lg">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600 dark:text-gray-400">
               已选择 {selectedIds.length} 条记录

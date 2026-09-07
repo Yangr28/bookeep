@@ -118,7 +118,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 pt-8 pb-6">
+      <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 pt-8 pb-6 safe-top">
         <button
           onClick={onBack}
           className="flex items-center gap-2 mb-4"
