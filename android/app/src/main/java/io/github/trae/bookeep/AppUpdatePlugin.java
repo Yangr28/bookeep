@@ -379,7 +379,9 @@ public class AppUpdatePlugin extends Plugin {
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zip))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                File out = new File(targetDir, entry.getName());
+                // 规范化路径分隔符：部分打包工具（如旧版 Compress-Archive）会用反斜杠作为条目分隔符
+                String name = entry.getName().replace('\\', '/');
+                File out = new File(targetDir, name);
                 // Zip Slip 防护：解压目标必须在 targetDir 内
                 String canonicalTarget = targetDir.getCanonicalPath();
                 String canonicalOut = out.getCanonicalPath();

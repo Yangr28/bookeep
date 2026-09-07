@@ -55,17 +55,17 @@ const zipPath = join(outDir, zipName);
 console.log(`\n[2/4] 打包热更新包 ${zipName}...`);
 
 if (process.platform === 'win32') {
-  const ps = spawnSync(
-    'powershell',
-    [
-      '-NoProfile',
-      '-Command',
-      `Compress-Archive -Path '${join(distDir, '*').replace(/'/g, "''")}' -DestinationPath '${zipPath.replace(/'/g, "''")}' -Force`,
-    ],
+  // 注意：不要用 Compress-Archive！其打包的 zip 子目录条目使用反斜杠（assets\index.js），
+  // 会导致 Android 端解压成带反斜杠的文件而非目录，WebView 加载 404 白屏。
+  // Windows 10+ 自带 bsdtar，-a 按扩展名生成 zip，条目路径始终为正斜杠。
+  const tar = spawnSync(
+    'tar',
+    ['-a', '-c', '-f', zipPath, '-C', distDir, '.'],
+    // 不要加 shell: true：项目路径含空格时参数会被错误拆分
     { stdio: 'inherit' },
   );
-  if (ps.status !== 0) {
-    console.error('zip 打包失败（需要 PowerShell 环境）');
+  if (tar.status !== 0) {
+    console.error('zip 打包失败（需要 Windows 10+ 自带的 tar 命令）');
     process.exit(1);
   }
 } else {
