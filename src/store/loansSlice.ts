@@ -8,12 +8,18 @@ export interface LoansSlice {
   addLoan: (loan: Omit<Loan, 'id'>) => void;
   deleteLoan: (id: string) => void;
   updateLoan: (id: string, updates: Partial<Loan>) => void;
+  setLoans: (loans: Loan[]) => void;
 }
 
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 export const createLoansSlice: StateCreator<LoansSlice> = (set) => ({
   loans: loadLoans(initialLoans),
+
+  setLoans: (loans) => {
+    saveLoans(loans);
+    set({ loans });
+  },
 
   addLoan: (loan) => {
     const newLoan: Loan = {

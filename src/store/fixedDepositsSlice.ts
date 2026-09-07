@@ -8,12 +8,18 @@ export interface FixedDepositsSlice {
   addFixedDeposit: (deposit: Omit<FixedDeposit, 'id'>) => void;
   deleteFixedDeposit: (id: string) => void;
   updateFixedDeposit: (id: string, updates: Partial<FixedDeposit>) => void;
+  setFixedDeposits: (deposits: FixedDeposit[]) => void;
 }
 
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 export const createFixedDepositsSlice: StateCreator<FixedDepositsSlice> = (set) => ({
   fixedDeposits: loadFixedDeposits(initialFixedDeposits),
+
+  setFixedDeposits: (deposits) => {
+    saveFixedDeposits(deposits);
+    set({ fixedDeposits: deposits });
+  },
 
   addFixedDeposit: (deposit) => {
     const newDeposit: FixedDeposit = {

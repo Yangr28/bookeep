@@ -25,6 +25,7 @@ import { Transaction, TransactionType } from './types';
 import { X, Wallet, CheckCircle } from 'lucide-react';
 import { App as CapApp } from '@capacitor/app';
 import { useStore } from './store/useStore';
+import { setStorageErrorCallback } from './utils/storage';
 import { iconMap, getIcon } from './utils/iconMap';
 import { AccountTypeNames } from './types';
 import { useHistory } from './hooks/useHistory';
@@ -63,6 +64,15 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [widgetQuickInput, setWidgetQuickInput] = useState('');
   const [appUnlocked, setAppUnlocked] = useState(!isAppLocked());
+
+  // 存储写入失败时提示用户导出备份（防止数据丢失）
+  useEffect(() => {
+    setStorageErrorCallback(() => {
+      setToastMessage('存储空间不足，请尽快导出数据备份');
+      setTimeout(() => setToastMessage(null), 5000);
+    });
+    return () => setStorageErrorCallback(() => {});
+  }, []);
   
   const { 
     currentPage, 
@@ -508,7 +518,7 @@ export default function App() {
       case '/search':
         return <Search onBack={handleBack} onEditTransaction={handleEditTransaction} />;
       case '/budgets':
-        return <Budgets onBack={handleBack} />;
+        return <Budgets onBack={handleBack} onToast={(msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(null), 2000); }} />;
       case '/stats':
         return <Stats onBack={handleBack} />;
       case '/recurring':

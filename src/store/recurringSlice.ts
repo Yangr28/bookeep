@@ -8,6 +8,7 @@ export interface RecurringSlice {
   deleteRecurringRecord: (id: string) => void;
   toggleRecurringRecord: (id: string) => void;
   generateRecurringTransactions: () => Transaction[];
+  setRecurringRecords: (records: RecurringRecord[]) => void;
 }
 
 const STORAGE_KEY = 'bookeep_recurring_records';
@@ -24,13 +25,18 @@ function loadFromStorage(): RecurringRecord[] {
 function saveToStorage(records: RecurringRecord[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  } catch {
-    console.error('Failed to save recurring records');
+  } catch (e) {
+    console.error(`存储写入失败 [${STORAGE_KEY}]:`, e);
   }
 }
 
 export const createRecurringSlice: StateCreator<RecurringSlice> = (set, get) => ({
   recurringRecords: loadFromStorage(),
+
+  setRecurringRecords: (records) => {
+    saveToStorage(records);
+    set({ recurringRecords: records });
+  },
 
   addRecurringRecord: (record) => {
     const newRecord: RecurringRecord = {

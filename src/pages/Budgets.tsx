@@ -6,9 +6,10 @@ import { formatCurrency, formatCurrencyShort } from '../utils/format';
 
 interface BudgetsProps {
   onBack: () => void;
+  onToast?: (msg: string) => void;
 }
 
-export const Budgets = ({ onBack }: BudgetsProps) => {
+export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState('');
@@ -40,8 +41,11 @@ export const Budgets = ({ onBack }: BudgetsProps) => {
 
   const handleSave = (categoryId: string) => {
     const amount = parseFloat(editAmount);
-    if (!isNaN(amount) && amount > 0) {
+    if (isNaN(amount) || amount <= 0) {
+      onToast?.('请输入有效金额');
+    } else {
       addBudget(categoryId, amount, selectedMonth);
+      onToast?.('预算已保存');
     }
     setEditingCategoryId(null);
     setEditAmount('');

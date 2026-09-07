@@ -17,6 +17,7 @@ export const formatCurrencyShort = (amount: number): string => {
 
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString || '未知日期';
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -25,6 +26,7 @@ export const formatDate = (dateString: string): string => {
 
 export const formatDateTime = (dateString: string): string => {
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString || '未知日期';
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');
@@ -35,6 +37,7 @@ export const formatDateTime = (dateString: string): string => {
 
 export const formatDateShort = (dateString: string): string => {
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString || '未知';
   const month = date.getMonth() + 1;
   const day = date.getDate();
   return `${month}月${day}日`;
@@ -42,6 +45,7 @@ export const formatDateShort = (dateString: string): string => {
 
 export const formatTime = (dateString: string): string => {
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '--:--';
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;

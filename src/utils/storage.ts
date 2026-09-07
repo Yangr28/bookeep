@@ -5,6 +5,14 @@ const FIXED_DEPOSITS_KEY = 'bookeep_fixed_deposits';
 const LOANS_KEY = 'bookeep_loans';
 const TRANSFERS_KEY = 'bookeep_transfers';
 
+/** 存储写入失败时的全局回调（由 App 层设置，用于提示用户导出备份） */
+let onStorageError: ((key: string) => void) | null = null;
+
+/** 设置存储失败回调（在 App 初始化时调用） */
+export const setStorageErrorCallback = (cb: (key: string) => void) => {
+  onStorageError = cb;
+};
+
 export const loadFromStorage = <T>(key: string, defaultValue: T): T => {
   try {
     const data = localStorage.getItem(key);
@@ -15,7 +23,13 @@ export const loadFromStorage = <T>(key: string, defaultValue: T): T => {
 };
 
 export const saveToStorage = <T>(key: string, value: T): void => {
-  localStorage.setItem(key, JSON.stringify(value));
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    // 容量超限（QuotaExceededError）或其他写入失败
+    console.error(`存储写入失败 [${key}]:`, e);
+    if (onStorageError) onStorageError(key);
+  }
 };
 
 export const loadTransactions = <T>(defaultValue: T): T => {

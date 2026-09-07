@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { exportData, downloadExportFile } from '../utils/export';
+import { exportData, downloadExportFile, parseImportData } from '../utils/export';
 import { getLocalVersions } from '../utils/update';
 import { ArrowLeft, Download, Upload, Info, HelpCircle, Shield, Sun, Moon, X, RefreshCw } from 'lucide-react';
 
@@ -30,16 +30,28 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate }: Setti
   const transactions = useStore((state) => state.transactions);
   const accounts = useStore((state) => state.accounts);
   const categories = useStore((state) => state.categories);
+  const transfers = useStore((state) => state.transfers);
+  const recurringRecords = useStore((state) => state.recurringRecords);
+  const templates = useStore((state) => state.templates);
+  const budgets = useStore((state) => state.budgets);
+  const fixedDeposits = useStore((state) => state.fixedDeposits);
+  const loans = useStore((state) => state.loans);
   const setTransactions = useStore((state) => state.setTransactions);
   const setAccounts = useStore((state) => state.setAccounts);
   const setCategories = useStore((state) => state.setCategories);
+  const setTransfers = useStore((state) => state.setTransfers);
+  const setRecurringRecords = useStore((state) => state.setRecurringRecords);
+  const setTemplates = useStore((state) => state.setTemplates);
+  const setBudgets = useStore((state) => state.setBudgets);
+  const setFixedDeposits = useStore((state) => state.setFixedDeposits);
+  const setLoans = useStore((state) => state.setLoans);
 
   const handleExport = async () => {
     try {
-      const data = exportData(transactions, accounts, categories);
+      const data = exportData({ transactions, accounts, categories, transfers, recurringRecords, templates, budgets, fixedDeposits, loans });
       await downloadExportFile(data);
       const fileName = `bookeep_backup_${new Date().toISOString().split('T')[0]}.json`;
-      alert(`数据导出成功！\n\n文件名称：${fileName}\n\n保存位置：\n📁 文件管理 → 下载文件夹\n📱 或在手机文件管理器中搜索 "${fileName}"\n\n可在设置页面点击「导入数据」恢复此备份文件`);
+      alert(`数据导出成功！\n\n文件名称：${fileName}\n\n包含：交易记录、账户、分类、转账、定期记录、模板、预算、定期存款、贷款\n\n保存位置：\n📁 文件管理 → 下载文件夹\n📱 或在手机文件管理器中搜索 "${fileName}"\n\n可在设置页面点击「导入数据」恢复此备份文件`);
     } catch (error) {
       console.error('Export error:', error);
       alert('数据导出失败，请重试');
@@ -58,21 +70,21 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate }: Setti
       reader.onload = (event) => {
         try {
           const jsonString = event.target?.result as string;
-          const importedData = JSON.parse(jsonString);
-          
-          if (importedData.transactions) {
-            setTransactions(importedData.transactions);
-          }
-          if (importedData.accounts) {
-            setAccounts(importedData.accounts);
-          }
-          if (importedData.categories) {
-            setCategories(importedData.categories);
-          }
-          
-          alert('数据导入成功');
-        } catch {
-          alert('数据导入失败，请确保文件格式正确');
+          const imported = parseImportData(jsonString);
+
+          setTransactions(imported.transactions);
+          setAccounts(imported.accounts);
+          setCategories(imported.categories);
+          setTransfers(imported.transfers);
+          setRecurringRecords(imported.recurringRecords);
+          setTemplates(imported.templates);
+          setBudgets(imported.budgets);
+          setFixedDeposits(imported.fixedDeposits);
+          setLoans(imported.loans);
+
+          alert(`数据导入成功！\n\n交易记录: ${imported.transactions.length} 条\n账户: ${imported.accounts.length} 个\n分类: ${imported.categories.length} 个\n转账: ${imported.transfers.length} 条\n定期记录: ${imported.recurringRecords.length} 条\n模板: ${imported.templates.length} 个`);
+        } catch (err) {
+          alert(err instanceof Error ? `导入失败: ${err.message}` : '数据导入失败，请确保文件格式正确');
         }
       };
       reader.readAsText(file);

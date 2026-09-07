@@ -1,21 +1,28 @@
 # Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# 保留行号信息，方便崩溃日志定位
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# WebView JS 接口：Capacitor 插件通过 @CapacitorPlugin 注册，不能被混淆
+-keep class io.github.trae.bookeep.** { *; }
+-keep class com.getcapacitor.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Capacitor 插件注册
+-keepclassmembers class * extends com.getcapacitor.Plugin {
+    public <init>();
+    public <methods>;
+}
+-keepclassmembers class * implements com.getcapacitor.Plugin {
+    public <methods>;
+}
+
+# 保留 WebView 相关接口
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# Capacitor 内部依赖（OkHttp 等）
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn javax.annotation.**

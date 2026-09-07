@@ -81,15 +81,24 @@ const DashboardComponent = ({
   }: DashboardProps) => {
   const transactions = useStore((state) => state.transactions);
   const deleteTransaction = useStore((state) => state.deleteTransaction);
-  const todayIncome = useStore((state) => state.getTodayIncome());
-  const todayExpense = useStore((state) => state.getTodayExpense());
-  const monthIncome = useStore((state) => state.getMonthIncome());
-  const monthExpense = useStore((state) => state.getMonthExpense());
-  const totalIncome = useStore((state) => state.getTotalIncome());
-  const totalExpense = useStore((state) => state.getTotalExpense());
-  const totalAssets = useStore((state) => state.getTotalAssets());
+  const getTodayIncome = useStore((state) => state.getTodayIncome);
+  const getTodayExpense = useStore((state) => state.getTodayExpense);
+  const getMonthIncome = useStore((state) => state.getMonthIncome);
+  const getMonthExpense = useStore((state) => state.getMonthExpense);
+  const getTotalIncome = useStore((state) => state.getTotalIncome);
+  const getTotalExpense = useStore((state) => state.getTotalExpense);
+  const getTotalAssets = useStore((state) => state.getTotalAssets);
   const categories = useStore((state) => state.categories);
   const accounts = useStore((state) => state.accounts);
+
+  // 计算函数缓存：仅 transactions/accounts 变化时重算
+  const todayIncome = useMemo(() => getTodayIncome(), [getTodayIncome, transactions]);
+  const todayExpense = useMemo(() => getTodayExpense(), [getTodayExpense, transactions]);
+  const monthIncome = useMemo(() => getMonthIncome(), [getMonthIncome, transactions]);
+  const monthExpense = useMemo(() => getMonthExpense(), [getMonthExpense, transactions]);
+  const totalIncome = useMemo(() => getTotalIncome(), [getTotalIncome, transactions]);
+  const totalExpense = useMemo(() => getTotalExpense(), [getTotalExpense, transactions]);
+  const totalAssets = useMemo(() => getTotalAssets(), [getTotalAssets, accounts, transactions]);
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);

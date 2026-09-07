@@ -28,6 +28,9 @@ interface CalculationsSliceDependencies {
   getCategoryById: (id: string) => Category | undefined;
 }
 
+/** 消除浮点精度误差 */
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 export const createCalculationsSlice: StateCreator<
   CalculationsSliceDependencies & CalculationsSlice,
   [],
@@ -35,69 +38,69 @@ export const createCalculationsSlice: StateCreator<
   CalculationsSlice
 > = (_, get) => ({
   getTotalAssets: () => {
-    return get().accounts.reduce((sum, a) => sum + a.balance, 0) + get().getTotalFixedDeposits();
+    return round2(get().accounts.reduce((sum, a) => sum + a.balance, 0) + get().getTotalFixedDeposits());
   },
 
   getTotalFixedDeposits: () => {
-    return get().fixedDeposits.reduce((sum, d) => sum + d.principal, 0);
+    return round2(get().fixedDeposits.reduce((sum, d) => sum + d.principal, 0));
   },
 
   getTotalLoans: () => {
-    return get().loans.reduce((sum, l) => sum + l.remainingAmount, 0);
+    return round2(get().loans.reduce((sum, l) => sum + l.remainingAmount, 0));
   },
 
   getTodayIncome: () => {
     const today = new Date().toISOString().split('T')[0];
-    return get().transactions
+    return round2(get().transactions
       .filter((t) => t.type === 'income' && t.createdAt.startsWith(today))
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.amount, 0));
   },
 
   getTodayExpense: () => {
     const today = new Date().toISOString().split('T')[0];
-    return get().transactions
+    return round2(get().transactions
       .filter((t) => t.type === 'expense' && t.createdAt.startsWith(today))
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.amount, 0));
   },
 
   getMonthIncome: (month?, year?) => {
     const now = new Date();
     const targetMonth = month !== undefined ? month : now.getMonth();
     const targetYear = year !== undefined ? year : now.getFullYear();
-    return get().transactions
+    return round2(get().transactions
       .filter((t) => {
         const date = new Date(t.createdAt);
         return t.type === 'income' && date.getMonth() === targetMonth && date.getFullYear() === targetYear;
       })
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.amount, 0));
   },
 
   getMonthExpense: (month?, year?) => {
     const now = new Date();
     const targetMonth = month !== undefined ? month : now.getMonth();
     const targetYear = year !== undefined ? year : now.getFullYear();
-    return get().transactions
+    return round2(get().transactions
       .filter((t) => {
         const date = new Date(t.createdAt);
         return t.type === 'expense' && date.getMonth() === targetMonth && date.getFullYear() === targetYear;
       })
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.amount, 0));
   },
 
   getTotalIncome: () => {
-    return get().transactions
+    return round2(get().transactions
       .filter((t) => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.amount, 0));
   },
 
   getTotalExpense: () => {
-    return get().transactions
+    return round2(get().transactions
       .filter((t) => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.amount, 0));
   },
 
   getTotalBalance: () => {
-    return get().getTotalIncome() - get().getTotalExpense();
+    return round2(get().getTotalIncome() - get().getTotalExpense());
   },
 
   getTransactionsByMonth: (month, year) => {
@@ -112,15 +115,15 @@ export const createCalculationsSlice: StateCreator<
   },
 
   getAccountIncome: (accountId: string) => {
-    return get().transactions
+    return round2(get().transactions
       .filter((t) => t.accountId === accountId && t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.amount, 0));
   },
 
   getAccountExpense: (accountId: string) => {
-    return get().transactions
+    return round2(get().transactions
       .filter((t) => t.accountId === accountId && t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.amount, 0));
   },
 
   getTransactionsGroupedByCategory: (type, month?, year?) => {
@@ -136,7 +139,7 @@ export const createCalculationsSlice: StateCreator<
     const grouped: Record<string, number> = {};
 
     transactions.forEach((t) => {
-      grouped[t.categoryId] = (grouped[t.categoryId] || 0) + t.amount;
+      grouped[t.categoryId] = round2((grouped[t.categoryId] || 0) + t.amount);
     });
 
     return Object.entries(grouped)

@@ -290,13 +290,17 @@ export const getRateSource = (currencyCode: string): 'custom' | 'live' | 'defaul
 // 外币转人民币
 export const convertToCNY = (amount: number, fromCurrency: string): number => {
   const rate = getRate(fromCurrency);
-  return amount * rate;
+  if (!rate || rate <= 0 || !isFinite(rate)) return 0;
+  const result = amount * rate;
+  return isFinite(result) ? Math.round(result * 100) / 100 : 0;
 };
 
 // 人民币转外币
 export const convertFromCNY = (amountCNY: number, toCurrency: string): number => {
   const rate = getRate(toCurrency);
-  return rate > 0 ? amountCNY / rate : 0;
+  if (!rate || rate <= 0 || !isFinite(rate)) return 0;
+  const result = amountCNY / rate;
+  return isFinite(result) ? Math.round(result * 100) / 100 : 0;
 };
 
 // 获取货币符号

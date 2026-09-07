@@ -18,6 +18,9 @@ interface TransactionsSliceDependencies {
 
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+/** 消除浮点精度误差：0.1+0.2 → 0.3 */
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 export const createTransactionsSlice: StateCreator<
   TransactionsSliceDependencies & TransactionsSlice,
   [],
@@ -42,8 +45,8 @@ export const createTransactionsSlice: StateCreator<
             return {
               ...account,
               balance: transaction.type === 'income'
-                ? account.balance + transaction.amount
-                : account.balance - transaction.amount,
+                ? round2(account.balance + transaction.amount)
+                : round2(account.balance - transaction.amount),
             };
           }
           return account;
@@ -71,8 +74,8 @@ export const createTransactionsSlice: StateCreator<
             return {
               ...account,
               balance: oldTransaction.type === 'income'
-                ? account.balance - oldTransaction.amount
-                : account.balance + oldTransaction.amount,
+                ? round2(account.balance - oldTransaction.amount)
+                : round2(account.balance + oldTransaction.amount),
             };
           }
           return account;
@@ -85,8 +88,8 @@ export const createTransactionsSlice: StateCreator<
             return {
               ...account,
               balance: transaction.type === 'income'
-                ? account.balance + transaction.amount
-                : account.balance - transaction.amount,
+                ? round2(account.balance + transaction.amount)
+                : round2(account.balance - transaction.amount),
             };
           }
           return account;
@@ -111,8 +114,8 @@ export const createTransactionsSlice: StateCreator<
             return {
               ...account,
               balance: transactionToDelete.type === 'income'
-                ? account.balance - transactionToDelete.amount
-                : account.balance + transactionToDelete.amount,
+                ? round2(account.balance - transactionToDelete.amount)
+                : round2(account.balance + transactionToDelete.amount),
             };
           }
           return account;

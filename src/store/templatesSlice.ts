@@ -6,6 +6,7 @@ export interface TemplatesSlice {
   addTemplate: (template: Omit<RecordTemplate, 'id' | 'createdAt'>) => void;
   updateTemplate: (id: string, updates: Partial<RecordTemplate>) => void;
   deleteTemplate: (id: string) => void;
+  setTemplates: (templates: RecordTemplate[]) => void;
 }
 
 const STORAGE_KEY = 'bookeep_templates';
@@ -22,13 +23,18 @@ function loadFromStorage(): RecordTemplate[] {
 function saveToStorage(templates: RecordTemplate[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
-  } catch {
-    console.error('Failed to save templates');
+  } catch (e) {
+    console.error(`存储写入失败 [${STORAGE_KEY}]:`, e);
   }
 }
 
 export const createTemplatesSlice: StateCreator<TemplatesSlice> = (set, get) => ({
   templates: loadFromStorage(),
+
+  setTemplates: (templates) => {
+    saveToStorage(templates);
+    set({ templates });
+  },
 
   addTemplate: (template) => {
     const newTemplate: RecordTemplate = {
