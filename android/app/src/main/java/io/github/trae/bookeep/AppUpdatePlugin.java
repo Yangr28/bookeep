@@ -326,44 +326,63 @@ public class AppUpdatePlugin extends Plugin {
     // ---------- helpers ----------
 
     private void downloadFile(String urlStr, File target, String kind) throws Exception {
-        HttpURLConnection conn = null;
-        InputStream input = null;
-        OutputStream output = null;
-        try {
-            URL url = new URL(urlStr);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setInstanceFollowRedirects(true);
-            conn.setConnectTimeout(20000);
-            conn.setReadTimeout(60000);
-            conn.setRequestProperty("Accept-Encoding", "identity");
-            conn.connect();
-            int code = conn.getResponseCode();
-            if (code != HttpURLConnection.HTTP_OK) {
-                throw new Exception("HTTP " + code);
-            }
-            input = conn.getInputStream();
-            output = new FileOutputStream(target);
-            long total = conn.getContentLengthLong();
-            long read = 0;
-            long lastNotify = 0;
-            byte[] buffer = new byte[8192];
-            int n;
-            while ((n = input.read(buffer)) != -1) {
-                output.write(buffer, 0, n);
-                read += n;
-                long now = System.currentTimeMillis();
-                if (now - lastNotify > 200) {
-                    lastNotify = now;
-                    notifyProgress(kind, read, total);
+        Exception lastError = null;
+        // 国内访问 GitHub 不稳定，最多重试 3 次，间隔递增
+        for (int attempt = 0; attempt < 3; attempt++) {
+            if (attempt > 0) {
+                try {
+                    Thread.sleep(1500L * attempt);
+                } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
                 }
             }
-            output.flush();
-            notifyProgress(kind, read, total > 0 ? total : read);
-        } finally {
-            if (output != null) try { output.close(); } catch (Exception ignored) {}
-            if (input != null) try { input.close(); } catch (Exception ignored) {}
-            if (conn != null) conn.disconnect();
+            HttpURLConnection conn = null;
+            InputStream input = null;
+            OutputStream output = null;
+            try {
+                URL url = new URL(urlStr);
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setInstanceFollowRedirects(true);
+                conn.setConnectTimeout(30000);
+                conn.setReadTimeout(120000);
+                // 模拟浏览器 User-Agent，避免 GitHub 拒绝默认 Java UA
+                conn.setRequestProperty("User-Agent",
+                        "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36");
+                conn.setRequestProperty("Accept-Encoding", "identity");
+                conn.connect();
+                int code = conn.getResponseCode();
+                if (code != HttpURLConnection.HTTP_OK) {
+                    throw new Exception("HTTP " + code);
+                }
+                input = conn.getInputStream();
+                output = new FileOutputStream(target);
+                long total = conn.getContentLengthLong();
+                long read = 0;
+                long lastNotify = 0;
+                byte[] buffer = new byte[8192];
+                int n;
+                while ((n = input.read(buffer)) != -1) {
+                    output.write(buffer, 0, n);
+                    read += n;
+                    long now = System.currentTimeMillis();
+                    if (now - lastNotify > 200) {
+                        lastNotify = now;
+                        notifyProgress(kind, read, total);
+                    }
+                }
+                output.flush();
+                notifyProgress(kind, read, total > 0 ? total : read);
+                return;
+            } catch (Exception e) {
+                lastError = e;
+                Log.w(TAG, "download attempt " + (attempt + 1) + " failed: " + e.getMessage());
+            } finally {
+                if (output != null) try { output.close(); } catch (Exception ignored) {}
+                if (input != null) try { input.close(); } catch (Exception ignored) {}
+                if (conn != null) conn.disconnect();
+            }
         }
+        throw lastError != null ? lastError : new Exception("下载失败");
     }
 
     private void notifyProgress(String kind, long loaded, long total) {
