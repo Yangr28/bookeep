@@ -327,8 +327,8 @@ public class AppUpdatePlugin extends Plugin {
 
     private void downloadFile(String urlStr, File target, String kind) throws Exception {
         Exception lastError = null;
-        // 国内访问 GitHub 不稳定，最多重试 3 次，间隔递增
-        for (int attempt = 0; attempt < 3; attempt++) {
+        // 国内访问 GitHub 不稳定，最多重试 5 次，间隔递增（1.5s/3s/4.5s/6s）
+        for (int attempt = 0; attempt < 5; attempt++) {
             if (attempt > 0) {
                 try {
                     Thread.sleep(1500L * attempt);
@@ -343,8 +343,8 @@ public class AppUpdatePlugin extends Plugin {
                 URL url = new URL(urlStr);
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setInstanceFollowRedirects(true);
-                conn.setConnectTimeout(30000);
-                conn.setReadTimeout(120000);
+                conn.setConnectTimeout(45000);
+                conn.setReadTimeout(180000);
                 // 模拟浏览器 User-Agent，避免 GitHub 拒绝默认 Java UA
                 conn.setRequestProperty("User-Agent",
                         "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36");

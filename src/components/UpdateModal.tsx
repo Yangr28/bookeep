@@ -71,6 +71,21 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip }: UpdateM
               </div>
               <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>更新失败</p>
               <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{flow.error}</p>
+              {!isHot && result.apkUrl && (
+                <p className="text-xs mt-3 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
+                  应用内下载失败？可在浏览器打开
+                  <a
+                    href={result.apkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline mx-1"
+                    style={{ color: 'var(--primary)' }}
+                  >
+                    下载页
+                  </a>
+                  下载 APK 安装
+                </p>
+              )}
             </div>
           ) : flow.phase === 'downloading' ? (
             <div className="py-4">
