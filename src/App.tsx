@@ -210,6 +210,36 @@ export default function App() {
     }, 0);
   }, [handlePageChange, setSelectedAccountId]);
 
+  // 底部导航中央「记一笔」：重置记账状态后进入记账页（保留上次使用的账户）
+  const handleFabRecord = useCallback(() => {
+    setEditTransaction(null);
+    setRecordAmount('');
+    setRecordCategoryId(null);
+    setRecordNote('');
+    setRecordType('expense');
+    setRecordDateTime(new Date());
+    handlePageChange('/record');
+  }, [handlePageChange, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setRecordDateTime]);
+
+  // 首页智能输入解析后跳转到记账页并预填数据
+  const handleQuickRecordToPage = useCallback((parsed: {
+    type: TransactionType;
+    amount?: string;
+    categoryId?: string | null;
+    note?: string;
+    accountId?: string | null;
+    dateTime?: Date;
+  }) => {
+    setEditTransaction(null);
+    setRecordType(parsed.type);
+    setRecordAmount(parsed.amount || '');
+    setRecordCategoryId(parsed.categoryId || null);
+    setRecordNote(parsed.note || '');
+    if (parsed.accountId) setRecordAccountId(parsed.accountId);
+    setRecordDateTime(parsed.dateTime || new Date());
+    handlePageChange('/record');
+  }, [handlePageChange, setEditTransaction, setRecordType, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordAccountId, setRecordDateTime]);
+
   const handleConfirmExit = useCallback(() => {
     CapApp.exitApp();
   }, []);
@@ -437,6 +467,8 @@ export default function App() {
             onGoToSettings={() => handlePageChange('/profile')}
             onGoToSearch={() => handlePageChange('/search')}
             onShowOCRModal={() => setShowOCRModal(true)}
+            onGoToRecord={handleQuickRecordToPage}
+            onFabRecord={handleFabRecord}
             quickRecordAmount={quickRecordAmount}
             quickRecordCategoryId={quickRecordCategoryId}
             quickRecordType={quickRecordType}
@@ -613,7 +645,7 @@ export default function App() {
         />
       )}
 
-      {showBottomNav && <BottomNav currentPage={currentPage} onPageChange={handlePageChange} />}
+      {showBottomNav && <BottomNav currentPage={currentPage} onPageChange={handlePageChange} onRecord={handleFabRecord} />}
 
       {showCalendar && (
         <CalendarPicker
