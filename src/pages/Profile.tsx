@@ -2,7 +2,7 @@ import { useEffect, useMemo, memo } from 'react';
 import { useStore } from '../store/useStore';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Settings as SettingsIcon, ChevronRight, TrendingUp, TrendingDown, Wallet, Tags, Download, Upload, Moon, Sun, HelpCircle, Shield } from 'lucide-react';
+import { Settings as SettingsIcon, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface ProfileProps {
   onGoToSettings: () => void;
@@ -30,7 +30,7 @@ const TOOLTIP_STYLE = {
 
 const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
-const ProfileComponent = ({ onGoToSettings, onGoToCategories, isDark, onToggleTheme, selectedDate }: ProfileProps) => {
+const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -68,18 +68,22 @@ const ProfileComponent = ({ onGoToSettings, onGoToCategories, isDark, onToggleTh
   }, [transactions]);
 
   const monthBalance = monthIncome - monthExpense;
-  const totalAssets = useStore.getState().accounts.reduce((sum, a) => sum + a.balance, 0);
 
   return (
     <div className="page-root pb-nav page-enter">
       {/* 页头 */}
-      <div className="safe-top px-4 pt-3 pb-1">
-        <h1 className="page-title">我的</h1>
-        <p className="page-subtitle">{selectedYear}年 {months[selectedMonth]} 财务概览</p>
+      <div className="safe-top px-4 pt-3 pb-1 flex items-center justify-between">
+        <div>
+          <h1 className="page-title">我的</h1>
+          <p className="page-subtitle">{selectedYear}年 {months[selectedMonth]} 财务概览</p>
+        </div>
+        <button onClick={onGoToSettings} className="icon-btn" aria-label="设置">
+          <SettingsIcon size={22} />
+        </button>
       </div>
 
       <div className="px-4 mt-3 space-y-3">
-        {/* 收支概览大卡片 */}
+        {/* 收支概览 */}
         <div className="card p-5">
           <div className="grid grid-cols-2 gap-3">
             <div className="text-center p-4 rounded-button" style={{ background: 'var(--primary-soft)' }}>
@@ -173,47 +177,6 @@ const ProfileComponent = ({ onGoToSettings, onGoToCategories, isDark, onToggleTh
             </div>
           </div>
         )}
-
-        {/* 快捷功能入口 */}
-        <div className="card overflow-hidden">
-          <div className="p-4" style={{ borderBottom: '1px solid var(--line)' }}>
-            <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>快捷功能</h3>
-          </div>
-          <button onClick={onGoToCategories} className="w-full flex items-center gap-4 p-4 active:brightness-95">
-            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
-              <Tags size={21} />
-            </div>
-            <div className="flex-1 text-left min-w-0">
-              <p className="font-semibold" style={{ color: 'var(--ink)' }}>分类管理</p>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>自定义收入/支出分类</p>
-            </div>
-            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
-          </button>
-          <button onClick={onToggleTheme} className="w-full flex items-center gap-4 p-4 active:brightness-95" style={{ borderTop: '1px solid var(--line)' }}>
-            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={isDark ? { background: '#1e2c42', color: 'var(--primary)' } : { background: '#faf1dc', color: '#d9930f' }}>
-              {isDark ? <Moon size={21} /> : <Sun size={21} />}
-            </div>
-            <div className="flex-1 text-left min-w-0">
-              <p className="font-semibold" style={{ color: 'var(--ink)' }}>深色模式</p>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{isDark ? '已开启' : '已关闭'}</p>
-            </div>
-            <div className="relative w-12 h-6 rounded-full transition-colors flex-shrink-0" style={{ background: isDark ? 'var(--primary)' : 'var(--paper-deep)' }}>
-              <div className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform" style={{ transform: isDark ? 'translateX(28px)' : 'translateX(4px)' }} />
-            </div>
-          </button>
-        </div>
-
-        {/* 设置入口 */}
-        <button onClick={onGoToSettings} className="card w-full flex items-center gap-4 p-4 active:brightness-95">
-          <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
-            <SettingsIcon size={21} />
-          </div>
-          <div className="flex-1 text-left min-w-0">
-            <p className="font-semibold" style={{ color: 'var(--ink)' }}>设置</p>
-            <p className="text-sm" style={{ color: 'var(--ink-2)' }}>数据备份/恢复、版本更新、帮助与反馈</p>
-          </div>
-          <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
-        </button>
       </div>
     </div>
   );

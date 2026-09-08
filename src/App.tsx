@@ -570,9 +570,9 @@ export default function App() {
           <Profile
             onGoToSettings={() => handlePageChange('/settings')}
             onGoToCategories={() => handlePageChange('/categories')}
+            onGoToDateSelect={() => setShowCalendar(true)}
             isDark={isDark}
             onToggleTheme={toggleTheme}
-            onGoToDateSelect={() => setShowCalendar(true)}
             selectedDate={calendarSelectedDate}
           />
         );
