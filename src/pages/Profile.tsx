@@ -2,7 +2,7 @@ import { useEffect, useMemo, memo } from 'react';
 import { useStore } from '../store/useStore';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Settings as SettingsIcon, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { Settings as SettingsIcon } from 'lucide-react';
 
 interface ProfileProps {
   onGoToSettings: () => void;
@@ -83,29 +83,20 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
       </div>
 
       <div className="px-4 mt-3 space-y-3">
-        {/* 收支概览 */}
-        <div className="card p-5">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="text-center p-4 rounded-button" style={{ background: 'var(--primary-soft)' }}>
-              <TrendingUp size={20} className="mx-auto mb-2" style={{ color: 'var(--primary)' }} />
-              <p className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>本月收入</p>
-              <p className="text-2xl font-bold amount-num mt-1" style={{ color: 'var(--primary)' }}>
-                {formatCurrencyShort(monthIncome)}
-              </p>
-            </div>
-            <div className="text-center p-4 rounded-button" style={{ background: 'var(--expense-soft)' }}>
-              <TrendingDown size={20} className="mx-auto mb-2" style={{ color: 'var(--expense)' }} />
-              <p className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>本月支出</p>
-              <p className="text-2xl font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
-                {formatCurrencyShort(monthExpense)}
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 p-4 rounded-button text-center" style={{ background: monthBalance >= 0 ? 'var(--primary-soft)' : 'var(--expense-soft)' }}>
-            <p className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>本月结余</p>
-            <p className="text-3xl font-bold amount-num mt-1" style={{ color: monthBalance >= 0 ? 'var(--primary)' : 'var(--expense)' }}>
-              {formatCurrencyShort(monthBalance)}
-            </p>
+        {/* 本月结余 */}
+        <div className="card p-5 text-center">
+          <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月结余</p>
+          <p className="text-4xl font-bold amount-num mt-2" style={{ color: monthBalance >= 0 ? 'var(--primary)' : 'var(--expense)' }}>
+            {formatCurrencyShort(monthBalance)}
+          </p>
+          <div className="flex items-center justify-center gap-6 mt-3 text-sm">
+            <span style={{ color: 'var(--ink-2)' }}>
+              收入 <span className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(monthIncome)}</span>
+            </span>
+            <span style={{ color: 'var(--line)' }}>·</span>
+            <span style={{ color: 'var(--ink-2)' }}>
+              支出 <span className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(monthExpense)}</span>
+            </span>
           </div>
         </div>
 
@@ -126,7 +117,10 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
 
         {/* 支出分布 */}
         <div className="card p-4">
-          <h2 className="section-title">本月支出分布</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="section-title mb-0">本月支出分布</h2>
+            <span className="text-sm font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(monthExpense)}</span>
+          </div>
           {expenseData.length > 0 ? (
             <div className="flex flex-col items-center">
               <ResponsiveContainer width="100%" height={220}>
@@ -155,7 +149,10 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
         {/* 收入分布 */}
         {incomeData.length > 0 && (
           <div className="card p-4">
-            <h2 className="section-title">本月收入分布</h2>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="section-title mb-0">本月收入分布</h2>
+              <span className="text-sm font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(monthIncome)}</span>
+            </div>
             <div className="flex flex-col items-center">
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
