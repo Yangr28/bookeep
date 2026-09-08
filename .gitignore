@@ -29,3 +29,5 @@ build-outputs
 *.njsproj
 *.sln
 *.sw?
+# 旧图标归档
+icons_old/

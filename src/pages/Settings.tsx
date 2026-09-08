@@ -35,6 +35,7 @@ interface FetchedRelease {
 export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheckUpdate, onGoToCategories, onRollback, rollbackFlow }: SettingsProps) => {
   const [showChangelog, setShowChangelog] = useState(false);
   const [rollbackOpen, setRollbackOpen] = useState(false);
+  const [subPage, setSubPage] = useState<'help' | 'privacy' | null>(null);
   const [nativeVersion, setNativeVersion] = useState('');
   const [hotVersion, setHotVersion] = useState('');
   
@@ -182,6 +183,163 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
 
   return (
     <div className={`page-root ${isTab ? 'pb-nav' : 'pb-24'}`}>
+      {/* 帮助与反馈子页面 */}
+      {subPage === 'help' && (
+        <>
+          <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
+            <button onClick={() => setSubPage(null)} className="icon-btn" aria-label="返回">
+              <ArrowLeft size={20} />
+            </button>
+            <div className="flex-1">
+              <h1 className="page-title">帮助与反馈</h1>
+            </div>
+          </div>
+          <div className="px-4 mt-3 space-y-3">
+            <div className="card p-4">
+              <h3 className="font-bold mb-3" style={{ color: 'var(--ink)' }}>快速上手</h3>
+              <div className="space-y-3 text-sm" style={{ color: 'var(--ink-2)' }}>
+                <div>
+                  <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>📝 记一笔</p>
+                  <p>点击底部中央「记一笔」按钮，选择分类、输入金额、选择账户即可完成记账。也可在首页智能输入框输入「午餐30」快速记账。</p>
+                </div>
+                <div>
+                  <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>💳 管理账户</p>
+                  <p>在「资产」页面添加银行卡、现金、电子钱包等账户，记录每笔收支所属账户，实时掌握资产状况。</p>
+                </div>
+                <div>
+                  <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>📊 查看统计</p>
+                  <p>在「账单」页面按时间、分类查看收支明细，了解消费趋势。</p>
+                </div>
+                <div>
+                  <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>🔄 数据备份</p>
+                  <p>在「数据管理」中导出数据为 JSON 文件保存，换机时可导入恢复。</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card p-4">
+              <h3 className="font-bold mb-3" style={{ color: 'var(--ink)' }}>常见问题</h3>
+              <div className="space-y-3 text-sm" style={{ color: 'var(--ink-2)' }}>
+                <div>
+                  <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>Q: 数据会上传到云端吗？</p>
+                  <p>A: 所有数据仅保存在本地，不会上传服务器。建议定期导出备份。</p>
+                </div>
+                <div>
+                  <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>Q: 换手机如何迁移数据？</p>
+                  <p>A: 在旧手机「数据管理 → 导出数据」，将导出的 JSON 文件传到新手机，再「导入数据」即可。</p>
+                </div>
+                <div>
+                  <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>Q: 如何恢复误删的记录？</p>
+                  <p>A: 记录删除后不可恢复，请谨慎操作。可在删除前先导出数据备份。</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card p-4">
+              <h3 className="font-bold mb-3" style={{ color: 'var(--ink)' }}>问题反馈</h3>
+              <p className="text-sm mb-3" style={{ color: 'var(--ink-2)' }}>如遇问题或有建议，欢迎通过以下方式反馈：</p>
+              <div className="space-y-2">
+                {GITHUB_REPO && (
+                  <a
+                    href={`https://github.com/${GITHUB_REPO}/issues`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-button transition-all"
+                    style={{ background: 'var(--paper)' }}
+                  >
+                    <div className="w-10 h-10 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+                      <Info size={20} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-semibold" style={{ color: 'var(--ink)' }}>GitHub Issues</p>
+                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>提交 Bug 或功能建议</p>
+                    </div>
+                    <ChevronRight size={18} style={{ color: 'var(--ink-2)' }} />
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 隐私政策子页面 */}
+      {subPage === 'privacy' && (
+        <>
+          <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
+            <button onClick={() => setSubPage(null)} className="icon-btn" aria-label="返回">
+              <ArrowLeft size={20} />
+            </button>
+            <div className="flex-1">
+              <h1 className="page-title">隐私政策</h1>
+            </div>
+          </div>
+          <div className="px-4 mt-3 space-y-3 pb-6">
+            <div className="card p-4 space-y-4 text-sm" style={{ color: 'var(--ink-2)' }}>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>最后更新：2026 年 9 月</p>
+
+              <div>
+                <h3 className="font-bold mb-2" style={{ color: 'var(--ink)' }}>一、信息收集</h3>
+                <p>本应用尊重并保护用户隐私。我们<strong>不会收集</strong>任何个人身份信息。所有记账数据（交易记录、账户、分类等）均存储在您的设备本地，不会上传至任何服务器。</p>
+              </div>
+
+              <div>
+                <h3 className="font-bold mb-2" style={{ color: 'var(--ink)' }}>二、数据存储</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>记账数据使用浏览器 IndexedDB 本地存储，仅可在当前设备访问</li>
+                  <li>导出的数据文件（JSON 格式）由用户自行保管，建议加密存储</li>
+                  <li>清除应用数据或卸载应用将导致本地数据丢失，请提前导出备份</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-bold mb-2" style={{ color: 'var(--ink)' }}>三、网络使用</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>应用仅在以下场景使用网络：检查更新（连接 GitHub Releases API）、下载热更新包</li>
+                  <li>更新检查不会发送任何用户数据，仅请求版本信息</li>
+                  <li>汇率转换功能使用在线汇率接口，不携带个人信息</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-bold mb-2" style={{ color: 'var(--ink)' }}>四、权限说明</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li><strong>存储权限</strong>：用于导出/导入数据文件</li>
+                  <li><strong>相机权限</strong>：用于拍票识别功能（OCR），图片仅在本地处理</li>
+                  <li><strong>通知权限</strong>：用于周期性记账提醒</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-bold mb-2" style={{ color: 'var(--ink)' }}>五、第三方服务</h3>
+                <p>本应用使用以下第三方服务，其隐私政策请参考对应服务：</p>
+                <ul className="list-disc pl-5 space-y-1 mt-1">
+                  <li>GitHub（代码托管、版本发布）：https://github.com</li>
+                  <li>汇率数据接口：用于多币种换算</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-bold mb-2" style={{ color: 'var(--ink)' }}>六、数据安全</h3>
+                <p>我们采取合理的技术措施保护您的数据安全。但请注意，任何存储方式都无法保证 100% 安全，建议您定期导出数据备份。</p>
+              </div>
+
+              <div>
+                <h3 className="font-bold mb-2" style={{ color: 'var(--ink)' }}>七、政策变更</h3>
+                <p>本隐私政策可能随应用更新而调整，重大变更将在应用内通知。继续使用即视为同意更新后的政策。</p>
+              </div>
+
+              <div>
+                <h3 className="font-bold mb-2" style={{ color: 'var(--ink)' }}>八、联系我们</h3>
+                <p>如对本政策有任何疑问，可通过 GitHub Issues 联系我们。</p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!subPage && (
+      <>
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
         {!isTab && onBack && (
           <button onClick={onBack} className="icon-btn" aria-label="返回">
@@ -359,7 +517,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
           </button>
 
           <button
-            onClick={() => alert('隐私政策功能开发中，敬请期待！')}
+            onClick={() => setSubPage('privacy')}
             className="w-full flex items-center gap-4 p-4 active:brightness-95"
             style={{ borderTop: '1px solid var(--line)' }}
           >
@@ -986,6 +1144,8 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );
