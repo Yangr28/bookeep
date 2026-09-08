@@ -1,9 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store/useStore';
-import { exportData, downloadExportFile, parseImportData } from '../utils/export';
+import {
+  exportData,
+  downloadExportFile,
+  parseImportData,
+  loadBackupRecords,
+  saveBackupRecord,
+  deleteBackupRecord,
+  readBackupFile,
+  type BackupRecord,
+} from '../utils/export';
 import { getLocalVersions, compareVersions } from '../utils/update';
 import type { UpdateFlowState } from '../hooks/useUpdateCheck';
-import { ArrowLeft, Download, Upload, Info, HelpCircle, Shield, Sun, Moon, X, RefreshCw, RotateCcw, Loader2, AlertCircle, Tags, ChevronRight } from 'lucide-react';
+import {
+  ArrowLeft,
+  Download,
+  Upload,
+  Info,
+  HelpCircle,
+  Shield,
+  Sun,
+  Moon,
+  X,
+  RefreshCw,
+  RotateCcw,
+  Loader2,
+  AlertCircle,
+  Tags,
+  ChevronRight,
+  Trash2,
+  FileText,
+  History,
+  CheckCircle2,
+} from 'lucide-react';
 
 interface SettingsProps {
   /** 以 tab 形式渲染（/profile「我的」）：标题改为「我的」、无返回键、底部 pb-nav */
@@ -35,10 +64,30 @@ interface FetchedRelease {
 export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheckUpdate, onGoToCategories, onRollback, rollbackFlow }: SettingsProps) => {
   const [showChangelog, setShowChangelog] = useState(false);
   const [rollbackOpen, setRollbackOpen] = useState(false);
-  const [subPage, setSubPage] = useState<'help' | 'privacy' | null>(null);
+  const [subPage, setSubPage] = useState<'help' | 'privacy' | 'backups' | null>(null);
   const [nativeVersion, setNativeVersion] = useState('');
   const [hotVersion, setHotVersion] = useState('');
-  
+
+  /** 操作反馈弹窗（替代 alert） */
+  const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; title: string; message: string } | null>(null);
+  const showToast = useCallback((type: 'success' | 'error' | 'info', title: string, message: string) => {
+    setToast({ type, title, message });
+  }, []);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  /** 导入确认弹窗（覆盖当前数据） */
+  const [importConfirm, setImportConfirm] = useState<{ data: ReturnType<typeof parseImportData> } | null>(null);
+  /** 备份管理：备份列表 */
+  const [backups, setBackups] = useState<BackupRecord[]>([]);
+  const refreshBackups = useCallback(() => setBackups(loadBackupRecords()), []);
+  useEffect(() => {
+    refreshBackups();
+  }, [refreshBackups]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -64,12 +113,32 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   const handleExport = async () => {
     try {
       const data = exportData({ transactions, accounts, categories, transfers, recurringRecords, templates, budgets, fixedDeposits, loans });
-      await downloadExportFile(data);
-      const fileName = `bookeep_backup_${new Date().toISOString().split('T')[0]}.json`;
-      alert(`数据导出成功！\n\n文件名称：${fileName}\n\n包含：交易记录、账户、分类、转账、定期记录、模板、预算、定期存款、贷款\n\n保存位置：\n📁 文件管理 → 下载文件夹\n📱 或在手机文件管理器中搜索 "${fileName}"\n\n可在设置页面点击「导入数据」恢复此备份文件`);
+      const { uri, fileName } = await downloadExportFile(data);
+
+      // 保存备份记录到应用内
+      saveBackupRecord({
+        id: `${Date.now()}`,
+        fileName,
+        fileUri: uri,
+        exportTime: data.exportTime,
+        stats: {
+          transactions: transactions.length,
+          accounts: accounts.length,
+          categories: categories.length,
+          transfers: transfers.length,
+          recurringRecords: recurringRecords.length,
+          templates: templates.length,
+          budgets: budgets.length,
+          fixedDeposits: fixedDeposits.length,
+          loans: loans.length,
+        },
+      });
+      refreshBackups();
+
+      showToast('success', '导出成功', `文件已保存到设备文档目录，可在「已导出数据」中管理。`);
     } catch (error) {
       console.error('Export error:', error);
-      alert('数据导出失败，请重试');
+      showToast('error', '导出失败', '请重试或检查存储权限');
     }
   };
 
@@ -86,25 +155,68 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
         try {
           const jsonString = event.target?.result as string;
           const imported = parseImportData(jsonString);
-
-          setTransactions(imported.transactions);
-          setAccounts(imported.accounts);
-          setCategories(imported.categories);
-          setTransfers(imported.transfers);
-          setRecurringRecords(imported.recurringRecords);
-          setTemplates(imported.templates);
-          setBudgets(imported.budgets);
-          setFixedDeposits(imported.fixedDeposits);
-          setLoans(imported.loans);
-
-          alert(`数据导入成功！\n\n交易记录: ${imported.transactions.length} 条\n账户: ${imported.accounts.length} 个\n分类: ${imported.categories.length} 个\n转账: ${imported.transfers.length} 条\n定期记录: ${imported.recurringRecords.length} 条\n模板: ${imported.templates.length} 个`);
+          // 弹出确认覆盖弹窗
+          setImportConfirm({ data: imported });
         } catch (err) {
-          alert(err instanceof Error ? `导入失败: ${err.message}` : '数据导入失败，请确保文件格式正确');
+          showToast('error', '导入失败', err instanceof Error ? err.message : '文件格式不正确');
         }
       };
       reader.readAsText(file);
     };
     input.click();
+  };
+
+  /** 确认导入：覆盖当前数据 */
+  const confirmImport = () => {
+    if (!importConfirm) return;
+    const imported = importConfirm.data;
+    setTransactions(imported.transactions);
+    setAccounts(imported.accounts);
+    setCategories(imported.categories);
+    setTransfers(imported.transfers);
+    setRecurringRecords(imported.recurringRecords);
+    setTemplates(imported.templates);
+    setBudgets(imported.budgets);
+    setFixedDeposits(imported.fixedDeposits);
+    setLoans(imported.loans);
+
+    setImportConfirm(null);
+    showToast(
+      'success',
+      '导入成功',
+      `交易 ${imported.transactions.length} 条 · 账户 ${imported.accounts.length} 个 · 分类 ${imported.categories.length} 个`,
+    );
+  };
+
+  /** 从备份记录恢复 */
+  const handleRestoreBackup = async (record: BackupRecord) => {
+    try {
+      const imported = await readBackupFile(record);
+      setTransactions(imported.transactions);
+      setAccounts(imported.accounts);
+      setCategories(imported.categories);
+      setTransfers(imported.transfers);
+      setRecurringRecords(imported.recurringRecords);
+      setTemplates(imported.templates);
+      setBudgets(imported.budgets);
+      setFixedDeposits(imported.fixedDeposits);
+      setLoans(imported.loans);
+
+      showToast('success', '恢复成功', `已从 ${record.fileName} 恢复数据`);
+    } catch (err) {
+      showToast('error', '恢复失败', err instanceof Error ? err.message : '文件可能已被删除');
+    }
+  };
+
+  /** 删除备份记录（及文件） */
+  const handleDeleteBackup = async (record: BackupRecord) => {
+    try {
+      await deleteBackupRecord(record.id, true);
+      refreshBackups();
+      showToast('success', '已删除', `备份 ${record.fileName} 已删除`);
+    } catch (err) {
+      showToast('error', '删除失败', err instanceof Error ? err.message : '请重试');
+    }
   };
 
   const [appVersion, setAppVersion] = useState(import.meta.env.APP_VERSION || '4.4.4');
@@ -212,7 +324,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                 </div>
                 <div>
                   <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>🔄 数据备份</p>
-                  <p>在「数据管理」中导出数据为 JSON 文件保存，换机时可导入恢复。</p>
+                  <p>在「数据管理」中导出数据为 JSON 文件保存。导出后可在「已导出数据」中查看、恢复或删除备份，无需手动找文件。</p>
                 </div>
               </div>
             </div>
@@ -226,7 +338,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                 </div>
                 <div>
                   <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>Q: 换手机如何迁移数据？</p>
-                  <p>A: 在旧手机「数据管理 → 导出数据」，将导出的 JSON 文件传到新手机，再「导入数据」即可。</p>
+                  <p>A: 在旧手机「数据管理 → 导出数据」，将导出的 JSON 文件传到新手机，再「导入数据」即可。同手机上也可在「已导出数据」中直接恢复备份。</p>
                 </div>
                 <div>
                   <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>Q: 如何恢复误删的记录？</p>
@@ -338,6 +450,105 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
         </>
       )}
 
+      {/* 已导出数据管理子页面 */}
+      {subPage === 'backups' && (
+        <>
+          <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
+            <button onClick={() => setSubPage(null)} className="icon-btn" aria-label="返回">
+              <ArrowLeft size={20} />
+            </button>
+            <div className="flex-1">
+              <h1 className="page-title">已导出数据</h1>
+            </div>
+          </div>
+          <div className="px-4 mt-3 space-y-3 pb-6">
+            <div className="card p-4 text-sm" style={{ color: 'var(--ink-2)' }}>
+              此处列出在应用内导出的备份文件。可直接在应用内恢复或删除，无需打开文件管理器。
+            </div>
+
+            {backups.length === 0 ? (
+              <div className="card p-8 flex flex-col items-center text-center">
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center mb-3"
+                  style={{ background: 'var(--paper-deep)' }}
+                >
+                  <FileText size={28} style={{ color: 'var(--ink-2)' }} />
+                </div>
+                <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>暂无备份</p>
+                <p className="text-sm" style={{ color: 'var(--ink-2)' }}>点击上方「导出数据」创建备份</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {backups.map((b) => {
+                  const date = new Date(b.exportTime);
+                  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                  const totalItems = b.stats.transactions + b.stats.transfers + b.stats.recurringRecords;
+                  return (
+                    <div key={b.id} className="card overflow-hidden">
+                      <div className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div
+                            className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
+                          >
+                            <FileText size={21} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold truncate" style={{ color: 'var(--ink)' }}>{b.fileName}</p>
+                            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>{dateStr}</p>
+                          </div>
+                          {b.fileUri.startsWith('downloads://') && (
+                            <span
+                              className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0"
+                              style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
+                            >
+                              浏览器
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+                          <div className="rounded-button py-1.5" style={{ background: 'var(--paper-deep)' }}>
+                            <p className="text-base font-bold" style={{ color: 'var(--ink)' }}>{b.stats.transactions}</p>
+                            <p className="text-[10px]" style={{ color: 'var(--ink-2)' }}>交易</p>
+                          </div>
+                          <div className="rounded-button py-1.5" style={{ background: 'var(--paper-deep)' }}>
+                            <p className="text-base font-bold" style={{ color: 'var(--ink)' }}>{b.stats.accounts}</p>
+                            <p className="text-[10px]" style={{ color: 'var(--ink-2)' }}>账户</p>
+                          </div>
+                          <div className="rounded-button py-1.5" style={{ background: 'var(--paper-deep)' }}>
+                            <p className="text-base font-bold" style={{ color: 'var(--ink)' }}>{totalItems}</p>
+                            <p className="text-[10px]" style={{ color: 'var(--ink-2)' }}>其他</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex" style={{ borderTop: '1px solid var(--line)' }}>
+                        <button
+                          onClick={() => handleRestoreBackup(b)}
+                          disabled={b.fileUri.startsWith('downloads://')}
+                          className="flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-1.5 active:brightness-95 disabled:opacity-40"
+                          style={{ color: 'var(--primary)' }}
+                        >
+                          <RotateCcw size={15} />
+                          恢复
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBackup(b)}
+                          className="flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-1.5 active:brightness-95"
+                          style={{ borderLeft: '1px solid var(--line)', color: 'var(--expense)' }}
+                        >
+                          <Trash2 size={15} />
+                          删除
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       {!subPage && (
       <>
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
@@ -383,6 +594,23 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             <div className="flex-1 text-left min-w-0">
               <p className="font-semibold" style={{ color: 'var(--ink)' }}>导入数据</p>
               <p className="text-sm" style={{ color: 'var(--ink-2)' }}>从 JSON 文件恢复数据</p>
+            </div>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+          </button>
+
+          <button
+            onClick={() => setSubPage('backups')}
+            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            style={{ borderTop: '1px solid var(--line)' }}
+          >
+            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+              <History size={21} />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>已导出数据</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
+                {backups.length > 0 ? `${backups.length} 个备份文件` : '管理并恢复备份'}
+              </p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
@@ -502,7 +730,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
           )}
 
           <button
-            onClick={() => alert('帮助与反馈功能开发中，敬请期待！')}
+            onClick={() => setSubPage('help')}
             className="w-full flex items-center gap-4 p-4 active:brightness-95"
             style={{ borderTop: '1px solid var(--line)' }}
           >
@@ -1146,6 +1374,87 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
         </div>
       )}
       </>
+      )}
+
+      {/* 导入数据确认弹窗 */}
+      {importConfirm && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => setImportConfirm(null)}
+        >
+          <div
+            className="card w-full max-w-md overflow-hidden animate-bounce-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 pt-6 pb-4" style={{ background: 'var(--expense-soft)' }}>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-12 h-12 rounded-card flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#fff', color: 'var(--expense)' }}
+                >
+                  <AlertCircle size={26} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>确认覆盖数据？</h3>
+                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>导入将替换当前所有数据</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4">
+              <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--ink-2)' }}>
+                即将导入以下数据并覆盖当前所有记录：
+              </p>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="rounded-button py-2" style={{ background: 'var(--paper-deep)' }}>
+                  <p className="text-base font-bold" style={{ color: 'var(--ink)' }}>{importConfirm.data.transactions.length}</p>
+                  <p style={{ color: 'var(--ink-2)' }}>交易</p>
+                </div>
+                <div className="rounded-button py-2" style={{ background: 'var(--paper-deep)' }}>
+                  <p className="text-base font-bold" style={{ color: 'var(--ink)' }}>{importConfirm.data.accounts.length}</p>
+                  <p style={{ color: 'var(--ink-2)' }}>账户</p>
+                </div>
+                <div className="rounded-button py-2" style={{ background: 'var(--paper-deep)' }}>
+                  <p className="text-base font-bold" style={{ color: 'var(--ink)' }}>{importConfirm.data.categories.length}</p>
+                  <p style={{ color: 'var(--ink-2)' }}>分类</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4" style={{ borderTop: '1px solid var(--line)' }}>
+              <div className="flex gap-3">
+                <button onClick={() => setImportConfirm(null)} className="btn-ghost flex-1">取消</button>
+                <button onClick={confirmImport} className="btn-primary flex-1">确认导入</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 操作反馈 Toast */}
+      {toast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[120] animate-slide-up">
+          <div
+            className="card flex items-center gap-3 px-4 py-3 shadow-lg"
+            style={{ minWidth: '280px', maxWidth: '90vw' }}
+          >
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{
+                background: toast.type === 'success' ? 'var(--primary-soft)' : toast.type === 'error' ? 'var(--expense-soft)' : 'var(--paper-deep)',
+                color: toast.type === 'success' ? 'var(--primary)' : toast.type === 'error' ? 'var(--expense)' : 'var(--ink-2)',
+              }}
+            >
+              {toast.type === 'success' ? <CheckCircle2 size={20} /> : toast.type === 'error' ? <AlertCircle size={20} /> : <Info size={20} />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>{toast.title}</p>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{toast.message}</p>
+            </div>
+            <button onClick={() => setToast(null)} className="icon-btn w-7 h-7 -mr-1">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

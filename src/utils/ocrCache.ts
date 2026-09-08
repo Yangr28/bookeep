@@ -10,9 +10,21 @@ const CDN_BASE = 'https://cdn.jsdelivr.net/npm';
 const TESSERACT_VERSION = '5';
 const TESSERACT_CORE_VERSION = '5';
 
-const LANG_CDN_URL = 'https://tessdata.project.files.com/4.0.0/chi_sim.traineddata.gz';
-const WORKER_CDN_URL = `${CDN_BASE}/tesseract.js@${TESSERACT_VERSION}/dist/worker.min.js`;
-const CORE_CDN_BASE = `${CDN_BASE}/tesseract.js-core@${TESSERACT_CORE_VERSION}`;
+// 多个 CDN 源，国内网络下逐个尝试
+const LANG_CDN_URLS = [
+  'https://tessdata.projectnaptha.com/4.0.0/chi_sim.traineddata.gz',
+  'https://cdn.jsdelivr.net/npm/tesseract.js-lang-data@4.0.0/chi_sim.traineddata.gz',
+  'https://unpkg.com/tesseract.js-lang-data@4.0.0/chi_sim.traineddata.gz',
+];
+const WORKER_CDN_URLS = [
+  `${CDN_BASE}/tesseract.js@${TESSERACT_VERSION}/dist/worker.min.js`,
+  `https://unpkg.com/tesseract.js@${TESSERACT_VERSION}/dist/worker.min.js`,
+  `https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/tesseract.js/${TESSERACT_VERSION}/dist/worker.min.js`,
+];
+const CORE_CDN_BASES = [
+  `${CDN_BASE}/tesseract.js-core@${TESSERACT_CORE_VERSION}`,
+  `https://unpkg.com/tesseract.js-core@${TESSERACT_CORE_VERSION}`,
+];
 
 export interface OCRCacheStatus {
   langDownloaded: boolean;
@@ -60,59 +72,70 @@ const getLocalUrl = (path: string): string => {
 };
 
 const downloadFile = async (
-  url: string,
+  urls: string[],
   destPath: string,
   onProgress?: (loaded: number, total: number) => void
 ): Promise<void> => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`下载失败: ${response.status}`);
-  }
+  let lastError: Error | null = null;
+  for (const url of urls) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        lastError = new Error(`下载失败: ${response.status}`);
+        continue;
+      }
 
-  const contentLength = response.headers.get('content-length');
-  const total = contentLength ? parseInt(contentLength, 10) : 0;
-  let loaded = 0;
+      const contentLength = response.headers.get('content-length');
+      const total = contentLength ? parseInt(contentLength, 10) : 0;
+      let loaded = 0;
 
-  const reader = response.body?.getReader();
-  if (!reader) {
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    const base64 = arrayBufferToBase64(arrayBuffer);
-    await Filesystem.writeFile({
-      path: destPath,
-      data: base64,
-      directory: Directory.Data,
-      recursive: true,
-    });
-    return;
-  }
+      const reader = response.body?.getReader();
+      if (!reader) {
+        const blob = await response.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        const base64 = arrayBufferToBase64(arrayBuffer);
+        await Filesystem.writeFile({
+          path: destPath,
+          data: base64,
+          directory: Directory.Data,
+          recursive: true,
+        });
+        return;
+      }
 
-  const chunks: Uint8Array[] = [];
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    loaded += value.length;
-    if (onProgress && total > 0) {
-      onProgress(loaded, total);
+      const chunks: Uint8Array[] = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        loaded += value.length;
+        if (onProgress && total > 0) {
+          onProgress(loaded, total);
+        }
+      }
+
+      const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+      const combined = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        combined.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      const base64 = arrayBufferToBase64(combined.buffer);
+      await Filesystem.writeFile({
+        path: destPath,
+        data: base64,
+        directory: Directory.Data,
+        recursive: true,
+      });
+      return;
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error('下载失败');
+      // 继续尝试下一个源
     }
   }
-
-  const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
-  const combined = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const chunk of chunks) {
-    combined.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  const base64 = arrayBufferToBase64(combined.buffer);
-  await Filesystem.writeFile({
-    path: destPath,
-    data: base64,
-    directory: Directory.Data,
-    recursive: true,
-  });
+  throw lastError || new Error('所有下载源均失败');
 };
 
 const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
@@ -124,18 +147,20 @@ const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
   return btoa(binary);
 };
 
-const getCoreWasmFilename = async (coreBaseUrl: string): Promise<string> => {
-  try {
-    const response = await fetch(`${coreBaseUrl}/tesseract-core.wasm.js`);
-    if (response.ok) return 'tesseract-core.wasm.js';
-  } catch {
-    // ignore
-  }
-  try {
-    const response = await fetch(`${coreBaseUrl}/tesseract-core-simd.wasm.js`);
-    if (response.ok) return 'tesseract-core-simd.wasm.js';
-  } catch {
-    // ignore
+const getCoreWasmFilename = async (coreBaseUrls: string[]): Promise<string> => {
+  for (const base of coreBaseUrls) {
+    try {
+      const response = await fetch(`${base}/tesseract-core.wasm.js`);
+      if (response.ok) return 'tesseract-core.wasm.js';
+    } catch {
+      // try next
+    }
+    try {
+      const response = await fetch(`${base}/tesseract-core-simd.wasm.js`);
+      if (response.ok) return 'tesseract-core-simd.wasm.js';
+    } catch {
+      // try next base
+    }
   }
   return 'tesseract-core.wasm.js';
 };
@@ -215,7 +240,7 @@ export const downloadOCRData = async (
         downloadProgress: 0,
         currentFile: '语言数据包',
       });
-      await downloadFile(LANG_CDN_URL, langPath, (loaded, total) => {
+      await downloadFile(LANG_CDN_URLS, langPath, (loaded, total) => {
         onProgress?.({
           langDownloaded: false,
           workerDownloaded: workerExistsInitial,
@@ -239,7 +264,7 @@ export const downloadOCRData = async (
         downloadProgress: 40,
         currentFile: '识别引擎',
       });
-      await downloadFile(WORKER_CDN_URL, workerPath);
+      await downloadFile(WORKER_CDN_URLS, workerPath);
     }
 
     let coreExists = false;
@@ -264,13 +289,13 @@ export const downloadOCRData = async (
         currentFile: '核心运行库',
       });
 
-      const coreWasmFilename = await getCoreWasmFilename(CORE_CDN_BASE);
+      const coreWasmFilename = await getCoreWasmFilename(CORE_CDN_BASES);
       await downloadFile(
-        `${CORE_CDN_BASE}/${coreWasmFilename}`,
+        CORE_CDN_BASES.map(base => `${base}/${coreWasmFilename}`),
         `${coreDir}/${coreWasmFilename}`
       );
       await downloadFile(
-        `${CORE_CDN_BASE}/tesseract-core.js`,
+        CORE_CDN_BASES.map(base => `${base}/tesseract-core.js`),
         `${coreDir}/tesseract-core.js`
       ).catch(() => {
         // core.js may not be needed if wasm version works
@@ -320,8 +345,8 @@ export const getOCREndpoints = async (): Promise<{
   }
 
   return {
-    workerPath: WORKER_CDN_URL,
-    langPath: 'https://tessdata.project.files.com/4.0.0',
-    corePath: CORE_CDN_BASE,
+    workerPath: WORKER_CDN_URLS[0],
+    langPath: LANG_CDN_URLS[0].replace(`/${LANG_FILENAME}`, ''),
+    corePath: CORE_CDN_BASES[0],
   };
 };
