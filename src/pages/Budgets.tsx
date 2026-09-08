@@ -28,8 +28,8 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
 
   const getBudgetColor = (percentage: number) => {
     if (percentage >= 100) return 'var(--expense)';
-    if (percentage >= 80) return '#d9930f';
-    if (percentage >= 50) return '#e0a93f';
+    if (percentage >= 80) return 'var(--expense-ink)';
+    if (percentage >= 50) return 'var(--primary-ink)';
     return 'var(--primary)';
   };
 
@@ -69,7 +69,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
   });
 
   return (
-    <div className="page-root pb-nav">
+    <div className="page-root pb-nav page-enter">
       <div className="safe-top px-4 pt-2 pb-1">
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="icon-btn" aria-label="返回">
@@ -88,7 +88,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
               {formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}
             </span>
           </div>
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(46,133,222,0.12)' }}>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
             <div
               className="h-full transition-all duration-500"
               style={{ width: `${totalPercentage}%`, background: getBudgetColor(totalPercentage) }}
@@ -123,7 +123,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
             const usage = calculateBudgetUsage(category.id, selectedMonth, transactions);
             const isOverBudget = usage.budget > 0 && usage.spent >= usage.budget;
             const IconComponent = getIcon(category.icon);
-            const pctColor = usage.percentage >= 100 ? 'var(--expense)' : usage.percentage >= 80 ? '#d9930f' : 'var(--ink-2)';
+            const pctColor = usage.percentage >= 100 ? 'var(--expense)' : usage.percentage >= 80 ? 'var(--expense-ink)' : 'var(--ink-2)';
 
             return (
               <div

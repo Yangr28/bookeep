@@ -9,6 +9,7 @@ import { AccountDetail } from './pages/AccountDetail';
 import { Transfer } from './pages/Transfer';
 import { AllRecords } from './pages/AllRecords';
 import { Settings } from './pages/Settings';
+import { Profile } from './pages/Profile';
 import { Search } from './pages/Search';
 import { Budgets } from './pages/Budgets';
 import { Stats } from './pages/Stats';
@@ -464,7 +465,7 @@ export default function App() {
             onGoToTemplates={() => handlePageChange('/templates')}
             onGoToCurrencyConverter={() => handlePageChange('/currency-converter')}
             onEditTransaction={handleEditTransaction}
-            onGoToSettings={() => handlePageChange('/profile')}
+            onGoToSettings={() => handlePageChange('/settings')}
             onGoToSearch={() => handlePageChange('/search')}
             onShowOCRModal={() => setShowOCRModal(true)}
             onGoToRecord={handleQuickRecordToPage}
@@ -566,16 +567,13 @@ export default function App() {
         );
       case '/profile':
         return (
-          <Settings
-            isTab
-            onBack={handleBack}
-            theme={theme}
+          <Profile
+            onGoToSettings={() => handlePageChange('/settings')}
+            onGoToCategories={() => handlePageChange('/categories')}
             isDark={isDark}
             onToggleTheme={toggleTheme}
-            onCheckUpdate={handleManualCheckUpdate}
-            onRollback={rollback}
-            rollbackFlow={updateFlow}
-            onGoToCategories={() => handlePageChange('/categories')}
+            onGoToDateSelect={() => setShowCalendar(true)}
+            selectedDate={calendarSelectedDate}
           />
         );
       case '/settings':

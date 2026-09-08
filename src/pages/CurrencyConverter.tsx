@@ -105,8 +105,8 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
 CurrencyPickerModal.displayName = 'CurrencyPickerModal';
 
 export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
-  const [fromCurrency, setFromCurrency] = useState('USD');
-  const [toCurrency, setToCurrency] = useState('CNY');
+  const [fromCurrency, setFromCurrency] = useState('CNY');
+  const [toCurrency, setToCurrency] = useState('USD');
   const [amount, setAmount] = useState('100');
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);

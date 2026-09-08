@@ -95,7 +95,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
   };
 
   return (
-    <div className="page-root pb-nav">
+    <div className="page-root pb-nav page-enter">
       <div className="safe-top px-4 pt-2 pb-1">
         <div className="flex items-center gap-3 mb-3">
           <button onClick={onBack} className="icon-btn" aria-label="返回">
@@ -117,11 +117,11 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
             <p className="text-xs" style={{ color: 'var(--ink-2)' }}>运行中</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold amount-num" style={{ color: '#d9930f' }}>
+            <p className="text-2xl font-bold amount-num" style={{ color: 'var(--expense-ink)' }}>
               {recurringRecords.filter(r => r.enabled).reduce((sum, r) => sum + r.amount, 0).toFixed(0)}
             </p>
             <p className="text-xs" style={{ color: 'var(--ink-2)' }}>月度金额</p>
-          </div>
+            </div>
         </div>
       </div>
 

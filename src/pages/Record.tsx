@@ -35,10 +35,8 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
     if (editTransaction) {
       onTypeChange(editTransaction.type);
       onCategoryChange(editTransaction.categoryId);
-    } else {
-      onTypeChange('expense');
-      onCategoryChange(null);
     }
+    // 非编辑模式不重置 type/categoryId，由外部入口（底部导航/首页智能输入）设置
   }, [editTransaction, onTypeChange, onCategoryChange]);
 
   const isEditMode = !!editTransaction;

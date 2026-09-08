@@ -94,7 +94,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
   };
 
   return (
-    <div className="page-root pb-nav">
+    <div className="page-root pb-nav page-enter">
       <div className="safe-top px-4 pt-2 pb-1">
         <div className="flex items-center gap-3 mb-3">
           <button onClick={onBack} className="icon-btn" aria-label="返回">
