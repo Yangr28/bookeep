@@ -148,22 +148,22 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
         </div>
 
         {successCount > 0 && (
-          <div className="bg-emerald-50 dark:bg-emerald-900/30 px-4 py-3 flex items-center gap-2">
-            <Check size={18} className="text-emerald-500" />
-            <span className="text-emerald-600 dark:text-emerald-400 text-sm">成功添加 {successCount} 条记录</span>
+          <div className="bg-primary-50 dark:bg-primary-900/30 px-4 py-3 flex items-center gap-2">
+            <Check size={18} className="text-primary-500" />
+            <span className="text-primary-600 dark:text-primary-400 text-sm">成功添加 {successCount} 条记录</span>
           </div>
         )}
 
         {step === 'upload' && (
           <div className="p-6">
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/30 px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+              <div className="bg-red-50 dark:bg-red-900/30 px-4 py-3 rounded-card mb-4 flex items-center gap-2">
                 <AlertCircle size={18} className="text-red-500" />
                 <span className="text-red-600 dark:text-red-400 text-sm">{error}</span>
               </div>
             )}
 
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl p-8 text-center hover:border-emerald-500 transition-colors cursor-pointer" onClick={() => document.getElementById('ocr-upload')?.click()}>
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-card p-8 text-center hover:border-primary-500 transition-colors cursor-pointer" onClick={() => document.getElementById('ocr-upload')?.click()}>
               <input
                 id="ocr-upload"
                 type="file"
@@ -178,7 +178,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
               <p className="text-gray-400 text-sm">支持微信、支付宝等支付账单截图</p>
             </div>
 
-            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-card">
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 提示：请确保截图清晰，包含交易金额和描述信息。支持识别多条交易记录。
               </p>
@@ -192,7 +192,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">识别到 {parsedTransactions.length} 条记录</p>
               <button
                 onClick={() => setStep('edit')}
-                className="w-full py-3 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 bg-primary-500 text-white rounded-card font-medium hover:bg-primary-600 transition-colors flex items-center justify-center gap-2"
               >
                 <span>确认并编辑</span>
                 <ChevronRight size={18} />
@@ -201,11 +201,11 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
 
             <div className="space-y-3 max-h-[50vh] overflow-y-auto">
               {parsedTransactions.map((transaction, index) => (
-                <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+                <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-card p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${
                       transaction.type === 'income' 
-                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
                         : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                     }`}>
                       {transaction.type === 'income' ? '收入' : '支出'}
@@ -224,7 +224,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
 
             <button
               onClick={handleReset}
-              className="w-full mt-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl font-medium transition-colors"
+              className="w-full mt-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-card font-medium transition-colors"
             >
               重新上传
             </button>
@@ -233,7 +233,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
 
         {step === 'edit' && (
           <div className="p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-card p-4 mb-4">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">选择账户</p>
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {accounts.map((account) => (
@@ -242,13 +242,13 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                     onClick={() => setSelectedAccountId(account.id)}
                     className={`flex-shrink-0 px-4 py-2 rounded-lg border-2 transition-all ${
                       selectedAccountId === account.id
-                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
                         : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700'
                     }`}
                   >
                     <span className={`text-sm font-medium ${
                       selectedAccountId === account.id
-                        ? 'text-emerald-600 dark:text-emerald-400'
+                        ? 'text-primary-600 dark:text-primary-400'
                         : 'text-gray-700 dark:text-gray-300'
                     }`}>
                       {account.name}
@@ -260,7 +260,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
 
             <div className="space-y-4 max-h-[45vh] overflow-y-auto">
               {parsedTransactions.map((transaction, index) => (
-                <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4">
+                <div key={index} className="bg-white dark:bg-gray-800 rounded-card p-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       记录 {index + 1}
@@ -288,7 +288,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                       onClick={() => handleTypeChange(index, 'income')}
                       className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                         transaction.type === 'income'
-                          ? 'bg-emerald-500 text-white'
+                          ? 'bg-primary-500 text-white'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
                       }`}
                     >
@@ -302,7 +302,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                       type="text"
                       value={transaction.amount}
                       onChange={(e) => handleEditTransaction(index, 'amount', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-800 dark:text-white text-lg font-bold outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-800 dark:text-white text-lg font-bold outline-none focus:ring-2 focus:ring-primary-500/20"
                     />
                   </div>
 
@@ -329,7 +329,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                       type="text"
                       value={transaction.note}
                       onChange={(e) => handleEditTransaction(index, 'note', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-800 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-800 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary-500/20"
                     />
                   </div>
 
@@ -339,7 +339,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                       type="datetime-local"
                       value={transaction.date.toISOString().slice(0, 16)}
                       onChange={(e) => handleEditTransaction(index, 'date', new Date(e.target.value))}
-                      className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-800 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-800 dark:text-white text-xs outline-none focus:ring-2 focus:ring-primary-500/20"
                     />
                   </div>
                 </div>
@@ -349,16 +349,16 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
             <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
               <button
                 onClick={() => setStep('preview')}
-                className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-card font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 返回
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={!selectedAccountId}
-                className={`flex-1 py-3 rounded-xl font-medium transition-all ${
+                className={`flex-1 py-3 rounded-card font-medium transition-all ${
                   selectedAccountId
-                    ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                    ? 'bg-primary-500 text-white hover:bg-primary-600'
                     : 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed'
                 }`}
               >
@@ -370,7 +370,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
 
         {isLoading && (
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 flex flex-col items-center min-w-[240px]">
+            <div className="bg-white dark:bg-gray-800 rounded-card p-6 flex flex-col items-center min-w-[240px]">
               {downloadStatus?.isDownloading ? (
                 <>
                   <Download size={32} className="text-blue-500 animate-bounce mb-3" />
@@ -388,7 +388,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                 </>
               ) : (
                 <>
-                  <Loader2 size={32} className="text-emerald-500 animate-spin mb-3" />
+                  <Loader2 size={32} className="text-primary-500 animate-spin mb-3" />
                   <p className="text-gray-600 dark:text-gray-300">正在识别图片...</p>
                 </>
               )}

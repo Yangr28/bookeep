@@ -56,7 +56,7 @@ export const NumericKeypad = ({
             placeholder="添加备注（可选）"
             value={note}
             onChange={(e) => onNoteChange(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-gray-800 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm"
+            className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-card text-gray-800 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500/20 text-sm"
             maxLength={50}
           />
         </div>
@@ -67,14 +67,14 @@ export const NumericKeypad = ({
             <button
               key={num}
               onClick={() => onNumberClick(num)}
-              className="py-4 bg-gray-50 dark:bg-gray-800 rounded-xl font-semibold text-xl text-gray-800 dark:text-white active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
+              className="py-4 bg-gray-50 dark:bg-gray-800 rounded-card font-semibold text-xl text-gray-800 dark:text-white active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
             >
               {num}
             </button>
           ))}
           <button
             onClick={() => onNumberClick('')}
-            className="py-4 bg-orange-100 dark:bg-orange-900/30 rounded-xl font-semibold text-sm text-orange-500 active:bg-orange-200 dark:active:bg-orange-800/30 flex flex-col items-center justify-center transition-colors"
+            className="py-4 bg-orange-100 dark:bg-orange-900/30 rounded-button font-semibold text-sm text-orange-500 active:bg-orange-200 dark:active:bg-orange-800/30 flex flex-col items-center justify-center transition-colors"
           >
             <Delete size={20} />
             <span>清除</span>
@@ -83,14 +83,14 @@ export const NumericKeypad = ({
             <button
               key={num}
               onClick={() => onNumberClick(num)}
-              className="py-4 bg-gray-50 dark:bg-gray-800 rounded-xl font-semibold text-xl text-gray-800 dark:text-white active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
+              className="py-4 bg-gray-50 dark:bg-gray-800 rounded-card font-semibold text-xl text-gray-800 dark:text-white active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
             >
               {num}
             </button>
           ))}
           <button
             onClick={() => onNumberClick('del')}
-            className="py-4 bg-red-100 dark:bg-red-900/30 rounded-xl font-semibold text-red-500 active:bg-red-200 dark:active:bg-red-800/30 flex items-center justify-center transition-colors"
+            className="py-4 bg-red-100 dark:bg-red-900/30 rounded-card font-semibold text-red-500 active:bg-red-200 dark:active:bg-red-800/30 flex items-center justify-center transition-colors"
           >
             <span className="text-xl">⌫</span>
           </button>
@@ -98,7 +98,7 @@ export const NumericKeypad = ({
             <button
               key={num}
               onClick={() => onNumberClick(num)}
-              className="py-4 bg-gray-50 dark:bg-gray-800 rounded-xl font-semibold text-xl text-gray-800 dark:text-white active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
+              className="py-4 bg-gray-50 dark:bg-gray-800 rounded-card font-semibold text-xl text-gray-800 dark:text-white active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
             >
               {num}
             </button>
@@ -106,9 +106,9 @@ export const NumericKeypad = ({
           <button
             onClick={onSubmit}
             disabled={!isFormValid}
-            className={`py-4 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-2 ${
+            className={`py-4 rounded-card font-semibold text-lg transition-all flex items-center justify-center gap-2 ${
               isFormValid
-                ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:shadow-lg hover:shadow-emerald-500/30 active:opacity-90'
+                ? 'bg-gradient-to-r from-primary-500 to-green-600 text-white hover:shadow-lg hover:shadow-primary-500/30 active:opacity-90'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
             }`}
           >
@@ -116,13 +116,13 @@ export const NumericKeypad = ({
           </button>
           <button
             onClick={() => onNumberClick('0')}
-            className="col-span-2 py-4 bg-gray-50 dark:bg-gray-800 rounded-xl font-semibold text-xl text-gray-800 dark:text-white active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
+            className="col-span-2 py-4 bg-gray-50 dark:bg-gray-800 rounded-card font-semibold text-xl text-gray-800 dark:text-white active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
           >
             0
           </button>
           <button
             onClick={() => onNumberClick('.')}
-            className="py-4 bg-gray-50 dark:bg-gray-800 rounded-xl font-semibold text-xl text-gray-800 dark:text-white active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
+            className="py-4 bg-gray-50 dark:bg-gray-800 rounded-card font-semibold text-xl text-gray-800 dark:text-white active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
           >
             .
           </button>

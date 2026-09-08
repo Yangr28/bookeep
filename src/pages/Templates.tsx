@@ -94,7 +94,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 page-enter">
       <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-6 safe-top">
         <div className="flex items-center gap-3 mb-4">
           <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors">
@@ -106,7 +106,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
       </div>
 
       <div className="px-4 -mt-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 flex items-center justify-between">
+        <div className="card p-4 flex items-center justify-between">
           <div>
             <p className="text-2xl font-bold text-gray-800 dark:text-white">{templates.length}</p>
             <p className="text-xs text-gray-500">已保存模板</p>
@@ -117,14 +117,14 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
 
       <div className="px-4 mt-4">
         {templates.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center">
+          <div className="card p-8 text-center">
             <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <Bookmark size={36} className="text-gray-400" />
             </div>
             <p className="text-gray-500 mb-4">还没有保存记账模板</p>
             <button
               onClick={openAddModal}
-              className="px-6 py-2.5 bg-pink-500 text-white rounded-xl font-medium hover:bg-pink-600 transition-colors"
+              className="px-6 py-2.5 bg-pink-500 text-white rounded-card font-medium hover:bg-pink-600 transition-colors"
             >
               创建模板
             </button>
@@ -139,7 +139,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
               return (
                 <div
                   key={template.id}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm"
+                  className="card p-4"
                 >
                   <button
                     onClick={() => handleUseTemplate(template)}
@@ -147,7 +147,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center"
+                        className="w-12 h-12 rounded-card flex items-center justify-center"
                         style={{ backgroundColor: `${template.color}20`, color: template.color }}
                       >
                         <TemplateIcon size={24} />
@@ -169,7 +169,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
                     </div>
                     <p className="font-medium text-gray-800 dark:text-white truncate">{template.name}</p>
                     <div className="flex items-center justify-between mt-1">
-                      <span className={`text-lg font-bold ${template.type === 'income' ? 'text-emerald-500' : 'text-red-500'}`}>
+                      <span className={`text-lg font-bold ${template.type === 'income' ? 'text-primary-500' : 'text-red-500'}`}>
                         {template.type === 'income' ? '+' : '-'}¥{template.amount.toFixed(2)}
                       </span>
                       <span className="text-xs text-gray-400 truncate max-w-[80px]">{category?.name}</span>
@@ -185,7 +185,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowModal(false)}>
-          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-2xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-card max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
               <h3 className="text-lg font-bold">{editingTemplate ? '编辑模板' : '新建模板'}</h3>
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
@@ -201,7 +201,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="如: 早餐、地铁费"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-xl text-lg font-bold text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-pink-500"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-card text-lg font-bold text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-pink-500"
                 />
               </div>
 
@@ -253,7 +253,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
                     }}
                     className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
                       form.type === t
-                        ? t === 'expense' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'
+                        ? t === 'expense' ? 'bg-red-500 text-white' : 'bg-primary-500 text-white'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
                     }`}
                   >
@@ -269,7 +269,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
                   value={form.amount}
                   onChange={(e) => setForm({ ...form, amount: e.target.value })}
                   placeholder="0.00"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-xl text-xl font-bold text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-pink-500"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-card text-xl font-bold text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-pink-500"
                 />
               </div>
 
@@ -337,7 +337,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
               <button
                 onClick={handleSubmit}
                 disabled={!form.name || !form.amount || !form.categoryId || !form.accountId}
-                className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
+                className={`w-full py-3 rounded-card font-bold text-white transition-all ${
                   form.name && form.amount && form.categoryId && form.accountId
                     ? 'bg-pink-500 hover:bg-pink-600'
                     : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'

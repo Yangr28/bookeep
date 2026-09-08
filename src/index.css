@@ -10,6 +10,19 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* 设计令牌 */
+  --color-primary: #10b981;
+  --color-primary-dark: #059669;
+  --radius-card: 1rem;
+  --radius-button: 0.75rem;
+  --shadow-card: 0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px 0 rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 4px 12px 0 rgba(0,0,0,0.1), 0 2px 4px 0 rgba(0,0,0,0.06);
+  --transition: all 0.2s ease-out;
+}
+
+.dark {
+  --shadow-card: 0 1px 3px 0 rgba(0,0,0,0.3), 0 1px 2px 0 rgba(0,0,0,0.2);
+  --shadow-card-hover: 0 4px 12px 0 rgba(0,0,0,0.35), 0 2px 4px 0 rgba(0,0,0,0.25);
 }
 
 * {
@@ -27,18 +40,78 @@ body {
   background-color: #f9fafb;
 }
 
-/* 安全区适配：安卓系统栏透明（边到边）后，页面头部/底部导航需让出状态栏/导航栏高度。
-   safe-top 用 max 保证无安全区时（Web 环境）仍保留约 pt-8 的原始留白 */
+.dark body {
+  background-color: #111827;
+}
+
+/* === 组件类 === */
+@layer components {
+  /* 卡片 */
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-card shadow-card;
+    transition: var(--transition);
+  }
+  .card-hover {
+    @apply hover:shadow-card-hover active:scale-[0.98];
+  }
+  /* 页面头部 */
+  .page-header {
+    @apply text-white px-5 pt-8 pb-5 rounded-b-3xl safe-top;
+  }
+  /* 标题 */
+  .page-title {
+    @apply text-xl font-bold tracking-tight;
+  }
+  /* 副标题 */
+  .page-subtitle {
+    @apply text-sm mt-1 opacity-80;
+  }
+  /* 区段标题 */
+  .section-title {
+    @apply text-base font-semibold text-gray-800 dark:text-gray-200 mb-3;
+  }
+  /* 按钮基础 */
+  .btn {
+    @apply flex items-center justify-center gap-2 font-medium transition-all duration-200 active:scale-95;
+  }
+  .btn-primary {
+    @apply btn bg-primary-500 text-white rounded-button py-3 px-4 hover:bg-primary-600 shadow-lg shadow-primary-500/25;
+  }
+  .btn-ghost {
+    @apply btn bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-button py-3 px-4 hover:bg-gray-200 dark:hover:bg-gray-600;
+  }
+  .btn-danger {
+    @apply btn bg-red-500 text-white rounded-button py-3 px-4 hover:bg-red-600;
+  }
+  /* 胶囊标签 */
+  .chip {
+    @apply inline-flex items-center gap-1 px-3 py-1.5 rounded-chip text-sm font-medium transition-all duration-200;
+  }
+  .chip-active {
+    @apply bg-primary-500 text-white shadow-lg shadow-primary-500/25;
+  }
+  .chip-inactive {
+    @apply bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400;
+  }
+  /* 列表项 */
+  .list-item {
+    @apply flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-card shadow-card transition-all duration-200 hover:shadow-card-hover;
+  }
+  /* 输入框 */
+  .input-field {
+    @apply w-full bg-gray-50 dark:bg-gray-700 rounded-button px-4 py-3 text-gray-800 dark:text-white placeholder-gray-400 border-2 border-transparent focus:border-primary-400 outline-none transition-colors;
+  }
+}
+
+/* === 安全区 === */
 .safe-top {
   padding-top: max(env(safe-area-inset-top, 0px), 2rem);
 }
 
-/* 底栏原 pb 约为 1rem，安全区高度在其上叠加 */
 .safe-bottom {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
 }
 
-/* 状态栏遮罩：边到边模式下覆盖状态栏区域，白色图标在任何页面背景上都可读 */
 .status-bar-scrim {
   position: fixed;
   top: 0;
@@ -50,64 +123,46 @@ body {
   pointer-events: none;
 }
 
-
+/* === 动画 === */
 @keyframes bounce-in {
-  0% {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
 }
-
-.animate-bounce-in {
-  animation: bounce-in 0.4s ease-out;
-}
+.animate-bounce-in { animation: bounce-in 0.4s ease-out; }
 
 @keyframes slide-up {
-  0% {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  0% { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }
-
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out;
-}
+.animate-slide-up { animation: slide-up 0.3s ease-out; }
 
 @keyframes fade-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
+.animate-fade-in { animation: fade-in 0.2s ease-out; }
 
-.animate-fade-in {
-  animation: fade-in 0.2s ease-out;
+@keyframes slide-in-right {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
 }
+.animate-slide-in-right { animation: slide-in-right 0.25s ease-out; }
 
+/* 页面切换过渡 */
+.page-enter { animation: fade-in 0.2s ease-out; }
+
+/* === 交互 === */
 button {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-input {
+input, select {
   -webkit-tap-highlight-color: transparent;
 }
 
 select {
-  -webkit-tap-highlight-color: transparent;
   appearance: none;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.5rem center;
@@ -126,7 +181,6 @@ select {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }

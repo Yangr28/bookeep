@@ -14,8 +14,8 @@ export const BottomNav = ({ currentPage, onPageChange }: BottomNavProps) => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 px-2 py-2 safe-bottom z-50">
-      <div className="flex justify-around items-center">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-t border-gray-100 dark:border-gray-700 safe-bottom z-50">
+      <div className="flex justify-around items-center px-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
@@ -23,19 +23,22 @@ export const BottomNav = ({ currentPage, onPageChange }: BottomNavProps) => {
             <button
               key={item.id}
               onClick={() => onPageChange(item.id)}
-              className={`flex flex-col items-center py-2 px-4 rounded-2xl transition-all duration-300 ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-2 px-5 rounded-button transition-all duration-300 ${
                 isActive
-                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105'
-                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'text-primary-500'
+                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
               }`}
             >
               <Icon
-                size={24}
-                className={`transition-transform duration-300 ${
-                  isActive ? 'scale-110' : ''
+                size={22}
+                className={`transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}
+              />
+              <span className={`text-label ${isActive ? 'font-semibold' : 'font-normal'}`}>{item.label}</span>
+              <span
+                className={`h-1 w-1 rounded-chip transition-all duration-300 ${
+                  isActive ? 'bg-primary-500 opacity-100' : 'opacity-0'
                 }`}
               />
-              <span className="text-xs mt-1 font-medium">{item.label}</span>
             </button>
           );
         })}

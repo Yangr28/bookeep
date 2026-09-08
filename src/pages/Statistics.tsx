@@ -67,19 +67,19 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
   const displayedChartData = showFullYear ? monthlyChartData : monthlyChartData.slice(-6);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white px-6 pt-8 pb-6 rounded-b-3xl safe-top">
+    <div className="page-enter min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-700 text-white px-5 pt-8 pb-5 rounded-b-3xl safe-top">
         <h1 className="text-2xl font-bold tracking-tight">统计报表</h1>
-        <p className="text-emerald-100 text-sm mt-2 leading-relaxed">查看您的财务数据</p>
+        <p className="text-primary-100 text-sm mt-2 leading-relaxed">查看您的财务数据</p>
       </div>
 
       <div className="px-4 -mt-5">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5">
+        <div className="card p-5">
           <button
             onClick={onShowCalendar}
             className="flex items-center justify-start gap-3 w-full mb-5"
           >
-            <div className="p-2.5 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+            <div className="p-2.5 bg-blue-50 dark:bg-blue-900/30 rounded-button">
               <Calendar size={20} className="text-blue-600" />
             </div>
             <div className="flex items-center gap-2">
@@ -91,13 +91,13 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
           </button>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-5 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-green-900/30 rounded-2xl shadow-sm">
+            <div className="text-center p-5 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-green-900/30 rounded-card shadow-sm">
               <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">本月收入</p>
-              <p className="text-2xl font-bold text-emerald-600 mt-2">
+              <p className="text-2xl font-bold text-primary-600 mt-2">
                 {formatCurrencyShort(monthIncome)}
               </p>
             </div>
-            <div className="text-center p-5 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-orange-900/30 rounded-2xl shadow-sm">
+            <div className="text-center p-5 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-orange-900/30 rounded-card shadow-sm">
               <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">本月支出</p>
               <p className="text-2xl font-bold text-red-500 mt-2">
                 {formatCurrencyShort(monthExpense)}
@@ -105,17 +105,17 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
             </div>
           </div>
 
-          <div className="mt-5 p-5 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-2xl shadow-sm">
+          <div className="mt-5 p-5 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-card shadow-sm">
             <p className="text-gray-500 dark:text-gray-400 text-sm text-center font-medium">本月结余</p>
             <p className={`text-3xl font-bold text-center mt-2 ${
-              monthIncome - monthExpense >= 0 ? 'text-emerald-600' : 'text-red-500'
+              monthIncome - monthExpense >= 0 ? 'text-primary-600' : 'text-red-500'
             }`}>
               {formatCurrencyShort(monthIncome - monthExpense)}
             </p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 mt-4">
+        <div className="card p-5 mt-4">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-5">支出分布</h2>
           {expenseData.length > 0 ? (
             <div className="flex flex-col items-center">
@@ -171,7 +171,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
           )}
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 mt-4">
+        <div className="card p-5 mt-4">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-5">收入分布</h2>
           {incomeData.length > 0 ? (
             <div className="flex flex-col items-center">
@@ -227,12 +227,12 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
           )}
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 mt-4 mb-4">
+        <div className="card p-5 mt-4 mb-4">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-white">收支趋势</h2>
             <button
               onClick={() => setShowFullYear(!showFullYear)}
-              className="px-4 py-2 text-emerald-500 text-sm font-medium bg-emerald-50 dark:bg-emerald-900/30 rounded-full hover:bg-emerald-100 dark:hover:bg-emerald-800/30 active:bg-emerald-200 transition-all flex items-center gap-1"
+              className="px-4 py-2 text-primary-500 text-sm font-medium bg-primary-50 dark:bg-primary-900/30 rounded-full hover:bg-primary-100 dark:hover:bg-primary-800/30 active:bg-primary-200 transition-all flex items-center gap-1"
             >
               {showFullYear ? '收起' : '查看全年'}
               <ChevronDown 

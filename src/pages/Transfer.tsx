@@ -69,7 +69,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
     (!fromAccount || fromAccount.balance >= parseFloat(amount));
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
       <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 pt-8 pb-6">
         <div className="flex items-center gap-4 mb-6">
           <button
@@ -80,7 +80,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
           </button>
           <h1 className="text-xl font-bold">转账</h1>
         </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+        <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
           <p className="text-white/80 text-sm mb-1">转账金额</p>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-semibold">¥</span>
@@ -97,7 +97,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
       </div>
 
       <div className="px-4 mt-4 space-y-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="card p-4">
           <label className="block text-sm text-gray-500 mb-3">转出账户</label>
           <div className="grid grid-cols-2 gap-2">
             {accounts.map((account) => (
@@ -131,7 +131,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="card p-4">
           <label className="block text-sm text-gray-500 mb-3">转入账户</label>
           <div className="grid grid-cols-2 gap-2">
             {accounts.map((account) => (
@@ -159,7 +159,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="card p-4">
           <label className="block text-sm text-gray-500 mb-2">备注</label>
           <input
             type="text"
@@ -175,7 +175,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all ${
+          className={`w-full py-3.5 rounded-card font-semibold text-white transition-all ${
             canSubmit
               ? 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:opacity-90'
               : 'bg-gray-300 cursor-not-allowed'

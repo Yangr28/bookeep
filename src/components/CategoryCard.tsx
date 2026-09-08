@@ -14,9 +14,9 @@ const CategoryCardComponent = ({ category, isSelected = false, onClick }: Catego
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center p-2.5 rounded-xl transition-all duration-200 ${
+      className={`flex flex-col items-center p-2.5 rounded-card transition-all duration-200 ${
         isSelected
-          ? 'bg-emerald-50 dark:bg-emerald-900/30 scale-105'
+          ? 'bg-primary-50 dark:bg-primary-900/30 scale-105'
           : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
       }`}
     >
@@ -28,7 +28,7 @@ const CategoryCardComponent = ({ category, isSelected = false, onClick }: Catego
       >
         <IconComponent size={22} style={{ color: category.color }} />
       </div>
-      <span className={`text-xs mt-1.5 font-medium ${isSelected ? 'text-emerald-600' : 'text-gray-600 dark:text-gray-300'}`}>
+      <span className={`text-xs mt-1.5 font-medium ${isSelected ? 'text-primary-600' : 'text-gray-600 dark:text-gray-300'}`}>
         {category.name}
       </span>
     </button>

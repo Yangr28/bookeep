@@ -30,7 +30,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
     if (percentage >= 100) return 'bg-red-500';
     if (percentage >= 80) return 'bg-orange-500';
     if (percentage >= 50) return 'bg-yellow-500';
-    return 'bg-emerald-500';
+    return 'bg-primary-500';
   };
 
   const handleEdit = (categoryId: string) => {
@@ -69,7 +69,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
       <div className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white px-6 pt-8 pb-6 safe-top">
         <div className="flex items-center gap-4">
           <button
@@ -84,7 +84,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
           </div>
         </div>
 
-        <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-4">
+        <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-card p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-purple-100">总预算使用</span>
             <span className="text-sm font-medium">{formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}</span>
@@ -127,7 +127,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
             return (
               <div
                 key={category.id}
-                className={`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm ${isOverBudget ? 'border-2 border-red-200 dark:border-red-800' : ''}`}
+                className={`card p-4 ${isOverBudget ? 'border-2 border-red-200 dark:border-red-800' : ''}`}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div
@@ -232,7 +232,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
         </div>
 
         {overBudgetCategories.length > 0 && (
-          <div className="mt-4 bg-red-50 dark:bg-red-900/20 rounded-xl p-4">
+          <div className="mt-4 bg-red-50 dark:bg-red-900/20 rounded-card p-4">
             <div className="flex items-start gap-3">
               <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
               <div>
@@ -245,7 +245,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
           </div>
         )}
 
-        <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
+        <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-card p-4">
           <div className="flex items-start gap-3">
             <Clock size={20} className="text-blue-500 flex-shrink-0 mt-0.5" />
             <div>

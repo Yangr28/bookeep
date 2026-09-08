@@ -37,7 +37,7 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={handleClose}>
       <div
-        className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl max-h-[70vh] overflow-hidden flex flex-col shadow-2xl"
+        className="bg-white dark:bg-gray-800 w-full max-w-md rounded-card max-h-[70vh] overflow-hidden flex flex-col shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
@@ -78,7 +78,7 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
                   onSearchChange('');
                   onClose();
                 }}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all border-2 ${
+                className={`w-full flex items-center gap-3 p-3 rounded-card transition-all border-2 ${
                   selected === currency.code
                     ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-500'
                     : 'bg-gray-50 dark:bg-gray-700 border-transparent hover:bg-gray-100 dark:hover:bg-gray-600'
@@ -258,11 +258,11 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
         </div>
 
         {/* 转换器主体 */}
-        <div className="mt-5 bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+        <div className="mt-5 bg-white/10 backdrop-blur-sm rounded-card p-4">
           {/* From */}
           <button
             onClick={() => setShowFromPicker(true)}
-            className="w-full flex items-center gap-3 p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors mb-2"
+            className="w-full flex items-center gap-3 p-3 bg-white/10 rounded-card hover:bg-white/20 transition-colors mb-2"
           >
             <span className="text-2xl">{fromCurrencyInfo?.flag}</span>
             <div className="flex-1 text-left">
@@ -292,7 +292,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
           {/* To */}
           <button
             onClick={() => setShowToPicker(true)}
-            className="w-full flex items-center gap-3 p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+            className="w-full flex items-center gap-3 p-3 bg-white/10 rounded-card hover:bg-white/20 transition-colors"
           >
             <span className="text-2xl">{toCurrencyInfo?.flag}</span>
             <div className="flex-1 text-left">
@@ -326,7 +326,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
             onClick={() => setShowRateEditor(!showRateEditor)}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
               showRateEditor
-                ? 'bg-emerald-500 text-white'
+                ? 'bg-primary-500 text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
             }`}
           >
@@ -339,7 +339,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
         {Object.entries(groupedCurrencies).map(([region, regionCurrencies]) => (
           <div key={region} className="mb-4">
             <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2 px-1">{region}</p>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-card shadow-sm overflow-hidden">
               {regionCurrencies.map((currency, index) => {
                 const rate = getRate(currency.code);
                 const isCustom = customRates[currency.code] !== undefined;
@@ -370,7 +370,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
                           />
                           <button
                             onClick={() => handleSaveRate(currency.code)}
-                            className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded"
+                            className="p-1 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
                           >
                             <CheckIcon size={16} />
                           </button>

@@ -29,18 +29,10 @@ export default function Empty({
           </svg>
         )}
       </div>
-      
-      <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">{title}</h3>
-      
-      {description && (
-        <p className="text-gray-400 dark:text-gray-500 text-sm text-center mb-6">{description}</p>
-      )}
-      
+      <h3 className="text-base font-semibold text-gray-600 dark:text-gray-400 mb-2">{title}</h3>
+      {description && <p className="text-gray-400 dark:text-gray-500 text-sm text-center mb-6">{description}</p>}
       {actionText && onAction && (
-        <button
-          onClick={onAction}
-          className="px-6 py-2.5 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
-        >
+        <button onClick={onAction} className="btn-primary px-6 py-2.5 text-sm">
           {actionText}
         </button>
       )}

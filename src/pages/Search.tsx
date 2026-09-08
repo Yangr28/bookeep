@@ -46,7 +46,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+    <div className="page-enter min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
       <div className="bg-white dark:bg-gray-800 px-4 pt-8 pb-4 shadow-sm safe-top">
         <div className="flex items-center gap-3">
           <button
@@ -63,7 +63,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="搜索备注、金额、分类..."
-              className="w-full bg-gray-100 dark:bg-gray-700 rounded-xl pl-10 pr-10 py-3 text-gray-800 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-100 dark:bg-gray-700 rounded-card pl-10 pr-10 py-3 text-gray-800 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
             />
             {query && (
               <button
@@ -104,7 +104,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
               onClick={() => setFilterType('income')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
                 filterType === 'income'
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-primary-500 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
@@ -121,7 +121,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
             {filteredTransactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm"
+                className="card p-4"
               >
                 <TransactionCard
                   transaction={transaction}

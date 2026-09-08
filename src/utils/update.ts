@@ -202,6 +202,22 @@ export function setSkippedVersion(version: string): void {
   }
 }
 
+/**
+ * 手动回退到指定历史版本（通过下载并激活该版本的热更新包实现）
+ * 要求该版本在 GitHub Releases 上有 dist_v<version>.zip 资产
+ * 返回可直接传给 AppUpdate.downloadHotUpdate 的 url 与 version
+ */
+export async function resolveRollbackTarget(targetVersion: string): Promise<{ url: string; version: string } | null> {
+  if (!GITHUB_REPO) return null;
+  const v = targetVersion.replace(/^v/, '').trim();
+  if (!v) return null;
+  // GitHub Release 资产下载地址是稳定可预测的
+  return {
+    url: `https://github.com/${GITHUB_REPO}/releases/download/v${v}/dist_v${v}.zip`,
+    version: v,
+  };
+}
+
 /** 自动检查节流：10 分钟内不重复自动检查（检查成本极低，保证新版本发布后尽快弹出提示） */
 const LAST_CHECK_KEY = 'bookeep_update_last_check';
 const AUTO_CHECK_INTERVAL = 10 * 60 * 1000;

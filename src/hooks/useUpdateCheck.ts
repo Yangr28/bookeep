@@ -7,6 +7,7 @@ import {
   setSkippedVersion,
   shouldAutoCheck,
   markAutoChecked,
+  resolveRollbackTarget,
   type UpdateCheckResult,
 } from '../utils/update';
 
@@ -121,6 +122,35 @@ export function useUpdateCheck() {
     });
   }, []);
 
+  /**
+   * 手动回退到指定历史版本（要求该版本在 GitHub Releases 上有 dist_v<version>.zip）
+   * 复用与 startUpdate 相同的下载/激活流程：下载热更新包 -> activateHotUpdate -> WebView 自动重载
+   * activateHotUpdate 会把 hot_previous 设为当前版本，4.5.0 加载失败可自动回滚到当前版本
+   */
+  const rollback = useCallback(async (targetVersion: string) => {
+    const target = await resolveRollbackTarget(targetVersion);
+    if (!target) return;
+    setFlow({ phase: 'downloading', kind: 'hot', percent: 0, error: '' });
+    let listener: PluginListenerHandle | undefined;
+    try {
+      listener = await AppUpdate.addListener('downloadProgress', (p) => {
+        if (p.kind === 'hot') {
+          setFlow((prev) =>
+            prev.phase === 'downloading' ? { ...prev, percent: p.percent } : prev,
+          );
+        }
+      });
+      await AppUpdate.downloadHotUpdate({ url: target.url, version: target.version });
+      await AppUpdate.activateHotUpdate({ version: target.version });
+      setFlow({ phase: 'done', kind: 'hot', percent: 100, error: '' });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '回退失败，请重试';
+      setFlow({ phase: 'error', kind: 'hot', percent: 0, error: msg });
+    } finally {
+      listener?.remove();
+    }
+  }, []);
+
   return {
     available,
     flow,
@@ -129,5 +159,6 @@ export function useUpdateCheck() {
     skip,
     startUpdate,
     markReady,
+    rollback,
   };
 }

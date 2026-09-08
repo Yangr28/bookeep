@@ -26,7 +26,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip }: UpdateM
       onClick={handleMaskClick}
     >
       <div
-        className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-2xl max-h-[85vh] overflow-hidden flex flex-col"
+        className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-card max-h-[85vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 头部 */}
@@ -40,7 +40,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip }: UpdateM
             </button>
           )}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-white/20 rounded-card flex items-center justify-center flex-shrink-0">
               {isHot ? <Zap size={26} /> : <Package size={26} />}
             </div>
             <div>
@@ -95,8 +95,8 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip }: UpdateM
             </div>
           ) : flow.phase === 'done' ? (
             <div className="flex flex-col items-center text-center py-6">
-              <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-3">
-                <CheckCircle size={28} className="text-emerald-500" />
+              <div className="w-14 h-14 bg-primary-50 dark:bg-primary-900/30 rounded-full flex items-center justify-center mb-3">
+                <CheckCircle size={28} className="text-primary-500" />
               </div>
               <p className="font-semibold text-gray-800 dark:text-white mb-1">
                 {isHot ? '更新完成，正在重新加载...' : '安装器已启动'}
@@ -111,14 +111,14 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip }: UpdateM
                 <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-xs font-medium rounded-full">
                   当前版本 v{isHot ? result.webVersion : result.nativeVersion}
                 </span>
-                <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 text-xs font-medium rounded-full">
+                <span className="px-2.5 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-300 text-xs font-medium rounded-full">
                   最新版本 v{result.version}
                 </span>
               </div>
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 更新内容
               </p>
-              <div className="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-4 max-h-48 overflow-y-auto">
+              <div className="bg-gray-50 dark:bg-gray-700/40 rounded-card p-4 max-h-48 overflow-y-auto">
                 {result.changelog ? (
                   <pre className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap font-sans leading-relaxed">
                     {result.changelog}
@@ -144,13 +144,13 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip }: UpdateM
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="flex-1 py-3 rounded-card bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 关闭
               </button>
               <button
                 onClick={onUpdate}
-                className="flex-1 py-3 rounded-xl bg-indigo-500 text-white font-medium hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-card bg-indigo-500 text-white font-medium hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2"
               >
                 <RefreshCw size={18} />
                 重试
@@ -161,14 +161,14 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip }: UpdateM
               {!mandatory && (
                 <button
                   onClick={onSkip}
-                  className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="flex-1 py-3 rounded-card bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 >
                   以后再说
                 </button>
               )}
               <button
                 onClick={onUpdate}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium hover:from-indigo-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-card bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium hover:from-indigo-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2"
               >
                 {isHot ? <Zap size={18} /> : <Package size={18} />}
                 立即更新
@@ -177,14 +177,14 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip }: UpdateM
           ) : flow.phase === 'done' && !isHot ? (
             <button
               onClick={onClose}
-              className="w-full py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="w-full py-3 rounded-card bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               我知道了
             </button>
           ) : (
             <button
               disabled
-              className="w-full py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 font-medium cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-card bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 font-medium cursor-not-allowed flex items-center justify-center gap-2"
             >
               <Loader2 size={18} className="animate-spin" />
               请稍候...

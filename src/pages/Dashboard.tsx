@@ -296,215 +296,107 @@ const DashboardComponent = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 overflow-y-auto">
-      <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white px-6 pt-8 pb-6 rounded-b-3xl safe-top">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 overflow-y-auto page-enter">
+      {/* 头部：余额+快捷功能 */}
+      <div className="bg-gradient-to-br from-primary-500 to-primary-700 text-white px-5 pt-8 pb-8 rounded-b-3xl safe-top">
+        <div className="flex items-center justify-between mb-5">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">财务概览</h1>
-            <p className="text-emerald-100 text-sm mt-2 leading-relaxed">
-              {new Date().toLocaleDateString('zh-CN', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+            <h1 className="text-title">财务概览</h1>
+            <p className="text-sm text-primary-100 mt-1">
+              {new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onGoToSearch}
-              className="bg-white/20 p-3 rounded-full hover:bg-white/30 active:bg-white/35 transition-colors"
-            >
-              <Search size={24} />
+          <div className="flex items-center gap-2">
+            <button onClick={onGoToSearch} className="p-2.5 bg-white/15 rounded-full hover:bg-white/25 active:bg-white/30 transition-colors">
+              <Search size={20} />
             </button>
-            <button
-              onClick={() => onGoToCurrencyConverter?.()}
-              className="bg-white/20 p-3 rounded-full hover:bg-white/30 active:bg-white/35 transition-colors"
-              title="汇率转换"
-            >
-              <Globe size={24} />
+            <button onClick={() => onGoToCurrencyConverter?.()} className="p-2.5 bg-white/15 rounded-full hover:bg-white/25 active:bg-white/30 transition-colors" title="汇率转换">
+              <Globe size={20} />
             </button>
-            <button
-              onClick={onGoToSettings}
-              className="bg-white/20 p-3 rounded-full hover:bg-white/30 active:bg-white/35 transition-colors"
-            >
-              <Settings size={24} />
-            </button>
-            <button
-              onClick={onGoToAccounts}
-              className="bg-white/20 p-3 rounded-full hover:bg-white/30 active:bg-white/35 transition-colors"
-            >
-              <Wallet size={28} />
+            <button onClick={onGoToSettings} className="p-2.5 bg-white/15 rounded-full hover:bg-white/25 active:bg-white/30 transition-colors">
+              <Settings size={20} />
             </button>
           </div>
         </div>
-        <button
-          onClick={() => onViewDetail('month-balance')}
-          className="w-full bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-left hover:bg-white/20 active:bg-white/25 transition-colors"
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-emerald-100 text-sm font-medium">本月余额</p>
-              <p className="text-3xl font-bold mt-2 tracking-tight">{formatCurrencyShort(balance)}</p>
+
+        {/* 余额卡 */}
+        <button onClick={() => onViewDetail('month-balance')} className="w-full bg-white/10 backdrop-blur-sm rounded-card p-4 text-left hover:bg-white/20 active:bg-white/25 transition-colors">
+          <p className="text-primary-100 text-sm font-medium">本月余额</p>
+          <p className="text-3xl font-bold mt-1.5 tracking-tight">{formatCurrencyShort(balance)}</p>
+          <div className="flex items-center gap-4 mt-3">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-300" />
+              <span className="text-xs text-primary-100">收入</span>
+              <span className="text-sm font-semibold text-green-300">{formatCurrencyShort(monthIncome)}</span>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="text-right min-w-0">
-                <p className="text-emerald-100 text-xs">本月收入</p>
-                <p className="text-lg font-semibold text-green-300 mt-0.5">{formatCurrencyShort(monthIncome)}</p>
-                <p className="text-emerald-100 text-xs mt-2">本月支出</p>
-                <p className="text-lg font-semibold text-red-300 mt-0.5">{formatCurrencyShort(-monthExpense)}</p>
-              </div>
-              <span className="text-emerald-200 text-xl flex-shrink-0">→</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-300" />
+              <span className="text-xs text-primary-100">支出</span>
+              <span className="text-sm font-semibold text-red-300">{formatCurrencyShort(-monthExpense)}</span>
             </div>
           </div>
         </button>
       </div>
 
-      {daysSinceLastRecord >= 3 && showReminder && (
-        <div className="px-4 mt-4">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-full">
-                  <Sparkles size={20} />
-                </div>
-                <div>
-                  <p className="font-semibold">已{daysSinceLastRecord}天未记账</p>
-                  <p className="text-sm text-white/80 mt-0.5">
-                    {daysSinceLastRecord >= 7 ? '已经很久没记账了，快来补上吧！' : '定期记录有助于更好地管理财务'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowReminder(false)}
-                className="p-1.5 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="px-4 mt-3">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm grid grid-cols-4 gap-2">
-          <button
-            onClick={() => onGoToRecurring?.()}
-            className="flex flex-col items-center gap-1.5 py-1"
-          >
-            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-              <Repeat size={18} className="text-indigo-500" />
-            </div>
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">周期记账</span>
-          </button>
-          <button
-            onClick={() => onGoToTemplates?.()}
-            className="flex flex-col items-center gap-1.5 py-1"
-          >
-            <div className="p-2 bg-pink-50 dark:bg-pink-900/20 rounded-lg">
-              <Bookmark size={18} className="text-pink-500" />
-            </div>
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">记账模板</span>
-          </button>
-          <button
-            onClick={() => onGoToBudgets?.()}
-            className="flex flex-col items-center gap-1.5 py-1"
-          >
-            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <PiggyBank size={18} className="text-purple-500" />
-            </div>
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">预算</span>
-          </button>
-          <button
-            onClick={() => onGoToStats?.()}
-            className="flex flex-col items-center gap-1.5 py-1"
-          >
-            <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-              <PieChart size={18} className="text-orange-500" />
-            </div>
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">统计</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="px-4 mt-4 space-y-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
-              <PlusCircle size={20} className="text-emerald-500" />
-            </div>
-            <h3 className="font-bold text-gray-800 dark:text-white">快速记账</h3>
-          </div>
-
-          <div className="flex items-center bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-emerald-400 transition-colors mb-3">
-            <Sparkles size={18} className="text-amber-500 mr-3 flex-shrink-0" />
+      {/* 记账区域 */}
+      <div className="px-4 -mt-4">
+        <div className="card p-4">
+          {/* 智能输入 */}
+          <div className="flex items-center bg-gray-50 dark:bg-gray-700 rounded-button px-3 py-2.5 border-2 border-transparent focus-within:border-primary-400 transition-colors mb-3">
+            <Sparkles size={16} className="text-amber-500 mr-2 flex-shrink-0" />
             <input
               ref={smartInputRef}
               type="text"
               value={smartInput}
               onChange={(e) => setSmartInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSmartSubmit();
-                }
-              }}
+              onKeyPress={(e) => { if (e.key === 'Enter') handleSmartSubmit(); }}
               placeholder="智能记账（如：停车2元）"
               className="flex-1 bg-transparent outline-none text-gray-800 dark:text-white placeholder-gray-400 text-sm"
             />
             <button
               onClick={() => handleSmartSubmit()}
               disabled={!smartInput.trim()}
-              className={`ml-2 p-2 rounded-lg transition-all ${
-                smartInput.trim()
-                  ? 'bg-amber-500 text-white hover:bg-amber-600'
-                  : 'bg-gray-200 dark:bg-gray-600 text-gray-500 cursor-not-allowed'
+              className={`ml-2 p-1.5 rounded-button transition-all ${
+                smartInput.trim() ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-gray-200 dark:bg-gray-600 text-gray-500 cursor-not-allowed'
               }`}
             >
               <PlusCircle size={16} />
             </button>
           </div>
 
+          {/* 支出/收入切换 */}
           <div className="flex gap-2 mb-3">
             <button
               onClick={() => onQuickRecordTypeChange('expense')}
-              className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${
-                quickRecordType === 'expense'
-                  ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+              className={`flex-1 py-2 rounded-button text-sm font-medium transition-all ${
+                quickRecordType === 'expense' ? 'bg-red-500 text-white shadow-lg shadow-red-500/25' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
               }`}
             >
               支出
             </button>
             <button
               onClick={() => onQuickRecordTypeChange('income')}
-              className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${
-                quickRecordType === 'income'
-                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+              className={`flex-1 py-2 rounded-button text-sm font-medium transition-all ${
+                quickRecordType === 'income' ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
               }`}
             >
               收入
             </button>
           </div>
 
-          <div className="grid grid-cols-4 gap-3 mb-3">
+          {/* 分类网格 */}
+          <div className="grid grid-cols-4 gap-2 mb-3">
             {filteredCategories.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                isSelected={quickRecordCategoryId === category.id}
-                onClick={() => onQuickRecordCategoryChange(category.id)}
-              />
+              <CategoryCard key={category.id} category={category} isSelected={quickRecordCategoryId === category.id} onClick={() => onQuickRecordCategoryChange(category.id)} />
             ))}
           </div>
 
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3 mb-3">
+          {/* 金额行 */}
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-button p-3 mb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">金额</span>
-                <button
-                  onClick={() => setShowCurrencyPicker(true)}
-                  className="flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-gray-600 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors"
-                >
+                <span className="text-sm text-gray-500 dark:text-gray-400">金额</span>
+                <button onClick={() => setShowCurrencyPicker(true)} className="flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-gray-600 rounded-chip text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors">
                   <span className="text-sm">{currencies.find(c => c.code === quickRecordCurrency)?.flag}</span>
                   <span>{quickRecordCurrency}</span>
                   <ChevronRight size={12} className="rotate-90 text-gray-400" />
@@ -512,27 +404,19 @@ const DashboardComponent = ({
               </div>
               <div className="flex items-center">
                 <span className="text-lg text-gray-400 mr-1">{currentCurrencySymbol}</span>
-                <input
-                  type="number"
-                  value={quickRecordAmount}
-                  onChange={(e) => onQuickRecordAmountChange(e.target.value)}
-                  placeholder="0.00"
-                  className="text-2xl font-bold text-gray-800 dark:text-white bg-transparent outline-none text-right w-28"
-                />
+                <input type="number" value={quickRecordAmount} onChange={(e) => onQuickRecordAmountChange(e.target.value)} placeholder="0.00" className="text-2xl font-bold text-gray-800 dark:text-white bg-transparent outline-none text-right w-28" />
               </div>
             </div>
             {isForeignCurrency && quickRecordAmount && (
               <div className="mt-1.5 pt-1.5 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between text-xs">
                 <span className="text-gray-400">汇率 1{quickRecordCurrency} = ¥{currentRate.toFixed(4)}</span>
-                <span className="text-emerald-500 font-medium">≈ ¥{convertedCNY.toFixed(2)} 人民币</span>
+                <span className="text-primary-500 font-medium">≈ ¥{convertedCNY.toFixed(2)} 人民币</span>
               </div>
             )}
           </div>
 
-          <button
-            onClick={() => setShowAccountPicker(true)}
-            className="w-full flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-xl p-3 mb-3 transition-all hover:bg-gray-100 dark:hover:bg-gray-600"
-          >
+          {/* 账户选择 */}
+          <button onClick={() => setShowAccountPicker(true)} className="w-full flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-button p-2.5 mb-2.5 transition-all hover:bg-gray-100 dark:hover:bg-gray-600">
             <div className="flex items-center gap-2.5">
               {(() => {
                 const selectedAccount = accounts.find((a) => a.id === quickRecordAccountId);
@@ -540,10 +424,7 @@ const DashboardComponent = ({
                   const IconComponent = getIcon(selectedAccount.icon);
                   return (
                     <>
-                      <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: `${selectedAccount.color}20`, color: selectedAccount.color }}
-                      >
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: `${selectedAccount.color}20`, color: selectedAccount.color }}>
                         <IconComponent size={16} />
                       </div>
                       <span className="text-sm font-medium text-gray-800 dark:text-white">{selectedAccount.name}</span>
@@ -563,65 +444,76 @@ const DashboardComponent = ({
             <ChevronRight size={18} className="text-gray-400" />
           </button>
 
-          <input
-            type="text"
-            value={quickRecordNote}
-            onChange={(e) => onQuickRecordNoteChange(e.target.value)}
-            placeholder="备注"
-            className="w-full bg-gray-50 dark:bg-gray-700 rounded-xl px-3 py-2 mb-3 text-sm text-gray-800 dark:text-white placeholder-gray-400 outline-none"
-          />
-
-          <div className="flex gap-2 mb-3">
-            <button
-              onClick={onShowDatePicker}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all"
-            >
-              <Calendar size={16} />
-              <span className="text-sm font-medium">{quickRecordDateTime.getMonth() + 1}月{quickRecordDateTime.getDate()}日</span>
+          {/* 备注+日期时间行 */}
+          <div className="flex gap-2 mb-2.5">
+            <input type="text" value={quickRecordNote} onChange={(e) => onQuickRecordNoteChange(e.target.value)} placeholder="备注" className="flex-1 bg-gray-50 dark:bg-gray-700 rounded-button px-3 py-2 text-sm text-gray-800 dark:text-white placeholder-gray-400 outline-none" />
+            <button onClick={onShowDatePicker} className="flex items-center gap-1 px-3 py-2 rounded-button bg-blue-500 text-white hover:bg-blue-600 transition-all text-sm">
+              <Calendar size={15} />
+              <span className="font-medium">{quickRecordDateTime.getMonth() + 1}月{quickRecordDateTime.getDate()}日</span>
             </button>
-            <button
-              onClick={onShowTimePicker}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition-all"
-            >
-              <Clock size={16} />
-              <span className="text-sm font-medium">{quickRecordDateTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>
-            </button>
-            <button
-              onClick={onShowOCRModal}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-all"
-            >
-              <Image size={16} />
-              <span className="text-sm font-medium">批量</span>
+            <button onClick={onShowTimePicker} className="flex items-center gap-1 px-3 py-2 rounded-button bg-purple-500 text-white hover:bg-purple-600 transition-all text-sm">
+              <Clock size={15} />
+              <span className="font-medium">{quickRecordDateTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>
             </button>
           </div>
 
-          <button
-            onClick={onQuickRecordSubmit}
-            disabled={!quickRecordAmount || !quickRecordCategoryId || !quickRecordAccountId}
-            className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
-              quickRecordAmount && quickRecordCategoryId && quickRecordAccountId
-                ? 'bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/40'
-                : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
-            }`}
-          >
-            记一笔
+          {/* 操作行 */}
+          <div className="flex gap-2">
+            <button onClick={onShowOCRModal} className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-button bg-indigo-500 text-white hover:bg-indigo-600 transition-all text-sm flex-1">
+              <Image size={16} />
+              <span className="font-medium">批量</span>
+            </button>
+            <button
+              onClick={onQuickRecordSubmit}
+              disabled={!quickRecordAmount || !quickRecordCategoryId || !quickRecordAccountId}
+              className={`flex-[2] py-2.5 rounded-button font-bold text-white transition-all ${
+                quickRecordAmount && quickRecordCategoryId && quickRecordAccountId ? 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-primary-500/30' : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
+              }`}
+            >
+              记一笔
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 功能入口 + 统计卡片 */}
+      <div className="px-4 mt-4 space-y-3">
+        {/* 功能入口条 */}
+        <div className="card p-3 grid grid-cols-4 gap-1">
+          <button onClick={() => onGoToRecurring?.()} className="flex flex-col items-center gap-1 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-button transition-colors">
+            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-button">
+              <Repeat size={18} className="text-indigo-500" />
+            </div>
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">周期记账</span>
+          </button>
+          <button onClick={() => onGoToTemplates?.()} className="flex flex-col items-center gap-1 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-button transition-colors">
+            <div className="p-2 bg-pink-50 dark:bg-pink-900/20 rounded-button">
+              <Bookmark size={18} className="text-pink-500" />
+            </div>
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">模板</span>
+          </button>
+          <button onClick={() => onGoToBudgets?.()} className="flex flex-col items-center gap-1 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-button transition-colors">
+            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-button">
+              <PiggyBank size={18} className="text-purple-500" />
+            </div>
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">预算</span>
+          </button>
+          <button onClick={() => onGoToStats?.()} className="flex flex-col items-center gap-1 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-button transition-colors">
+            <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-button">
+              <PieChart size={18} className="text-orange-500" />
+            </div>
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">统计</span>
           </button>
         </div>
 
+        {/* 今日统计 */}
         <div className="grid grid-cols-2 gap-3">
           <StatCard type="income" title="今日收入" amount={todayIncome} onClick={() => onViewDetail('today-income')} />
           <StatCard type="expense" title="今日支出" amount={todayExpense} onClick={() => onViewDetail('today-expense')} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard type="income" title="本月收入" amount={monthIncome} onClick={() => onViewDetail('month-income')} />
-          <StatCard type="expense" title="本月支出" amount={monthExpense} onClick={() => onViewDetail('month-expense')} />
-        </div>
-
-        <button
-          onClick={() => onViewDetail('total-balance')}
-          className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-4 text-white text-left hover:opacity-95 active:opacity-90 transition-opacity"
-        >
+        {/* 总资产卡 */}
+        <button onClick={() => onViewDetail('total-balance')} className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-card p-4 text-white text-left hover:opacity-95 active:opacity-90 transition-opacity card-hover">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
               <p className="text-purple-100 text-xs font-medium">总资产</p>
@@ -640,17 +532,14 @@ const DashboardComponent = ({
         </button>
       </div>
 
+      {/* 最近记录 */}
       <div className="px-4 mt-6 pb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">最近记录</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="section-title mb-0">最近记录</h2>
         </div>
-        
+
         {orderedTransactions.length === 0 ? (
-          <Empty
-            icon={Wallet}
-            title="暂无记录"
-            description="使用上方快捷记账添加您的第一笔记录吧"
-          />
+          <Empty icon={Wallet} title="暂无记录" description="使用上方快捷记账添加您的第一笔记录吧" />
         ) : (
           <div className="space-y-2">
             {orderedTransactions.map((transaction, index) => (
@@ -665,10 +554,8 @@ const DashboardComponent = ({
                 onTouchMove={handleTouchMove}
                 onTouchEnd={() => handleTouchEnd(index)}
                 className={`cursor-grab active:cursor-grabbing transition-all duration-300 ${
-                  draggedIndex === index 
-                    ? 'opacity-50 scale-95 shadow-xl shadow-gray-400/50 -translate-y-2 z-10' 
-                    : ''
-                } ${dragOverIndex === index ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}`}
+                  draggedIndex === index ? 'opacity-50 scale-95 shadow-xl shadow-gray-400/50 -translate-y-2 z-10' : ''
+                } ${dragOverIndex === index ? 'ring-2 ring-primary-500 ring-offset-2' : ''}`}
               >
                 <TransactionCard
                   transaction={transaction}
@@ -681,18 +568,13 @@ const DashboardComponent = ({
         )}
       </div>
 
+      {/* 账户选择弹窗 */}
       {showAccountPicker && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center pb-20" onClick={() => setShowAccountPicker(false)}>
-          <div
-            className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl max-h-[65vh] overflow-hidden flex flex-col animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl max-h-[65vh] overflow-hidden flex flex-col animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
               <h3 className="font-bold text-gray-800 dark:text-white">选择账户</h3>
-              <button
-                onClick={() => setShowAccountPicker(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-              >
+              <button onClick={() => setShowAccountPicker(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
                 <X size={20} className="text-gray-500" />
               </button>
             </div>
@@ -711,27 +593,19 @@ const DashboardComponent = ({
                   return (
                     <button
                       key={account.id}
-                      onClick={() => {
-                        onQuickRecordAccountChange(account.id);
-                        setShowAccountPicker(false);
-                      }}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all border-2 ${
-                        isSelected
-                          ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500'
-                          : 'bg-gray-50 dark:bg-gray-700 border-transparent hover:bg-gray-100 dark:hover:bg-gray-600'
+                      onClick={() => { onQuickRecordAccountChange(account.id); setShowAccountPicker(false); }}
+                      className={`w-full flex items-center gap-3 p-3 rounded-button transition-all border-2 ${
+                        isSelected ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500' : 'bg-gray-50 dark:bg-gray-700 border-transparent hover:bg-gray-100 dark:hover:bg-gray-600'
                       }`}
                     >
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${account.color}20`, color: account.color }}
-                      >
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${account.color}20`, color: account.color }}>
                         <IconComponent size={20} />
                       </div>
                       <div className="flex-1 text-left min-w-0">
                         <p className="font-medium text-gray-800 dark:text-white">{account.name}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">余额 ¥{account.balance.toLocaleString()}</p>
                       </div>
-                      {isSelected && <CheckCircle size={20} className="text-emerald-500 flex-shrink-0" />}
+                      {isSelected && <CheckCircle size={20} className="text-primary-500 flex-shrink-0" />}
                     </button>
                   );
                 })
@@ -741,38 +615,21 @@ const DashboardComponent = ({
         </div>
       )}
 
+      {/* 货币选择弹窗 */}
       {showCurrencyPicker && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center pb-20" onClick={() => { setShowCurrencyPicker(false); setCurrencySearch(''); }}>
-          <div
-            className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl max-h-[70vh] overflow-hidden flex flex-col animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl max-h-[70vh] overflow-hidden flex flex-col animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
               <h3 className="font-bold text-gray-800 dark:text-white">选择货币</h3>
-              <button
-                onClick={() => { setShowCurrencyPicker(false); setCurrencySearch(''); }}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-              >
+              <button onClick={() => { setShowCurrencyPicker(false); setCurrencySearch(''); }} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
                 <X size={20} className="text-gray-500" />
               </button>
             </div>
-            {/* 搜索框 */}
             <div className="p-3 border-b border-gray-100 dark:border-gray-700">
-              <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-button px-3 py-2">
                 <Search size={16} className="text-gray-400" />
-                <input
-                  type="text"
-                  value={currencySearch}
-                  onChange={(e) => setCurrencySearch(e.target.value)}
-                  placeholder="搜索货币名称或代码"
-                  className="flex-1 bg-transparent outline-none text-sm text-gray-800 dark:text-white placeholder-gray-400"
-                  autoFocus
-                />
-                {currencySearch && (
-                  <button onClick={() => setCurrencySearch('')}>
-                    <X size={14} className="text-gray-400" />
-                  </button>
-                )}
+                <input type="text" value={currencySearch} onChange={(e) => setCurrencySearch(e.target.value)} placeholder="搜索货币名称或代码" className="flex-1 bg-transparent outline-none text-sm text-gray-800 dark:text-white placeholder-gray-400" autoFocus />
+                {currencySearch && <button onClick={() => setCurrencySearch('')}><X size={14} className="text-gray-400" /></button>}
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-1 pb-4">
@@ -783,33 +640,25 @@ const DashboardComponent = ({
                   return c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
                 })
                 .map((currency) => {
-                const isSelected = quickRecordCurrency === currency.code;
-                return (
-                  <button
-                    key={currency.code}
-                    onClick={() => {
-                      onQuickRecordCurrencyChange(currency.code);
-                      setShowCurrencyPicker(false);
-                      setCurrencySearch('');
-                    }}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all border-2 ${
-                      isSelected
-                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500'
-                        : 'bg-gray-50 dark:bg-gray-700 border-transparent hover:bg-gray-100 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    <span className="text-2xl flex-shrink-0">{currency.flag}</span>
-                    <div className="flex-1 text-left min-w-0">
-                      <p className="font-medium text-gray-800 dark:text-white">{currency.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {currency.code} · 1{currency.code} = ¥{getRate(currency.code).toFixed(currency.rateToCNY < 0.01 ? 6 : 4)}
-                      </p>
-                    </div>
-                    <span className="text-gray-400 text-sm flex-shrink-0">{currency.symbol}</span>
-                    {isSelected && <CheckCircle size={20} className="text-emerald-500 flex-shrink-0" />}
-                  </button>
-                );
-              })}
+                  const isSelected = quickRecordCurrency === currency.code;
+                  return (
+                    <button
+                      key={currency.code}
+                      onClick={() => { onQuickRecordCurrencyChange(currency.code); setShowCurrencyPicker(false); setCurrencySearch(''); }}
+                      className={`w-full flex items-center gap-3 p-3 rounded-button transition-all border-2 ${
+                        isSelected ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500' : 'bg-gray-50 dark:bg-gray-700 border-transparent hover:bg-gray-100 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      <span className="text-2xl flex-shrink-0">{currency.flag}</span>
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="font-medium text-gray-800 dark:text-white">{currency.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{currency.code} · 1{currency.code} = ¥{getRate(currency.code).toFixed(currency.rateToCNY < 0.01 ? 6 : 4)}</p>
+                      </div>
+                      <span className="text-gray-400 text-sm flex-shrink-0">{currency.symbol}</span>
+                      {isSelected && <CheckCircle size={20} className="text-primary-500 flex-shrink-0" />}
+                    </button>
+                  );
+                })}
             </div>
           </div>
         </div>

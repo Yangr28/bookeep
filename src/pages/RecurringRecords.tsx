@@ -95,7 +95,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 page-enter">
       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-6 safe-top">
         <div className="flex items-center gap-3 mb-4">
           <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors">
@@ -107,13 +107,13 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
       </div>
 
       <div className="px-4 -mt-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 grid grid-cols-3 gap-3">
+        <div className="card p-4 grid grid-cols-3 gap-3">
           <div className="text-center">
             <p className="text-2xl font-bold text-gray-800 dark:text-white">{recurringRecords.length}</p>
             <p className="text-xs text-gray-500">周期任务</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-emerald-500">{recurringRecords.filter(r => r.enabled).length}</p>
+            <p className="text-2xl font-bold text-primary-500">{recurringRecords.filter(r => r.enabled).length}</p>
             <p className="text-xs text-gray-500">运行中</p>
           </div>
           <div className="text-center">
@@ -127,14 +127,14 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
 
       <div className="px-4 mt-4">
         {recurringRecords.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center">
+          <div className="card p-8 text-center">
             <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <Repeat size={36} className="text-gray-400" />
             </div>
             <p className="text-gray-500 mb-4">还没有设置周期记账</p>
             <button
               onClick={openAddModal}
-              className="px-6 py-2.5 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors"
+              className="px-6 py-2.5 bg-primary-500 text-white rounded-card font-medium hover:bg-primary-600 transition-colors"
             >
               创建周期任务
             </button>
@@ -149,7 +149,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
               return (
                 <div
                   key={record.id}
-                  className={`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm transition-all ${
+                  className={`card p-4 transition-all ${
                     !record.enabled ? 'opacity-60' : ''
                   }`}
                 >
@@ -162,7 +162,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-lg font-bold ${record.type === 'income' ? 'text-emerald-500' : 'text-red-500'}`}>
+                        <span className={`text-lg font-bold ${record.type === 'income' ? 'text-primary-500' : 'text-red-500'}`}>
                           {record.type === 'income' ? '+' : '-'}¥{record.amount.toFixed(2)}
                         </span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
@@ -199,7 +199,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                       onClick={() => toggleRecurringRecord(record.id)}
                       className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                         record.enabled
-                          ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
+                          ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
                       }`}
                     >
@@ -216,7 +216,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowModal(false)}>
-          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-2xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-card max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
               <h3 className="text-lg font-bold">{editingRecord ? '编辑周期任务' : '新建周期任务'}</h3>
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
@@ -234,7 +234,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                     }}
                     className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
                       form.type === t
-                        ? t === 'expense' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'
+                        ? t === 'expense' ? 'bg-red-500 text-white' : 'bg-primary-500 text-white'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
                     }`}
                   >
@@ -250,7 +250,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                   value={form.amount}
                   onChange={(e) => setForm({ ...form, amount: e.target.value })}
                   placeholder="0.00"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-xl text-xl font-bold text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-card text-xl font-bold text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
@@ -395,7 +395,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
               <button
                 onClick={handleSubmit}
                 disabled={!form.amount || !form.categoryId || !form.accountId}
-                className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
+                className={`w-full py-3 rounded-card font-bold text-white transition-all ${
                   form.amount && form.categoryId && form.accountId
                     ? 'bg-indigo-500 hover:bg-indigo-600'
                     : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'

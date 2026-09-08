@@ -81,7 +81,7 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
       <div
         key={i}
         className={`w-3 h-3 rounded-full transition-all ${
-          i < text.length ? 'bg-emerald-500 scale-110' : 'bg-gray-200 dark:bg-gray-700'
+          i < text.length ? 'bg-primary-500 scale-110' : 'bg-gray-200 dark:bg-gray-700'
         }`}
       />
     ));
@@ -91,7 +91,7 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
     <div className="fixed inset-0 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center z-50">
       <div className="w-full max-w-sm px-6">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
             {isSetupMode ? <Settings size={32} className="text-white" /> : <Lock size={32} className="text-white" />}
           </div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
@@ -102,7 +102,7 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+        <div className="bg-white dark:bg-gray-800 rounded-card p-6 shadow-lg">
           {error && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg text-red-500 text-sm text-center">
               {error}
@@ -147,7 +147,7 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
                 key={num}
                 onClick={() => num === 'delete' ? handleDelete() : handleInput(num)}
                 disabled={num === ''}
-                className={`h-14 rounded-xl text-xl font-semibold transition-all ${
+                className={`h-14 rounded-card text-xl font-semibold transition-all ${
                   num === ''
                     ? 'bg-transparent cursor-default'
                     : num === 'delete'

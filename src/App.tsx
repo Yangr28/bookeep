@@ -49,6 +49,7 @@ export default function App() {
     skip: skipUpdate,
     startUpdate,
     markReady,
+    rollback,
   } = useUpdateCheck();
 
   const [quickRecordAmount, setQuickRecordAmount] = useState('');
@@ -514,7 +515,7 @@ export default function App() {
           />
         );
       case '/settings':
-        return <Settings onBack={handleBack} theme={theme} isDark={isDark} onToggleTheme={toggleTheme} onCheckUpdate={handleManualCheckUpdate} />;
+        return <Settings onBack={handleBack} theme={theme} isDark={isDark} onToggleTheme={toggleTheme} onCheckUpdate={handleManualCheckUpdate} onRollback={rollback} rollbackFlow={updateFlow} />;
       case '/search':
         return <Search onBack={handleBack} onEditTransaction={handleEditTransaction} />;
       case '/budgets':
@@ -678,9 +679,9 @@ export default function App() {
                     <button
                       key={account.id}
                       onClick={() => handleRecordAccountSelect(account.id)}
-                      className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all border-2 ${
+                      className={`w-full flex items-center gap-4 p-4 rounded-card transition-all border-2 ${
                         recordAccountId === account.id
-                          ? 'bg-emerald-50 border-emerald-500'
+                          ? 'bg-primary-50 border-primary-500'
                           : 'bg-gray-50 border-transparent hover:bg-gray-100'
                       }`}
                     >
@@ -708,7 +709,7 @@ export default function App() {
 
       {showExitConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 mx-4 w-full max-w-sm shadow-xl">
+          <div className="bg-white rounded-card p-6 mx-4 w-full max-w-sm shadow-xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-800">确认退出</h3>
               <button 
@@ -728,7 +729,7 @@ export default function App() {
               </button>
               <button
                 onClick={handleConfirmExit}
-                className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                className="flex-1 py-3 rounded-card bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
               >
                 退出
               </button>
@@ -752,7 +753,7 @@ export default function App() {
       )}
 
       {toastMessage && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/90 text-white px-8 py-5 rounded-2xl z-[100] flex items-center gap-4 animate-fade-in shadow-2xl min-w-[200px] justify-center">
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/90 text-white px-8 py-5 rounded-card z-[100] flex items-center gap-4 animate-fade-in shadow-2xl min-w-[200px] justify-center">
           <CheckCircle size={28} className="text-emerald-400" />
           <span className="font-bold text-lg">{toastMessage}</span>
         </div>

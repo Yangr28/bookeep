@@ -117,7 +117,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 page-enter">
       <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 pt-8 pb-6 safe-top">
         <button
           onClick={onBack}
@@ -153,14 +153,14 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
 
       <div className="px-4 pt-4">
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-green-50 rounded-xl p-4">
+          <div className="bg-green-50 rounded-card p-4">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp size={18} className="text-green-500" />
               <span className="text-sm text-gray-500">总收入</span>
             </div>
             <p className="text-lg font-bold text-green-600">+{formatCurrencyShort(accountIncome)}</p>
           </div>
-          <div className="bg-red-50 rounded-xl p-4">
+          <div className="bg-red-50 rounded-card p-4">
             <div className="flex items-center gap-2 mb-2">
               <TrendingDown size={18} className="text-red-500" />
               <span className="text-sm text-gray-500">总支出</span>
@@ -171,7 +171,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
       </div>
 
       <div className="px-4 mt-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-4">
+        <div className="card p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={18} className="text-gray-500" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">日期筛选</span>
@@ -224,7 +224,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
               return (
                 <div
                   key={record.id}
-                  className="bg-white rounded-xl p-3 shadow-sm"
+                  className="bg-white rounded-card p-3 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">

@@ -318,7 +318,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 page-enter">
       <div className="p-6 pt-8 safe-top">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -339,12 +339,12 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
           </div>
         </div>
 
-        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-4">
+        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-card p-1 mb-4">
           <button
             onClick={() => setActiveTab('accounts')}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
               activeTab === 'accounts'
-                ? 'bg-white dark:bg-gray-700 shadow-sm text-emerald-600'
+                ? 'bg-white dark:bg-gray-700 shadow-sm text-primary-600'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
@@ -364,7 +364,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
             onClick={() => setActiveTab('deposits')}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
               activeTab === 'deposits'
-                ? 'bg-white dark:bg-gray-700 shadow-sm text-emerald-600'
+                ? 'bg-white dark:bg-gray-700 shadow-sm text-primary-600'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
@@ -465,7 +465,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                 <p className="text-gray-500 mb-4">还没有添加账户</p>
                 <button
                   onClick={handleOpenAddModal}
-                  className="bg-emerald-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-emerald-600 transition-colors"
+                  className="bg-primary-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors"
                 >
                   添加第一个账户
                 </button>
@@ -474,7 +474,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
 
             <button
               onClick={handleOpenAddModal}
-              className="fixed bottom-24 right-6 bg-emerald-500 text-white p-4 rounded-full shadow-lg hover:bg-emerald-600 active:scale-95 transition-all"
+              className="fixed bottom-24 right-6 bg-primary-500 text-white p-4 rounded-full shadow-lg hover:bg-primary-600 active:scale-95 transition-all"
             >
               <Plus size={24} />
             </button>
@@ -484,7 +484,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
         {activeTab === 'transfer' && (
           <>
             <div className="space-y-4">
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+              <div className="card p-4">
                 <label className="block text-sm text-gray-500 dark:text-gray-400 mb-3">转出账户</label>
                 <div className="grid grid-cols-2 gap-2">
                   {accounts.map((account) => (
@@ -518,7 +518,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+              <div className="card p-4">
                 <label className="block text-sm text-gray-500 dark:text-gray-400 mb-3">转入账户</label>
                 <div className="grid grid-cols-2 gap-2">
                   {accounts.map((account) => (
@@ -546,7 +546,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+              <div className="card p-4">
                 <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">转账金额</label>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-semibold text-gray-800 dark:text-white">¥</span>
@@ -565,7 +565,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+              <div className="card p-4">
                 <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">备注</label>
                 <input
                   type="text"
@@ -598,7 +598,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                     setTransferNote('');
                   }}
                   disabled={!transferFromId || !transferToId || !transferAmount || parseFloat(transferAmount) <= 0 || transferFromId === transferToId}
-                  className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all ${
+                  className={`w-full py-3.5 rounded-card font-semibold text-white transition-all ${
                     transferFromId && transferToId && transferAmount && parseFloat(transferAmount) > 0 && transferFromId !== transferToId
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:opacity-90'
                       : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
@@ -618,7 +618,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                       return (
                         <div
                           key={transfer.id}
-                          className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm"
+                          className="card p-3"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2.5">
@@ -672,7 +672,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
               {fixedDeposits.map((deposit) => (
                 <div
                   key={deposit.id}
-                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
+                  className="card p-5 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -697,13 +697,13 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3">
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-card p-3">
                       <p className="text-gray-500 dark:text-gray-400 text-xs">本金</p>
                       <p className="font-semibold text-gray-800 dark:text-white mt-1 truncate">{formatCurrencyShort(deposit.principal)}</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3">
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-card p-3">
                       <p className="text-gray-500 dark:text-gray-400 text-xs">到期金额</p>
-                      <p className="font-semibold text-emerald-600 mt-1 truncate">{formatCurrencyShort(deposit.maturityAmount)}</p>
+                      <p className="font-semibold text-primary-600 mt-1 truncate">{formatCurrencyShort(deposit.maturityAmount)}</p>
                     </div>
                   </div>
 
@@ -738,7 +738,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                 <p className="text-gray-500 dark:text-gray-400 mb-4">还没有添加定期存款</p>
                 <button
                   onClick={() => setShowDepositModal(true)}
-                  className="bg-emerald-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-emerald-600 transition-colors"
+                  className="bg-primary-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors"
                 >
                   添加定期存款
                 </button>
@@ -747,7 +747,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
 
             <button
               onClick={() => setShowDepositModal(true)}
-              className="fixed bottom-24 right-6 bg-emerald-500 text-white p-4 rounded-full shadow-lg hover:bg-emerald-600 active:scale-95 transition-all"
+              className="fixed bottom-24 right-6 bg-primary-500 text-white p-4 rounded-full shadow-lg hover:bg-primary-600 active:scale-95 transition-all"
             >
               <Plus size={24} />
             </button>
@@ -760,7 +760,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
               {loans.map((loan) => (
                 <div
                   key={loan.id}
-                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
+                  className="card p-5 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -785,17 +785,17 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3">
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-card p-3">
                       <p className="text-gray-500 dark:text-gray-400 text-xs">贷款总额</p>
                       <p className="font-semibold text-gray-800 dark:text-white mt-1 truncate">{formatCurrencyShort(loan.principal)}</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3">
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-card p-3">
                       <p className="text-gray-500 dark:text-gray-400 text-xs">剩余本金</p>
                       <p className="font-semibold text-red-500 mt-1 truncate">{formatCurrencyShort(loan.remainingAmount)}</p>
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3 mb-3">
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-card p-3 mb-3">
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span className="text-gray-500 dark:text-gray-400">还款进度</span>
                       <span className="text-gray-700 dark:text-white font-medium">{((loan.paidAmount / loan.principal) * 100).toFixed(1)}%</span>
@@ -839,7 +839,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                 <p className="text-gray-500 dark:text-gray-400 mb-4">还没有添加贷款</p>
                 <button
                   onClick={() => setShowLoanModal(true)}
-                  className="bg-emerald-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-emerald-600 transition-colors"
+                  className="bg-primary-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors"
                 >
                   添加贷款
                 </button>
@@ -877,7 +877,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   value={accountFormData.name}
                   onChange={(e) => setAccountFormData({ ...accountFormData, name: e.target.value })}
                   placeholder="例如：招商银行"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                 />
               </div>
 
@@ -890,9 +890,9 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                       onClick={() => {
                         setAccountFormData({ ...accountFormData, type: option.value as Account['type'], color: colorOptions[accountTypeOptions.indexOf(option)] });
                       }}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
+                      className={`flex flex-col items-center gap-2 p-3 rounded-card transition-all ${
                         accountFormData.type === option.value
-                          ? 'bg-emerald-50 border-2 border-emerald-500'
+                          ? 'bg-primary-50 border-2 border-primary-500'
                           : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
                       }`}
                     >
@@ -910,7 +910,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   value={accountFormData.balance}
                   onChange={(e) => setAccountFormData({ ...accountFormData, balance: e.target.value })}
                   placeholder="0.00"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                 />
               </div>
 
@@ -932,7 +932,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                       setCustomColorValue(accountFormData.color);
                       setShowCustomColorPicker(true);
                     }}
-                    className="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-emerald-400 transition-colors"
+                    className="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-primary-400 transition-colors"
                   >
                     <Palette size={18} className="text-gray-400" />
                   </button>
@@ -942,7 +942,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
               <button
                 onClick={handleAccountSubmit}
                 disabled={!accountFormData.name.trim() || accountFormData.balance === ''}
-                className="w-full bg-emerald-500 text-white py-3 rounded-xl font-medium hover:bg-emerald-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
+                className="w-full bg-primary-500 text-white py-3 rounded-card font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
               >
                 添加账户
               </button>
@@ -972,7 +972,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   value={accountFormData.name}
                   onChange={(e) => setAccountFormData({ ...accountFormData, name: e.target.value })}
                   placeholder="例如：招商银行"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                 />
               </div>
 
@@ -985,9 +985,9 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                       onClick={() => {
                         setAccountFormData({ ...accountFormData, type: option.value as Account['type'], color: colorOptions[accountTypeOptions.indexOf(option)] });
                       }}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
+                      className={`flex flex-col items-center gap-2 p-3 rounded-card transition-all ${
                         accountFormData.type === option.value
-                          ? 'bg-emerald-50 border-2 border-emerald-500'
+                          ? 'bg-primary-50 border-2 border-primary-500'
                           : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
                       }`}
                     >
@@ -1005,7 +1005,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   value={accountFormData.balance}
                   onChange={(e) => setAccountFormData({ ...accountFormData, balance: e.target.value })}
                   placeholder="0.00"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                 />
               </div>
 
@@ -1027,7 +1027,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                       setCustomColorValue(accountFormData.color);
                       setShowCustomColorPicker(true);
                     }}
-                    className="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-emerald-400 transition-colors"
+                    className="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-primary-400 transition-colors"
                   >
                     <Palette size={18} className="text-gray-400" />
                   </button>
@@ -1037,7 +1037,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
               <button
                 onClick={handleAccountSubmit}
                 disabled={!accountFormData.name.trim() || accountFormData.balance === ''}
-                className="w-full bg-emerald-500 text-white py-3 rounded-xl font-medium hover:bg-emerald-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
+                className="w-full bg-primary-500 text-white py-3 rounded-card font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
               >
                 保存修改
               </button>
@@ -1068,7 +1068,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                     value={depositFormData.name}
                     onChange={(e) => setDepositFormData({ ...depositFormData, name: e.target.value })}
                     placeholder="例如：一年定期"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                   />
                 </div>
 
@@ -1081,14 +1081,14 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                         value={depositFormData.bank}
                         onChange={(e) => setDepositFormData({ ...depositFormData, bank: e.target.value })}
                         placeholder="输入银行名称"
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                        className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                       />
                       <button
                         onClick={() => {
                           setShowCustomBank(false);
                           setDepositFormData({ ...depositFormData, bank: '招商银行' });
                         }}
-                        className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                        className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                       >
                         选择预设银行
                       </button>
@@ -1100,9 +1100,9 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                           <button
                             key={bank}
                             onClick={() => setDepositFormData({ ...depositFormData, bank })}
-                            className={`py-2 px-3 rounded-xl text-sm font-medium transition-all border ${
+                            className={`py-2 px-3 rounded-card text-sm font-medium transition-all border ${
                               depositFormData.bank === bank
-                                ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                                ? 'bg-primary-50 border-primary-500 text-primary-700'
                                 : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                             }`}
                           >
@@ -1115,7 +1115,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                           setShowCustomBank(true);
                           setDepositFormData({ ...depositFormData, bank: '' });
                         }}
-                        className="w-full py-2 px-3 rounded-xl text-sm font-medium border border-dashed border-gray-300 text-gray-500 hover:border-emerald-400 hover:text-emerald-600 transition-colors"
+                        className="w-full py-2 px-3 rounded-card text-sm font-medium border border-dashed border-gray-300 text-gray-500 hover:border-primary-400 hover:text-primary-600 transition-colors"
                       >
                         + 自定义银行
                       </button>
@@ -1130,7 +1130,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                     value={depositFormData.principal}
                     onChange={(e) => setDepositFormData({ ...depositFormData, principal: e.target.value })}
                     placeholder="0.00"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                   />
                 </div>
 
@@ -1142,7 +1142,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                     value={depositFormData.rate}
                     onChange={(e) => setDepositFormData({ ...depositFormData, rate: e.target.value })}
                     placeholder="2.75"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                   />
                 </div>
 
@@ -1153,9 +1153,9 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                       <button
                         key={term.value}
                         onClick={() => setDepositFormData({ ...depositFormData, term: term.value })}
-                        className={`py-2 rounded-xl text-sm font-medium transition-all ${
+                        className={`py-2 rounded-card text-sm font-medium transition-all ${
                           depositFormData.term === term.value
-                            ? 'bg-emerald-500 text-white'
+                            ? 'bg-primary-500 text-white'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                       >
@@ -1171,15 +1171,15 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                     type="date"
                     value={depositFormData.startDate}
                     onChange={(e) => setDepositFormData({ ...depositFormData, startDate: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                   />
                 </div>
 
                 {depositFormData.principal && depositFormData.rate && (
-                  <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="bg-gray-50 rounded-card p-4">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-500 text-sm">到期金额</span>
-                      <span className="font-semibold text-emerald-600">
+                      <span className="font-semibold text-primary-600">
                         {calculateMaturityAmount(
                           parseFloat(depositFormData.principal),
                           parseFloat(depositFormData.rate),
@@ -1199,7 +1199,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                 <button
                   onClick={handleDepositSubmit}
                   disabled={!depositFormData.name.trim() || !depositFormData.principal || !depositFormData.rate}
-                  className="w-full bg-emerald-500 text-white py-3 rounded-xl font-medium hover:bg-emerald-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
+                  className="w-full bg-primary-500 text-white py-3 rounded-card font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
                 >
                   添加定期存款
                 </button>
@@ -1230,7 +1230,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   value={loanFormData.name}
                   onChange={(e) => setLoanFormData({ ...loanFormData, name: e.target.value })}
                   placeholder="例如：房贷"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
                 />
               </div>
 
@@ -1242,7 +1242,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                       <button
                         key={bank}
                         onClick={() => setLoanFormData({ ...loanFormData, bank })}
-                        className={`py-2 rounded-xl text-sm font-medium transition-all ${
+                        className={`py-2 rounded-card text-sm font-medium transition-all ${
                           loanFormData.bank === bank
                             ? 'bg-red-50 border-2 border-red-500 text-red-600'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -1256,7 +1256,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                         setShowCustomBank(true);
                         setLoanFormData({ ...loanFormData, bank: '' });
                       }}
-                      className="py-2 rounded-xl text-sm font-medium border border-dashed border-gray-300 text-gray-500 hover:border-red-400 hover:text-red-600 transition-colors"
+                      className="py-2 rounded-card text-sm font-medium border border-dashed border-gray-300 text-gray-500 hover:border-red-400 hover:text-red-600 transition-colors"
                     >
                       自定义
                     </button>
@@ -1268,14 +1268,14 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                       value={loanFormData.bank}
                       onChange={(e) => setLoanFormData({ ...loanFormData, bank: e.target.value })}
                       placeholder="输入银行名称"
-                      className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
+                      className="flex-1 px-4 py-3 rounded-card border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
                     />
                     <button
                       onClick={() => {
                         setShowCustomBank(false);
                         setLoanFormData({ ...loanFormData, bank: '招商银行' });
                       }}
-                      className="px-4 py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                      className="px-4 py-3 rounded-card border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
                     >
                       取消
                     </button>
@@ -1290,7 +1290,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   value={loanFormData.principal}
                   onChange={(e) => setLoanFormData({ ...loanFormData, principal: e.target.value })}
                   placeholder="0.00"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
                 />
               </div>
 
@@ -1302,7 +1302,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   value={loanFormData.rate}
                   onChange={(e) => setLoanFormData({ ...loanFormData, rate: e.target.value })}
                   placeholder="4.2"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
                 />
               </div>
 
@@ -1313,7 +1313,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                     <button
                       key={term.value}
                       onClick={() => setLoanFormData({ ...loanFormData, term: term.value })}
-                      className={`py-2 rounded-xl text-sm font-medium transition-all ${
+                      className={`py-2 rounded-card text-sm font-medium transition-all ${
                         loanFormData.term === term.value
                           ? 'bg-red-500 text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -1331,12 +1331,12 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   type="date"
                   value={loanFormData.startDate}
                   onChange={(e) => setLoanFormData({ ...loanFormData, startDate: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
                 />
               </div>
 
               {loanFormData.principal && loanFormData.rate && (
-                <div className="bg-gray-50 rounded-xl p-4">
+                <div className="bg-gray-50 rounded-card p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-500 text-sm">每月还款</span>
                     <span className="font-semibold text-red-500">
@@ -1353,7 +1353,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
               <button
                 onClick={handleLoanSubmit}
                 disabled={!loanFormData.name.trim() || !loanFormData.principal || !loanFormData.rate}
-                className="w-full bg-red-500 text-white py-3 rounded-xl font-medium hover:bg-red-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
+                className="w-full bg-red-500 text-white py-3 rounded-card font-medium hover:bg-red-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
               >
                 添加贷款
               </button>
@@ -1364,7 +1364,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
 
       {showCustomColorPicker && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4">
+          <div className="bg-white rounded-card p-6 w-full max-w-sm mx-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">自定义颜色</h3>
             <div className="flex items-center gap-3 mb-4">
               <input
@@ -1379,13 +1379,13 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                 onChange={handleCustomColorInput}
                 placeholder="#10B981"
                 maxLength={7}
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all uppercase"
+                className="flex-1 px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all uppercase"
               />
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCustomColorPicker(false)}
-                className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 py-3 rounded-card border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
               >
                 取消
               </button>
@@ -1396,7 +1396,7 @@ export const Accounts = ({ onViewAccountDetail }: { onViewAccountDetail: (accoun
                   }
                   setShowCustomColorPicker(false);
                 }}
-                className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-600 transition-colors"
+                className="flex-1 py-3 rounded-card bg-primary-500 text-white font-medium hover:bg-primary-600 transition-colors"
               >
                 确定
               </button>

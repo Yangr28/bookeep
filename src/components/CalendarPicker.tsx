@@ -86,9 +86,9 @@ export const CalendarPicker = ({ selectedDate, onDateChange, onClose }: Calendar
           disabled={future}
           className={`h-12 w-12 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
             selected
-              ? 'bg-emerald-500 text-white'
+              ? 'bg-primary-500 text-white'
               : todayDay
-              ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+              ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
               : future
               ? 'text-gray-300 cursor-not-allowed'
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'

@@ -134,11 +134,11 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
   const isCategoryDetail = !!selectedCategory;
 
   const gradientClass = isCategoryDetail && selectedCategory
-    ? `bg-gradient-to-br ${selectedCategory.type === 'income' ? 'from-emerald-500 to-green-600' : 'from-red-500 to-orange-500'}`
+    ? `bg-gradient-to-br ${selectedCategory.type === 'income' ? 'from-primary-500 to-green-600' : 'from-red-500 to-orange-500'}`
     : isTotalBalance 
       ? 'bg-gradient-to-br from-purple-500 to-indigo-600' 
       : isIncome 
-        ? 'bg-gradient-to-br from-emerald-500 to-green-600' 
+        ? 'bg-gradient-to-br from-primary-500 to-green-600' 
         : 'bg-gradient-to-br from-red-500 to-orange-500';
 
   const pageTitle = isCategoryDetail && selectedCategory 
@@ -146,7 +146,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
     : config.title;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
       <div className={`p-6 ${gradientClass} text-white`}>
         <div className="flex items-center gap-4 mb-6">
           <button
@@ -158,7 +158,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
           <h1 className="text-xl font-bold">{pageTitle}</h1>
         </div>
         {isCategoryDetail && selectedCategory ? (
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
             <p className="text-white/80 text-sm">累计{selectedCategory.type === 'income' ? '收入' : '支出'}</p>
             <p className="text-3xl font-bold mt-1">
               {selectedCategory.type === 'income' ? '+' : ''}{formatCurrencyShort(totalAmount)}
@@ -166,7 +166,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
             <p className="text-white/60 text-sm mt-2">共{filteredTransactions.length}笔记录</p>
           </div>
         ) : isTotalBalance ? (
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
             <p className="text-white/80 text-sm">资产总计</p>
             <p className="text-3xl font-bold mt-1">{formatCurrencyShort(totalIncome - totalExpense)}</p>
             <div className="flex justify-between mt-4 text-sm">
@@ -181,7 +181,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
             </div>
           </div>
         ) : isMonthBalance ? (
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
             <p className="text-white/80 text-sm">本月余额</p>
             <p className="text-3xl font-bold mt-1">{formatCurrencyShort(monthIncome - monthExpense)}</p>
             <div className="flex justify-between mt-4 text-sm">
@@ -196,7 +196,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
             </div>
           </div>
         ) : (
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
             <p className="text-white/80 text-sm">{config.period}总计</p>
             <p className="text-3xl font-bold mt-1">
               {isIncome ? '+' : ''}{formatCurrencyShort(totalAmount)}
@@ -206,7 +206,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
       </div>
 
       <div className="px-4 mt-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-4">
+        <div className="card p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={18} className="text-gray-500" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">日期筛选</span>
@@ -314,9 +314,9 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className={`p-2 rounded-full ${isIncome ? 'bg-emerald-100' : 'bg-red-100'}`}>
+            <div className={`p-2 rounded-full ${isIncome ? 'bg-primary-100' : 'bg-red-100'}`}>
               {isIncome ? (
-                <TrendingUp size={20} className="text-emerald-500" />
+                <TrendingUp size={20} className="text-primary-500" />
               ) : (
                 <TrendingDown size={20} className="text-red-500" />
               )}

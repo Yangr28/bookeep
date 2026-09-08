@@ -72,7 +72,7 @@ export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerPr
                 >
                   <ChevronLeft size={20} className="text-gray-600" />
                 </button>
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 rounded-xl flex items-center justify-center shadow-sm">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-50 to-green-50 dark:from-primary-900/30 dark:to-green-900/30 rounded-card flex items-center justify-center shadow-sm">
                   <span className="text-3xl font-bold text-gray-800 dark:text-white">
                     {hours.toString().padStart(2, '0')}
                   </span>
@@ -97,7 +97,7 @@ export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerPr
                 >
                   <ChevronLeft size={20} className="text-gray-600" />
                 </button>
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl flex items-center justify-center shadow-sm">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-card flex items-center justify-center shadow-sm">
                   <span className="text-3xl font-bold text-gray-800 dark:text-white">
                     {minutes.toString().padStart(2, '0')}
                   </span>
@@ -124,7 +124,7 @@ export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerPr
                     onClick={() => handleQuickSelect(h, m)}
                     className={`py-2 px-1.5 rounded-lg text-xs font-medium transition-all ${
                       isSelected
-                        ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md'
+                        ? 'bg-gradient-to-r from-primary-500 to-green-500 text-white shadow-md'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
                   >

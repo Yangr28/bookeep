@@ -85,14 +85,14 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
       <div className="bg-white dark:bg-gray-800 px-6 pt-8 pb-6 safe-top">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">分类管理</h1>
         <p className="text-gray-400 dark:text-gray-500 text-sm mt-2 leading-relaxed">管理您的收支分类</p>
       </div>
 
       <div className="px-4 mt-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
+        <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
               <span className="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
@@ -103,7 +103,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                 setNewCategory((prev) => ({ ...prev, type: 'expense' }));
                 setShowAddModal(true);
               }}
-              className="p-2.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition-all"
+              className="p-2.5 text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-card transition-all"
             >
               <Plus size={20} />
             </button>
@@ -115,7 +115,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                 <button
                   key={category.id}
                   onClick={() => onViewCategoryDetail(category.id)}
-                  className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-xl relative group hover:bg-gray-100 dark:hover:bg-gray-600 active:bg-gray-200 transition-all duration-200 min-h-[80px]"
+                  className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-card relative group hover:bg-gray-100 dark:hover:bg-gray-600 active:bg-gray-200 transition-all duration-200 min-h-[80px]"
                 >
                   <button
                     onClick={(e) => {
@@ -141,10 +141,10 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm mt-4">
+        <div className="card p-5 mt-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span>
+              <span className="w-2.5 h-2.5 bg-primary-500 rounded-full"></span>
               收入分类
             </h2>
             <button
@@ -152,7 +152,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                 setNewCategory((prev) => ({ ...prev, type: 'income' }));
                 setShowAddModal(true);
               }}
-              className="p-2.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition-all"
+              className="p-2.5 text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-card transition-all"
             >
               <Plus size={20} />
             </button>
@@ -164,7 +164,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                 <button
                   key={category.id}
                   onClick={() => onViewCategoryDetail(category.id)}
-                  className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-xl relative group hover:bg-gray-100 dark:hover:bg-gray-600 active:bg-gray-200 transition-all duration-200 min-h-[80px]"
+                  className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-card relative group hover:bg-gray-100 dark:hover:bg-gray-600 active:bg-gray-200 transition-all duration-200 min-h-[80px]"
                 >
                   <button
                     onClick={(e) => {
@@ -213,7 +213,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                   onChange={(e) => setNewCategory((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="输入分类名称"
                   maxLength={10}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                 />
               </div>
 
@@ -226,9 +226,9 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                       <button
                         key={icon}
                         onClick={() => setNewCategory((prev) => ({ ...prev, icon }))}
-                        className={`p-2 rounded-xl transition-all ${
+                        className={`p-2 rounded-card transition-all ${
                           newCategory.icon === icon
-                            ? 'bg-emerald-50 border-2 border-emerald-500'
+                            ? 'bg-primary-50 border-2 border-primary-500'
                             : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
                         }`}
                       >
@@ -255,7 +255,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                   <button
                     onClick={() => setShowColorPicker(!showColorPicker)}
                     className={`w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center transition-colors ${
-                      !colorList.includes(newCategory.color) ? 'border-emerald-400' : 'border-gray-300 hover:border-emerald-400'
+                      !colorList.includes(newCategory.color) ? 'border-primary-400' : 'border-gray-300 hover:border-primary-400'
                     }`}
                     style={!colorList.includes(newCategory.color) ? { backgroundColor: newCategory.color } : {}}
                   >
@@ -264,7 +264,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                 </div>
 
                 {showColorPicker && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="mt-4 p-4 bg-gray-50 rounded-card">
                     <p className="text-sm text-gray-500 mb-3">自定义颜色</p>
                     <div className="grid grid-cols-6 gap-2 mb-3">
                       {['#FF0000', '#FF6B00', '#FFCC00', '#00CC00', '#0066FF', '#9933FF', '#FF0099', '#00CCCC',
@@ -309,7 +309,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                             setNewCategory((prev) => ({ ...prev, color: '#EF4444' }));
                           }
                         }}
-                        className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all uppercase"
+                        className="flex-1 px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all uppercase"
                         placeholder="#RRGGBB"
                         maxLength={7}
                       />
@@ -321,7 +321,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
               <button
                 onClick={handleAddCategory}
                 disabled={!newCategory.name.trim()}
-                className="w-full bg-emerald-500 text-white py-3 rounded-xl font-medium hover:bg-emerald-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
+                className="w-full bg-primary-500 text-white py-3 rounded-card font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
               >
                 添加分类
               </button>
@@ -336,7 +336,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
           onClick={() => setCategoryToDelete(null)}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 mx-4 w-full max-w-sm shadow-xl"
+            className="bg-white dark:bg-gray-800 rounded-card p-6 mx-4 w-full max-w-sm shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white">删除分类</h3>
@@ -349,13 +349,13 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setCategoryToDelete(null)}
-                className="flex-1 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="flex-1 py-2.5 rounded-card bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 取消
               </button>
               <button
                 onClick={confirmDeleteCategory}
-                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                className="flex-1 py-2.5 rounded-card bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
               >
                 删除
               </button>

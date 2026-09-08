@@ -118,7 +118,7 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+    <div className="page-enter min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
       <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 pt-8 pb-6 safe-top">
         <div className="flex items-center gap-4 mb-6">
           <button
@@ -130,7 +130,7 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
           <h1 className="text-xl font-bold">全部记录</h1>
         </div>
         
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+        <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
           <div className="flex justify-between items-center mb-3">
             <div>
               <p className="text-white/80 text-sm">总收入</p>
@@ -148,7 +148,7 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
       </div>
 
       <div className="px-4 mt-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-4">
+        <div className="card p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={18} className="text-gray-500" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">日期筛选</span>
@@ -226,11 +226,7 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
                   <button
                     key={chip.value}
                     onClick={() => setCategoryFilter(chip.value)}
-                    className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                      active
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
+                    className={`flex-shrink-0 chip ${active ? 'chip-active' : 'chip-inactive'}`}
                   >
                     {'color' in chip && chip.color && (
                       <span
@@ -264,7 +260,7 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
               return (
                 <div
                   key={record.id}
-                  className="bg-white rounded-xl p-3 shadow-sm"
+                  className="card p-3"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">

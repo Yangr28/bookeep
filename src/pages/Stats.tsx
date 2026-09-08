@@ -184,7 +184,7 @@ export const Stats = ({ onBack }: StatsProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+    <div className="page-enter min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
       <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white px-6 pt-8 pb-6 safe-top">
         <div className="flex items-center gap-4">
           <button
@@ -202,7 +202,7 @@ export const Stats = ({ onBack }: StatsProps) => {
 
       <div className="px-4 mt-4">
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+          <div className="card p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-1.5 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
                 <Clock size={14} className="text-amber-500" />
@@ -211,16 +211,16 @@ export const Stats = ({ onBack }: StatsProps) => {
             </div>
             <p className="text-2xl font-bold text-gray-800 dark:text-white">{statsData.consecutiveDays} <span className="text-sm font-normal text-gray-400">天</span></p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+          <div className="card p-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                <Target size={14} className="text-emerald-500" />
+              <div className="p-1.5 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+                <Target size={14} className="text-primary-500" />
               </div>
               <p className="text-gray-500 dark:text-gray-400 text-sm">累计交易</p>
             </div>
             <p className="text-2xl font-bold text-gray-800 dark:text-white">{statsData.totalTransactions} <span className="text-sm font-normal text-gray-400">笔</span></p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+          <div className="card p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                 <Wallet size={14} className="text-blue-500" />
@@ -229,7 +229,7 @@ export const Stats = ({ onBack }: StatsProps) => {
             </div>
             <p className="text-2xl font-bold text-gray-800 dark:text-white">{formatCurrency(statsData.totalAmount)}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+          <div className="card p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
                 <TrendingUp size={14} className="text-purple-500" />
@@ -238,7 +238,7 @@ export const Stats = ({ onBack }: StatsProps) => {
             </div>
             <p className="text-2xl font-bold text-gray-800 dark:text-white">{formatCurrency(statsData.monthlyAverage)}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+          <div className="card p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-1.5 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
                 <Calendar size={14} className="text-cyan-500" />
@@ -247,7 +247,7 @@ export const Stats = ({ onBack }: StatsProps) => {
             </div>
             <p className="text-2xl font-bold text-gray-800 dark:text-white">{statsData.daysWithTransactions} <span className="text-sm font-normal text-gray-400">天</span></p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+          <div className="card p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-1.5 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
                 <Star size={14} className="text-pink-500" />
@@ -268,10 +268,10 @@ export const Stats = ({ onBack }: StatsProps) => {
               const IconComponent = achievement.icon;
               return (
                 <div
-                  key={achievement.id}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm text-center"
-                  title={achievement.description}
-                >
+                    key={achievement.id}
+                    className="card p-3 text-center"
+                    title={achievement.description}
+                  >
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2"
                     style={{ backgroundColor: `${achievement.color}20` }}
@@ -308,7 +308,7 @@ export const Stats = ({ onBack }: StatsProps) => {
                 return (
                   <div
                     key={achievement.id}
-                    className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm"
+                    className="card p-4"
                   >
                     <div className="flex items-center gap-3">
                       <div
@@ -340,7 +340,7 @@ export const Stats = ({ onBack }: StatsProps) => {
           </div>
         )}
 
-        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
+        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-card p-4">
           <div className="flex items-start gap-3">
             <Zap size={20} className="text-blue-500 flex-shrink-0 mt-0.5" />
             <div>
