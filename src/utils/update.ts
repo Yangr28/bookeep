@@ -218,9 +218,9 @@ export async function resolveRollbackTarget(targetVersion: string): Promise<{ ur
   };
 }
 
-/** 自动检查节流：10 分钟内不重复自动检查（检查成本极低，保证新版本发布后尽快弹出提示） */
+/** 自动检查节流：5 分钟内不重复自动检查（检查成本极低，保证新版本发布后尽快弹出提示） */
 const LAST_CHECK_KEY = 'bookeep_update_last_check';
-const AUTO_CHECK_INTERVAL = 10 * 60 * 1000;
+const AUTO_CHECK_INTERVAL = 5 * 60 * 1000;
 
 export function shouldAutoCheck(): boolean {
   try {

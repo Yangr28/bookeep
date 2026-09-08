@@ -299,7 +299,7 @@ export default function App() {
     markReady();
   }, [markReady]);
 
-  // 启动解锁后延迟自动检查更新（10 分钟节流；api.github.com 国内不稳定，失败自动重试 3 次）
+  // 启动解锁后延迟自动检查更新（5 分钟节流；api.github.com 国内不稳定，失败自动重试 3 次）
   useEffect(() => {
     if (!appUnlocked) return;
     let retries = 0;
@@ -308,11 +308,11 @@ export default function App() {
       checkUpdate(false).catch(() => {
         if (retries < 2) {
           retries += 1;
-          retryTimer = setTimeout(attemptCheck, 2500);
+          retryTimer = setTimeout(attemptCheck, 2000);
         }
       });
     };
-    const timer = setTimeout(attemptCheck, 3000);
+    const timer = setTimeout(attemptCheck, 1500);
     return () => {
       clearTimeout(timer);
       if (retryTimer) clearTimeout(retryTimer);

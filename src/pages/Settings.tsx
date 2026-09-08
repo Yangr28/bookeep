@@ -692,6 +692,9 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                 {hotVersion && nativeVersion && (
                   <span style={{ color: 'var(--primary)' }}>（热更新 · 内置 v{nativeVersion}）</span>
                 )}
+                {rollbackTarget && (
+                  <span style={{ color: 'var(--expense)' }}> · 可回退 v{rollbackTarget}</span>
+                )}
                 {' · 更新日志'}
               </p>
             </div>
@@ -709,25 +712,6 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               检查更新
             </span>
           </button>
-
-          {rollbackTarget && (
-            <button
-              onClick={() => setRollbackOpen(true)}
-              className="w-full flex items-center gap-4 p-4 active:brightness-95"
-              style={{ borderTop: '1px solid var(--line)' }}
-            >
-              <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: '#faf1dc', color: '#d9930f' }}>
-                <RotateCcw size={21} />
-              </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="font-semibold" style={{ color: 'var(--ink)' }}>回退到旧版本</p>
-                <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
-                  当前新版界面不满意？可一键回退到 v{rollbackTarget}，数据不受影响
-                </p>
-              </div>
-              <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
-            </button>
-          )}
 
           <button
             onClick={() => setSubPage('help')}
@@ -1243,7 +1227,20 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               </>
               )}
             </div>
-            <div className="p-4" style={{ borderTop: '1px solid var(--line)' }}>
+            <div className="p-4 space-y-3" style={{ borderTop: '1px solid var(--line)' }}>
+              {rollbackTarget && !rollbackBusy && rollbackFlow?.phase !== 'done' && (
+                <button
+                  onClick={() => {
+                    setRollbackOpen(true);
+                    setShowChangelog(false);
+                  }}
+                  className="w-full py-2.5 text-sm font-medium flex items-center justify-center gap-2 rounded-button active:brightness-95"
+                  style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}
+                >
+                  <RotateCcw size={16} />
+                  回退到旧版本 v{rollbackTarget}
+                </button>
+              )}
               <button
                 onClick={() => setShowChangelog(false)}
                 className="btn-primary w-full py-3 font-medium"
