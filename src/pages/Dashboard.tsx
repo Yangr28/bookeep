@@ -4,7 +4,7 @@ import { StatCard } from '../components/StatCard';
 import { TransactionCard } from '../components/TransactionCard';
 import { formatCurrencyShort } from '../utils/format';
 import { parseSmartInputWithHistory, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe } from 'lucide-react';
+import { Wallet, Settings, Plus, Sparkles, Image, Search } from 'lucide-react';
 import Empty from '../components/Empty';
 import { TransactionType, Transaction } from '../types';
 
@@ -201,13 +201,6 @@ const DashboardComponent = ({
   const balance = monthIncome - monthExpense;
   const canSubmit = !!(quickRecordAmount && quickRecordCategoryId && quickRecordAccountId);
 
-  const quickTools = [
-    { icon: ArrowLeftRight, label: '转账', onClick: onGoToTransfer, color: 'var(--primary)', bg: 'var(--primary-soft)' },
-    { icon: Repeat, label: '周期记账', onClick: onGoToRecurring, color: '#7c6ef0', bg: '#eeecfd' },
-    { icon: Bookmark, label: '模板', onClick: onGoToTemplates, color: '#e0684f', bg: 'var(--expense-soft)' },
-    { icon: PiggyBank, label: '预算', onClick: onGoToBudgets, color: '#d9930f', bg: '#faf1dc' },
-  ];
-
   return (
     <div className="page-root pb-nav overflow-y-auto">
       {/* 头部：问候 + 快捷图标 */}
@@ -223,9 +216,6 @@ const DashboardComponent = ({
         <div className="flex items-center gap-2">
           <button onClick={onGoToSearch} className="icon-btn" aria-label="搜索">
             <Search size={19} />
-          </button>
-          <button onClick={() => onGoToCurrencyConverter?.()} className="icon-btn" aria-label="汇率转换">
-            <Globe size={19} />
           </button>
           <button onClick={onGoToSettings} className="icon-btn" aria-label="设置">
             <Settings size={19} />
@@ -304,27 +294,6 @@ const DashboardComponent = ({
               记一笔
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* 快捷工具 */}
-      <div className="px-4 mt-4">
-        <div className="card p-3 grid grid-cols-4 gap-1">
-          {quickTools.map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <button
-                key={tool.label}
-                onClick={tool.onClick}
-                className="flex flex-col items-center gap-1.5 py-2 rounded-button transition-colors active:scale-95"
-              >
-                <div className="w-10 h-10 rounded-button flex items-center justify-center" style={{ background: tool.bg }}>
-                  <Icon size={19} style={{ color: tool.color }} />
-                </div>
-                <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>{tool.label}</span>
-              </button>
-            );
-          })}
         </div>
       </div>
 

@@ -67,8 +67,6 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
     return data;
   }, [transactions]);
 
-  const monthBalance = monthIncome - monthExpense;
-
   return (
     <div className="page-root pb-nav page-enter">
       {/* 页头 */}
@@ -83,23 +81,6 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
       </div>
 
       <div className="px-4 mt-3 space-y-3">
-        {/* 本月结余 */}
-        <div className="card p-5 text-center">
-          <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月结余</p>
-          <p className="text-4xl font-bold amount-num mt-2" style={{ color: monthBalance >= 0 ? 'var(--primary)' : 'var(--expense)' }}>
-            {formatCurrencyShort(monthBalance)}
-          </p>
-          <div className="flex items-center justify-center gap-6 mt-3 text-sm">
-            <span style={{ color: 'var(--ink-2)' }}>
-              收入 <span className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(monthIncome)}</span>
-            </span>
-            <span style={{ color: 'var(--line)' }}>·</span>
-            <span style={{ color: 'var(--ink-2)' }}>
-              支出 <span className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(monthExpense)}</span>
-            </span>
-          </div>
-        </div>
-
         {/* 6个月收支趋势 */}
         <div className="card p-4">
           <h2 className="section-title">近 6 个月收支趋势</h2>
