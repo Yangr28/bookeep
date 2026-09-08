@@ -69,105 +69,114 @@ export const CalendarPicker = ({ selectedDate, onDateChange, onClose }: Calendar
 
   const renderDays = () => {
     const days = [];
-    
+
     for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<div key={`empty-${i}`} className="h-12 flex items-center justify-center" />);
+      days.push(<div key={`empty-${i}`} className="h-11 w-11" />);
     }
-    
+
     for (let day = 1; day <= daysInMonth; day++) {
       const selected = isSelected(day);
       const todayDay = isToday(day);
       const future = isFuture(day);
-      
+
+      const dayStyle: React.CSSProperties = selected
+        ? { background: 'var(--primary)', color: '#fff', boxShadow: 'var(--shadow-fab)' }
+        : todayDay
+        ? { background: 'var(--primary-soft)', color: 'var(--primary-ink)' }
+        : future
+        ? { color: 'var(--ink-2)', opacity: 0.35 }
+        : { color: 'var(--ink)' };
+
       days.push(
         <button
           key={day}
           onClick={() => !future && handleDayClick(day)}
           disabled={future}
-          className={`h-12 w-12 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-            selected
-              ? 'bg-primary-500 text-white'
-              : todayDay
-              ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
-              : future
-              ? 'text-gray-300 cursor-not-allowed'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-          }`}
+          className="h-11 w-11 rounded-full flex items-center justify-center text-sm font-medium transition-all active:scale-95"
+          style={dayStyle}
         >
           {day}
         </button>
       );
     }
-    
+
     return days;
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end z-[100] touch-none">
-      <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl max-h-[80vh] overflow-y-auto animate-slide-up">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-4 border-b border-blue-400/30">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-full transition-colors"
-            >
-              <X size={20} className="text-white" />
-            </button>
-            <h2 className="text-base font-semibold text-white">选择日期</h2>
-            <div className="w-10"></div>
-          </div>
-          <div className="mt-1 text-white/80 text-sm">
-            {selectedDate.getFullYear()}年{selectedDate.getMonth() + 1}月{selectedDate.getDate()}日
-          </div>
+    <div
+      className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in"
+      style={{ background: 'rgba(43,41,37,0.45)' }}
+      onClick={onClose}
+    >
+      <div
+        className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 头部 */}
+        <div
+          className="flex items-center justify-between p-4"
+          style={{ borderBottom: '1px solid var(--line)' }}
+        >
+          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>选择日期</h3>
+          <button onClick={onClose} className="icon-btn w-9 h-9">
+            <X size={18} />
+          </button>
         </div>
 
-        <div className="p-3 pb-16">
+        <div className="p-4 safe-bottom">
+          {/* 年月切换 */}
           <div className="flex items-center justify-center gap-3 mb-4">
-            <button
-              onClick={handlePrevMonth}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-            >
-              <ChevronLeft size={20} className="text-gray-600" />
+            <button onClick={handlePrevMonth} className="icon-btn w-9 h-9">
+              <ChevronLeft size={18} />
             </button>
-            
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleYearChange('down')}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-                >
-                  <ChevronLeft size={14} className="text-gray-500" />
+
+            <div className="flex flex-col items-center min-w-[7rem]">
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => handleYearChange('down')} className="icon-btn w-7 h-7">
+                  <ChevronLeft size={14} />
                 </button>
-                <span className="text-lg font-bold text-gray-800 dark:text-white w-16 text-center">{currentYear}年</span>
-                <button
-                  onClick={() => handleYearChange('up')}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                <span
+                  className="text-lg font-bold w-14 text-center amount-num"
+                  style={{ color: 'var(--ink)' }}
                 >
-                  <ChevronRight size={14} className="text-gray-500" />
+                  {currentYear}年
+                </span>
+                <button onClick={() => handleYearChange('up')} className="icon-btn w-7 h-7">
+                  <ChevronRight size={14} />
                 </button>
               </div>
-              <span className="text-base font-medium text-gray-600 dark:text-gray-300 mt-0.5">{months[currentMonth]}</span>
+              <span className="text-sm font-medium mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                {months[currentMonth]}
+              </span>
             </div>
-            
-            <button
-              onClick={handleNextMonth}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-            >
-              <ChevronRight size={20} className="text-gray-600" />
+
+            <button onClick={handleNextMonth} className="icon-btn w-9 h-9">
+              <ChevronRight size={18} />
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-0.5 mb-1">
+          {/* 星期 */}
+          <div className="grid grid-cols-7 justify-items-center mb-1">
             {weekDays.map((day) => (
-              <div key={day} className="h-8 flex items-center justify-center text-xs font-medium text-gray-400">
+              <div
+                key={day}
+                className="h-8 w-11 flex items-center justify-center text-xs font-medium"
+                style={{ color: 'var(--ink-2)' }}
+              >
                 {day}
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-0.5">
+          {/* 日期 */}
+          <div className="grid grid-cols-7 gap-1 justify-items-center">
             {renderDays()}
           </div>
+
+          <p className="text-center text-xs mt-4" style={{ color: 'var(--ink-2)' }}>
+            已选 {selectedDate.getFullYear()}年{selectedDate.getMonth() + 1}月{selectedDate.getDate()}日
+          </p>
         </div>
       </div>
     </div>

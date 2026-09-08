@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 
+// 主 Tab 页（底部导航）：'/' 首页、'/records' 账单、'/accounts' 资产、'/profile' 我的
 // '/record'（记账/编辑页）作为普通入栈页面：编辑保存后可返回进入前的来源页
-const mainPages = ['/', '/categories', '/statistics', '/accounts'];
+const mainPages = ['/', '/records', '/accounts', '/profile'];
 
 interface HistoryState {
   currentPage: string;

@@ -20,20 +20,32 @@ export const DeleteConfirmModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-card w-full max-w-sm shadow-xl animate-bounce-in">
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-          <X size={20} className="text-gray-400" />
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center animate-fade-in"
+      style={{ background: 'rgba(43,41,37,0.45)' }}
+      onClick={onClose}
+    >
+      <div
+        className="card relative w-full max-w-sm mx-4 p-5 animate-bounce-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button onClick={onClose} className="icon-btn w-9 h-9 absolute top-4 right-4">
+          <X size={18} />
         </button>
-        <div className="p-6 text-center">
-          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Trash2 size={28} className="text-red-500" />
+        <div className="text-center pt-2">
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}
+          >
+            <Trash2 size={28} />
           </div>
-          <h3 className="text-title text-gray-800 dark:text-white mb-2">{title}</h3>
-          {itemName && <p className="text-gray-500 dark:text-gray-400 mb-2">{itemName}</p>}
-          <p className="text-gray-500 dark:text-gray-400">{message}</p>
+          <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--ink)' }}>{title}</h3>
+          {itemName && (
+            <p className="text-sm font-medium mb-1" style={{ color: 'var(--ink)' }}>{itemName}</p>
+          )}
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>{message}</p>
         </div>
-        <div className="px-6 pb-6 flex gap-3">
+        <div className="flex gap-3 mt-6">
           <button onClick={onClose} className="btn-ghost flex-1">取消</button>
           <button onClick={onConfirm} className="btn-danger flex-1">删除</button>
         </div>

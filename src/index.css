@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+ * 设计语言：暖纸 · 青蓝
+ * 暖米色纸面 + 纯白暖影卡片 + 晴蓝主色 + 陶土橙支出色
+ * 规则：无渐变、无毛玻璃；圆角柔和；阴影暖调；留白宽松
+ * ============================================================ */
+
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   line-height: 1.5;
@@ -10,19 +16,45 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* 设计令牌 */
-  --color-primary: #10b981;
-  --color-primary-dark: #059669;
-  --radius-card: 1rem;
-  --radius-button: 0.75rem;
-  --shadow-card: 0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px 0 rgba(0,0,0,0.04);
-  --shadow-card-hover: 0 4px 12px 0 rgba(0,0,0,0.1), 0 2px 4px 0 rgba(0,0,0,0.06);
+
+  /* 设计令牌（浅色） */
+  --paper: #f6f3ee;        /* 页面纸面底 */
+  --paper-deep: #efe9df;   /* 次级面：输入框/分段控件底 */
+  --card: #ffffff;         /* 卡片 */
+  --ink: #2b2925;          /* 主文字（暖墨） */
+  --ink-2: #8c8577;        /* 次要文字（暖棕灰） */
+  --line: #e9e3d6;         /* 发丝分隔线 */
+  --primary: #2e85de;      /* 晴蓝主色 */
+  --primary-soft: #e7f0fc; /* 主色浅底 */
+  --primary-ink: #1b5ba3;  /* 主色深字 */
+  --expense: #e0684f;      /* 陶土橙红（支出/危险） */
+  --expense-soft: #fce9e4;
+  --expense-ink: #a93f2c;
+  --radius-card: 1.25rem;   /* 20px 卡片 */
+  --radius-button: 0.875rem;/* 14px 按钮 */
+  --radius-sheet: 1.5rem;   /* 24px 底部弹层 */
+  --shadow-card: 0 6px 20px rgba(168, 142, 110, 0.10);
+  --shadow-card-hover: 0 10px 28px rgba(168, 142, 110, 0.16);
+  --shadow-fab: 0 10px 24px rgba(46, 133, 222, 0.38);
   --transition: all 0.2s ease-out;
 }
 
 .dark {
-  --shadow-card: 0 1px 3px 0 rgba(0,0,0,0.3), 0 1px 2px 0 rgba(0,0,0,0.2);
-  --shadow-card-hover: 0 4px 12px 0 rgba(0,0,0,0.35), 0 2px 4px 0 rgba(0,0,0,0.25);
+  --paper: #17181c;
+  --paper-deep: #22242c;
+  --card: #20232b;
+  --ink: #ece7de;
+  --ink-2: #9a9488;
+  --line: #2e323c;
+  --primary: #5ba0f0;
+  --primary-soft: #1e2c42;
+  --primary-ink: #a8ccf7;
+  --expense: #e8806b;
+  --expense-soft: #3a2420;
+  --expense-ink: #f0a48f;
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.32);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.46);
+  --shadow-fab: 0 10px 24px rgba(91, 160, 240, 0.32);
 }
 
 * {
@@ -37,79 +69,159 @@ html, body, #root {
 }
 
 body {
-  background-color: #f9fafb;
-}
-
-.dark body {
-  background-color: #111827;
+  background-color: var(--paper);
+  color: var(--ink);
 }
 
 /* === 组件类 === */
 @layer components {
-  /* 卡片 */
+  /* 页面根容器 */
+  .page-root {
+    @apply min-h-screen page-enter;
+    background-color: var(--paper);
+    color: var(--ink);
+  }
+
+  /* 卡片：纯白/暖炭，柔暖阴影，20px 圆角 */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-card shadow-card;
+    background-color: var(--card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
     transition: var(--transition);
   }
   .card-hover {
     @apply hover:shadow-card-hover active:scale-[0.98];
   }
-  /* 页面头部 */
+
+  /* 普通页头部（纸底、墨字、无渐变） */
   .page-header {
-    @apply text-white px-5 pt-8 pb-5 rounded-b-3xl safe-top;
+    background-color: var(--paper);
+    color: var(--ink);
+    @apply px-5 pt-6 pb-3 safe-top;
   }
-  /* 标题 */
   .page-title {
-    @apply text-xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
-  /* 副标题 */
   .page-subtitle {
-    @apply text-sm mt-1 opacity-80;
+    @apply text-sm mt-1;
+    color: var(--ink-2);
   }
-  /* 区段标题 */
   .section-title {
-    @apply text-base font-semibold text-gray-800 dark:text-gray-200 mb-3;
+    @apply text-base font-semibold mb-3;
+    color: var(--ink);
   }
-  /* 按钮基础 */
+
+  /* 圆形图标按钮（返回/关闭） */
+  .icon-btn {
+    @apply inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors active:scale-95;
+    background-color: var(--paper-deep);
+    color: var(--ink);
+  }
+  .icon-btn:active { background-color: var(--line); }
+
+  /* 按钮 */
   .btn {
-    @apply flex items-center justify-center gap-2 font-medium transition-all duration-200 active:scale-95;
+    @apply flex items-center justify-center gap-2 font-semibold transition-all duration-200 active:scale-95;
+    border-radius: var(--radius-button);
   }
   .btn-primary {
-    @apply btn bg-primary-500 text-white rounded-button py-3 px-4 hover:bg-primary-600 shadow-lg shadow-primary-500/25;
+    @apply btn py-3 px-4 text-white;
+    background-color: var(--primary);
+    box-shadow: 0 6px 16px rgba(46, 133, 222, 0.28);
+  }
+  .btn-primary:active { filter: brightness(0.94); }
+  .btn-primary:disabled {
+    background-color: var(--paper-deep);
+    color: var(--ink-2);
+    box-shadow: none;
   }
   .btn-ghost {
-    @apply btn bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-button py-3 px-4 hover:bg-gray-200 dark:hover:bg-gray-600;
+    @apply btn py-3 px-4;
+    background-color: var(--paper-deep);
+    color: var(--ink);
   }
+  .btn-ghost:active { filter: brightness(0.95); }
   .btn-danger {
-    @apply btn bg-red-500 text-white rounded-button py-3 px-4 hover:bg-red-600;
+    @apply btn py-3 px-4 text-white;
+    background-color: var(--expense);
   }
+  .btn-danger:active { filter: brightness(0.92); }
+
   /* 胶囊标签 */
   .chip {
-    @apply inline-flex items-center gap-1 px-3 py-1.5 rounded-chip text-sm font-medium transition-all duration-200;
+    @apply inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium transition-all duration-200;
+    border-radius: 9999px;
   }
   .chip-active {
-    @apply bg-primary-500 text-white shadow-lg shadow-primary-500/25;
+    background-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(46, 133, 222, 0.28);
   }
   .chip-inactive {
-    @apply bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400;
+    background-color: var(--paper-deep);
+    color: var(--ink-2);
   }
+
+  /* 分段控件（明细/图表 等） */
+  .seg {
+    @apply flex p-1 rounded-full;
+    background-color: var(--paper-deep);
+  }
+  .seg-item {
+    @apply flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-medium rounded-full transition-all duration-200;
+    color: var(--ink-2);
+  }
+  .seg-item-active {
+    background-color: var(--card);
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(168, 142, 110, 0.18);
+  }
+
   /* 列表项 */
   .list-item {
-    @apply flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-card shadow-card transition-all duration-200 hover:shadow-card-hover;
+    @apply flex items-center gap-3 p-3 transition-all duration-200;
+    background-color: var(--card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
   }
+
   /* 输入框 */
   .input-field {
-    @apply w-full bg-gray-50 dark:bg-gray-700 rounded-button px-4 py-3 text-gray-800 dark:text-white placeholder-gray-400 border-2 border-transparent focus:border-primary-400 outline-none transition-colors;
+    @apply w-full px-4 py-3 outline-none transition-colors;
+    background-color: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-button);
+    color: var(--ink);
+  }
+  .input-field::placeholder { color: var(--ink-2); opacity: 0.7; }
+  .input-field:focus { border-color: var(--primary); }
+
+  /* 底部弹层 */
+  .sheet {
+    background-color: var(--card);
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  }
+
+  /* 数字：等宽，金额专用 */
+  .amount-num {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
 }
 
 /* === 安全区 === */
 .safe-top {
-  padding-top: max(env(safe-area-inset-top, 0px), 2rem);
+  padding-top: max(env(safe-area-inset-top, 0px), 1.5rem);
 }
 
 .safe-bottom {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
+/* 底部导航占位高度 */
+.pb-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6.5rem);
 }
 
 .status-bar-scrim {
@@ -118,7 +230,7 @@ body {
   left: 0;
   right: 0;
   height: env(safe-area-inset-top, 0px);
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0));
   z-index: 40;
   pointer-events: none;
 }
@@ -164,7 +276,7 @@ input, select {
 
 select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238c8577' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.5rem center;
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;

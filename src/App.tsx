@@ -210,6 +210,17 @@ export default function App() {
     }, 0);
   }, [handlePageChange, setSelectedAccountId]);
 
+  // 底部导航中央「记一笔」：重置记账状态后进入记账页（保留上次使用的账户）
+  const handleFabRecord = useCallback(() => {
+    setEditTransaction(null);
+    setRecordAmount('');
+    setRecordCategoryId(null);
+    setRecordNote('');
+    setRecordType('expense');
+    setRecordDateTime(new Date());
+    handlePageChange('/record');
+  }, [handlePageChange, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setRecordDateTime]);
+
   const handleConfirmExit = useCallback(() => {
     CapApp.exitApp();
   }, []);
@@ -428,13 +439,13 @@ export default function App() {
             onViewDetail={handleViewDetail}
             onGoToAccounts={() => handlePageChange('/accounts')}
             onGoToBudgets={() => handlePageChange('/budgets')}
-            onGoToStats={() => handlePageChange('/stats')}
+            onGoToStats={() => handlePageChange('/records')}
             onGoToTransfer={() => handlePageChange('/transfer')}
             onGoToRecurring={() => handlePageChange('/recurring')}
             onGoToTemplates={() => handlePageChange('/templates')}
             onGoToCurrencyConverter={() => handlePageChange('/currency-converter')}
             onEditTransaction={handleEditTransaction}
-            onGoToSettings={() => handlePageChange('/settings')}
+            onGoToSettings={() => handlePageChange('/profile')}
             onGoToSearch={() => handlePageChange('/search')}
             onShowOCRModal={() => setShowOCRModal(true)}
             quickRecordAmount={quickRecordAmount}
@@ -461,6 +472,7 @@ export default function App() {
         return (
           <Record
             editTransaction={editTransaction}
+            onBack={handleBack}
             selectedDateTime={recordDateTime}
             selectedAccountId={recordAccountId}
             onShowDatePicker={() => setShowRecordDatePicker(true)}
@@ -486,8 +498,26 @@ export default function App() {
             onShowCalendar={() => setShowCalendar(true)}
           />
         );
+      case '/records':
+        return (
+          <AllRecords
+            isTab
+            onBack={handleBack}
+            onEditTransaction={handleEditTransaction}
+          />
+        );
       case '/accounts':
-        return <Accounts onViewAccountDetail={handleViewAccountDetail} />;
+        return (
+          <Accounts
+            isTab
+            onViewAccountDetail={handleViewAccountDetail}
+            onGoToBudgets={() => handlePageChange('/budgets')}
+            onGoToRecurring={() => handlePageChange('/recurring')}
+            onGoToTemplates={() => handlePageChange('/templates')}
+            onGoToCurrencyConverter={() => handlePageChange('/currency-converter')}
+            onGoToTransfer={() => handlePageChange('/transfer')}
+          />
+        );
       case '/account-detail':
         return (
           <AccountDetail 
@@ -514,8 +544,22 @@ export default function App() {
             onEditTransaction={handleEditTransaction}
           />
         );
+      case '/profile':
+        return (
+          <Settings
+            isTab
+            onBack={handleBack}
+            theme={theme}
+            isDark={isDark}
+            onToggleTheme={toggleTheme}
+            onCheckUpdate={handleManualCheckUpdate}
+            onRollback={rollback}
+            rollbackFlow={updateFlow}
+            onGoToCategories={() => handlePageChange('/categories')}
+          />
+        );
       case '/settings':
-        return <Settings onBack={handleBack} theme={theme} isDark={isDark} onToggleTheme={toggleTheme} onCheckUpdate={handleManualCheckUpdate} onRollback={rollback} rollbackFlow={updateFlow} />;
+        return <Settings onBack={handleBack} theme={theme} isDark={isDark} onToggleTheme={toggleTheme} onCheckUpdate={handleManualCheckUpdate} onRollback={rollback} rollbackFlow={updateFlow} onGoToCategories={() => handlePageChange('/categories')} />;
       case '/search':
         return <Search onBack={handleBack} onEditTransaction={handleEditTransaction} />;
       case '/budgets':
@@ -529,32 +573,7 @@ export default function App() {
       case '/currency-converter':
         return <CurrencyConverter onBack={handleBack} />;
       default:
-        return (
-          <Dashboard
-            onViewDetail={handleViewDetail}
-            onGoToAccounts={() => handlePageChange('/accounts')}
-            onGoToCurrencyConverter={() => handlePageChange('/currency-converter')}
-            onEditTransaction={handleEditTransaction}
-            quickRecordAmount={quickRecordAmount}
-            quickRecordCategoryId={quickRecordCategoryId}
-            quickRecordType={quickRecordType}
-            quickRecordNote={quickRecordNote}
-            quickRecordAccountId={quickRecordAccountId}
-            quickRecordDateTime={quickRecordDateTime}
-            quickRecordCurrency={quickRecordCurrency}
-            onQuickRecordAmountChange={setQuickRecordAmount}
-            onQuickRecordCategoryChange={setQuickRecordCategoryId}
-            onQuickRecordTypeChange={setQuickRecordType}
-            onQuickRecordNoteChange={setQuickRecordNote}
-            onQuickRecordAccountChange={setQuickRecordAccountId}
-            onQuickRecordCurrencyChange={setQuickRecordCurrency}
-            onQuickRecordSubmit={handleQuickRecordSubmit}
-            onShowDatePicker={() => setShowQuickRecordDatePicker(true)}
-            onShowTimePicker={() => setShowQuickRecordTimePicker(true)}
-            widgetQuickInput={widgetQuickInput}
-            onClearWidgetQuickInput={() => setWidgetQuickInput('')}
-          />
-        );
+        return null;
     }
   };
 
@@ -565,22 +584,25 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 relative ${isSwiping || hasModalOpen ? 'overflow-hidden' : ''}`}>
+    <div
+      className={`min-h-screen relative page-enter ${isSwiping || hasModalOpen ? 'overflow-hidden' : ''}`}
+      style={{ background: 'var(--paper)', color: 'var(--ink)' }}
+    >
       {/* 状态栏遮罩：边到边模式下保证白色状态栏图标在任何页面背景上都可读 */}
       <div className="status-bar-scrim" />
       {canGoBack() && (
         <>
-          <div 
+          <div
             className={`fixed left-0 top-0 bottom-0 w-8 flex items-center justify-center z-20 transition-opacity duration-200 ${showLeftIndicator ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
             onClick={handleBack}
           >
-            <div className="w-1.5 h-20 bg-gray-400 rounded-r-full shadow-sm" />
+            <div className="w-1.5 h-20 rounded-r-full" style={{ background: 'var(--primary)', opacity: 0.5 }} />
           </div>
-          <div 
+          <div
             className={`fixed right-0 top-0 bottom-0 w-8 flex items-center justify-center z-20 transition-opacity duration-200 ${showRightIndicator ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
             onClick={handleBack}
           >
-            <div className="w-1.5 h-20 bg-gray-400 rounded-l-full shadow-sm" />
+            <div className="w-1.5 h-20 rounded-l-full" style={{ background: 'var(--primary)', opacity: 0.5 }} />
           </div>
         </>
       )}
@@ -597,19 +619,13 @@ export default function App() {
       </div>
 
       {isSwiping && canGoBack() && (
-        <>
-          <div 
-            className="fixed inset-0 bg-black/30 pointer-events-none z-10"
-            style={{ opacity: Math.abs(swipeProgress) * 0.4 }}
-          />
-          <div 
-            className="fixed left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-gray-200 to-transparent pointer-events-none z-10"
-            style={{ opacity: Math.abs(swipeProgress) * 0.6 }}
-          />
-        </>
+        <div
+          className="fixed inset-0 pointer-events-none z-10"
+          style={{ background: 'rgba(43,41,37,0.35)', opacity: Math.abs(swipeProgress) * 0.5 }}
+        />
       )}
 
-      {showBottomNav && <BottomNav currentPage={currentPage} onPageChange={handlePageChange} />}
+      {showBottomNav && <BottomNav currentPage={currentPage} onPageChange={handlePageChange} onRecord={handleFabRecord} />}
 
       {showCalendar && (
         <CalendarPicker
@@ -652,52 +668,58 @@ export default function App() {
       )}
 
       {showAccountPicker && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[100]">
-          <div className="bg-white w-full rounded-t-3xl max-h-[75vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white z-10 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">选择账户</h2>
-              <button
-                onClick={() => setShowAccountPicker(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X size={24} className="text-gray-500" />
+        <div
+          className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => setShowAccountPicker(false)}
+        >
+          <div
+            className="sheet w-full max-w-md max-h-[75vh] overflow-hidden flex flex-col animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>选择账户</h3>
+              <button onClick={() => setShowAccountPicker(false)} className="icon-btn w-9 h-9">
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 pb-24 space-y-3">
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 pb-6 safe-bottom">
               {accounts.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Wallet size={28} className="text-gray-400" />
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--paper-deep)' }}>
+                    <Wallet size={28} style={{ color: 'var(--ink-2)' }} />
                   </div>
-                  <p className="text-gray-500">还没有添加账户</p>
+                  <p style={{ color: 'var(--ink-2)' }}>还没有添加账户</p>
                 </div>
               ) : (
                 accounts.map((account) => {
                   const IconComponent = getIcon(account.icon);
+                  const isSelected = recordAccountId === account.id;
                   return (
                     <button
                       key={account.id}
                       onClick={() => handleRecordAccountSelect(account.id)}
-                      className={`w-full flex items-center gap-4 p-4 rounded-card transition-all border-2 ${
-                        recordAccountId === account.id
-                          ? 'bg-primary-50 border-primary-500'
-                          : 'bg-gray-50 border-transparent hover:bg-gray-100'
-                      }`}
+                      className="w-full flex items-center gap-3 p-3 rounded-button transition-all"
+                      style={{
+                        background: isSelected ? 'var(--primary-soft)' : 'var(--paper)',
+                        border: `2px solid ${isSelected ? 'var(--primary)' : 'transparent'}`,
+                      }}
                     >
                       <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: `${account.color}20`, color: account.color }}
                       >
-                        <IconComponent size={24} />
+                        <IconComponent size={20} />
                       </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-gray-800">{account.name}</p>
-                        <p className="text-sm text-gray-500">{AccountTypeNames[account.type]}</p>
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="font-medium" style={{ color: 'var(--ink)' }}>{account.name}</p>
+                        <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{AccountTypeNames[account.type]}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-800">{account.balance.toLocaleString()}</p>
-                      </div>
+                      <p className="font-semibold amount-num flex-shrink-0" style={{ color: 'var(--ink)' }}>
+                        ¥{account.balance.toLocaleString()}
+                      </p>
+                      {isSelected && <CheckCircle size={18} className="flex-shrink-0" style={{ color: 'var(--primary)' }} />}
                     </button>
                   );
                 })
@@ -708,31 +730,22 @@ export default function App() {
       )}
 
       {showExitConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-card p-6 mx-4 w-full max-w-sm shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">确认退出</h3>
-              <button 
-                onClick={() => setShowExitConfirm(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X size={20} className="text-gray-400" />
+        <div
+          className="fixed inset-0 flex items-center justify-center z-[100] animate-fade-in"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => setShowExitConfirm(false)}
+        >
+          <div className="card w-full max-w-sm mx-4 p-5 animate-bounce-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>确认退出</h3>
+              <button onClick={() => setShowExitConfirm(false)} className="icon-btn w-9 h-9">
+                <X size={18} />
               </button>
             </div>
-            <p className="text-gray-500 mb-6">确定要退出 Bookeep 吗？</p>
+            <p className="text-sm mb-5" style={{ color: 'var(--ink-2)' }}>确定要退出 Bookeep 吗？</p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowExitConfirm(false)}
-                className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleConfirmExit}
-                className="flex-1 py-3 rounded-card bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
-              >
-                退出
-              </button>
+              <button onClick={() => setShowExitConfirm(false)} className="btn-ghost flex-1">取消</button>
+              <button onClick={handleConfirmExit} className="btn-danger flex-1">退出</button>
             </div>
           </div>
         </div>
@@ -753,9 +766,18 @@ export default function App() {
       )}
 
       {toastMessage && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/90 text-white px-8 py-5 rounded-card z-[100] flex items-center gap-4 animate-fade-in shadow-2xl min-w-[200px] justify-center">
-          <CheckCircle size={28} className="text-emerald-400" />
-          <span className="font-bold text-lg">{toastMessage}</span>
+        <div
+          className="fixed top-1/2 left-1/2 z-[110] flex items-center gap-3 px-6 py-4 rounded-card animate-bounce-in"
+          style={{
+            transform: 'translate(-50%, -50%)',
+            background: 'var(--card)',
+            boxShadow: 'var(--shadow-card-hover)',
+            minWidth: 180,
+            justifyContent: 'center',
+          }}
+        >
+          <CheckCircle size={24} style={{ color: 'var(--primary)' }} />
+          <span className="font-bold" style={{ color: 'var(--ink)' }}>{toastMessage}</span>
         </div>
       )}
     </div>

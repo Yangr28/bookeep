@@ -14,21 +14,22 @@ const CategoryCardComponent = ({ category, isSelected = false, onClick }: Catego
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center p-2.5 rounded-card transition-all duration-200 ${
-        isSelected
-          ? 'bg-primary-50 dark:bg-primary-900/30 scale-105'
-          : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
-      }`}
+      className={`flex flex-col items-center p-2.5 rounded-button transition-all duration-200 ${isSelected ? 'scale-[1.04]' : 'active:scale-95'}`}
+      style={{
+        background: isSelected ? 'var(--primary-soft)' : 'var(--paper)',
+        border: `2px solid ${isSelected ? 'var(--primary)' : 'transparent'}`,
+      }}
     >
       <div
-        className={`p-2 rounded-full transition-all duration-200 ${
-          isSelected ? 'scale-110' : ''
-        }`}
+        className={`p-2 rounded-full transition-all duration-200 ${isSelected ? 'scale-110' : ''}`}
         style={{ backgroundColor: `${category.color}20` }}
       >
         <IconComponent size={22} style={{ color: category.color }} />
       </div>
-      <span className={`text-xs mt-1.5 font-medium ${isSelected ? 'text-primary-600' : 'text-gray-600 dark:text-gray-300'}`}>
+      <span
+        className="text-xs mt-1.5 font-medium truncate max-w-full"
+        style={{ color: isSelected ? 'var(--primary-ink)' : 'var(--ink-2)' }}
+      >
         {category.name}
       </span>
     </button>

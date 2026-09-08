@@ -10,6 +10,21 @@ interface StatisticsProps {
   onDateChange?: (date: Date) => void;
 }
 
+const CHART_COLORS = {
+  income: '#2e85de',
+  expense: '#e0684f',
+  axis: '#8c8577',
+  cursor: 'rgba(168, 142, 110, 0.12)',
+};
+
+const TOOLTIP_STYLE = {
+  borderRadius: '14px',
+  border: '1px solid var(--line)',
+  background: 'var(--card)',
+  color: 'var(--ink)',
+  boxShadow: 'var(--shadow-card)',
+};
+
 const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -36,10 +51,10 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
       date.setMonth(date.getMonth() - i);
       const month = date.getMonth();
       const year = date.getFullYear();
-      
+
       let income = 0;
       let expense = 0;
-      
+
       useStore.getState().transactions.forEach((t) => {
         const tDate = new Date(t.createdAt);
         if (tDate.getMonth() === month && tDate.getFullYear() === year) {
@@ -50,7 +65,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
           }
         }
       });
-      
+
       data.push({
         month: months[month],
         income: income || 0,
@@ -66,57 +81,65 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
   const monthlyChartData = generateMonthlyData();
   const displayedChartData = showFullYear ? monthlyChartData : monthlyChartData.slice(-6);
 
+  const monthBalance = monthIncome - monthExpense;
+
   return (
-    <div className="page-enter min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-gradient-to-br from-primary-500 to-primary-700 text-white px-5 pt-8 pb-5 rounded-b-3xl safe-top">
-        <h1 className="text-2xl font-bold tracking-tight">统计报表</h1>
-        <p className="text-primary-100 text-sm mt-2 leading-relaxed">查看您的财务数据</p>
+    <div className="page-root pb-nav">
+      {/* 页头 */}
+      <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
+        <div className="flex-1">
+          <h1 className="page-title">统计报表</h1>
+          <p className="page-subtitle">查看您的财务数据</p>
+        </div>
       </div>
 
-      <div className="px-4 -mt-5">
+      <div className="px-4 mt-3">
+        {/* 月份选择 + 收支概览 */}
         <div className="card p-5">
           <button
             onClick={onShowCalendar}
             className="flex items-center justify-start gap-3 w-full mb-5"
           >
-            <div className="p-2.5 bg-blue-50 dark:bg-blue-900/30 rounded-button">
-              <Calendar size={20} className="text-blue-600" />
+            <div className="p-2.5 rounded-button" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+              <Calendar size={20} />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold text-gray-800 dark:text-white">
+              <span className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>
                 {selectedYear}年 {months[selectedMonth]}
               </span>
-              <ChevronDown size={20} className="text-gray-400" />
+              <ChevronDown size={20} style={{ color: 'var(--ink-2)' }} />
             </div>
           </button>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-5 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-green-900/30 rounded-card shadow-sm">
-              <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">本月收入</p>
-              <p className="text-2xl font-bold text-primary-600 mt-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="text-center p-4 rounded-button" style={{ background: 'var(--paper)' }}>
+              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月收入</p>
+              <p className="text-2xl font-bold amount-num mt-2" style={{ color: 'var(--primary)' }}>
                 {formatCurrencyShort(monthIncome)}
               </p>
             </div>
-            <div className="text-center p-5 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-orange-900/30 rounded-card shadow-sm">
-              <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">本月支出</p>
-              <p className="text-2xl font-bold text-red-500 mt-2">
+            <div className="text-center p-4 rounded-button" style={{ background: 'var(--paper)' }}>
+              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月支出</p>
+              <p className="text-2xl font-bold amount-num mt-2" style={{ color: 'var(--expense)' }}>
                 {formatCurrencyShort(monthExpense)}
               </p>
             </div>
           </div>
 
-          <div className="mt-5 p-5 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-card shadow-sm">
-            <p className="text-gray-500 dark:text-gray-400 text-sm text-center font-medium">本月结余</p>
-            <p className={`text-3xl font-bold text-center mt-2 ${
-              monthIncome - monthExpense >= 0 ? 'text-primary-600' : 'text-red-500'
-            }`}>
-              {formatCurrencyShort(monthIncome - monthExpense)}
+          <div className="mt-3 p-4 rounded-button" style={{ background: 'var(--paper)' }}>
+            <p className="text-sm text-center font-medium" style={{ color: 'var(--ink-2)' }}>本月结余</p>
+            <p
+              className="text-3xl font-bold text-center amount-num mt-2"
+              style={{ color: monthBalance >= 0 ? 'var(--primary)' : 'var(--expense)' }}
+            >
+              {formatCurrencyShort(monthBalance)}
             </p>
           </div>
         </div>
 
-        <div className="card p-5 mt-4">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-5">支出分布</h2>
+        {/* 支出分布 */}
+        <div className="card p-4 mt-3">
+          <h2 className="section-title">支出分布</h2>
           {expenseData.length > 0 ? (
             <div className="flex flex-col items-center">
               <ResponsiveContainer width="100%" height={240}>
@@ -140,21 +163,21 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                   </Pie>
                   <Tooltip
                     formatter={(value: number) => [`¥${formatCurrency(value)}`, '金额']}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+                    contentStyle={TOOLTIP_STYLE}
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="w-full mt-4 flex flex-wrap justify-center gap-4">
+              <div className="w-full mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2">
                 {expenseData.map((item, index) => (
                   <div key={`legend-${index}`} className="flex items-center gap-2">
                     <div
                       className="w-4 h-4 rounded-full flex-shrink-0"
                       style={{ backgroundColor: item.category.color }}
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                    <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
                       {item.category.name}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>
                       {monthExpense > 0 ? `(${(item.total / monthExpense * 100).toFixed(0)}%)` : '(0%)'}
                     </span>
                   </div>
@@ -163,16 +186,17 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
-                <CircleDot size={28} className="text-gray-300" />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--paper-deep)' }}>
+                <CircleDot size={28} style={{ color: 'var(--ink-2)' }} />
               </div>
-              <p className="text-gray-500 dark:text-gray-400">暂无支出数据</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>暂无支出数据</p>
             </div>
           )}
         </div>
 
-        <div className="card p-5 mt-4">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-5">收入分布</h2>
+        {/* 收入分布 */}
+        <div className="card p-4 mt-3">
+          <h2 className="section-title">收入分布</h2>
           {incomeData.length > 0 ? (
             <div className="flex flex-col items-center">
               <ResponsiveContainer width="100%" height={240}>
@@ -196,21 +220,21 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                   </Pie>
                   <Tooltip
                     formatter={(value: number) => [`¥${formatCurrency(value)}`, '金额']}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+                    contentStyle={TOOLTIP_STYLE}
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="w-full mt-4 flex flex-wrap justify-center gap-4">
+              <div className="w-full mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2">
                 {incomeData.map((item, index) => (
                   <div key={`legend-${index}`} className="flex items-center gap-2">
                     <div
                       className="w-4 h-4 rounded-full flex-shrink-0"
                       style={{ backgroundColor: item.category.color }}
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                    <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
                       {item.category.name}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>
                       {monthIncome > 0 ? `(${(item.total / monthIncome * 100).toFixed(0)}%)` : '(0%)'}
                     </span>
                   </div>
@@ -219,25 +243,27 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
-                <CircleDot size={28} className="text-gray-300" />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--paper-deep)' }}>
+                <CircleDot size={28} style={{ color: 'var(--ink-2)' }} />
               </div>
-              <p className="text-gray-500 dark:text-gray-400">暂无收入数据</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>暂无收入数据</p>
             </div>
           )}
         </div>
 
-        <div className="card p-5 mt-4 mb-4">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">收支趋势</h2>
+        {/* 收支趋势 */}
+        <div className="card p-4 mt-3 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="section-title mb-0">收支趋势</h2>
             <button
               onClick={() => setShowFullYear(!showFullYear)}
-              className="px-4 py-2 text-primary-500 text-sm font-medium bg-primary-50 dark:bg-primary-900/30 rounded-full hover:bg-primary-100 dark:hover:bg-primary-800/30 active:bg-primary-200 transition-all flex items-center gap-1"
+              className="chip text-xs"
+              style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
             >
               {showFullYear ? '收起' : '查看全年'}
-              <ChevronDown 
-                size={16} 
-                className={`transition-transform ${showFullYear ? 'rotate-180' : ''}`} 
+              <ChevronDown
+                size={16}
+                className={`transition-transform ${showFullYear ? 'rotate-180' : ''}`}
               />
             </button>
           </div>
@@ -245,20 +271,23 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
             <div className="min-w-max px-1">
               <ResponsiveContainer width={showFullYear ? 520 : 320} height={240}>
                 <BarChart data={displayedChartData} barSize={showFullYear ? 22 : 30}>
-                  <XAxis 
-                    dataKey="fullMonth" 
-                    tick={{ fontSize: 11 }}
+                  <XAxis
+                    dataKey="fullMonth"
+                    tick={{ fontSize: 11, fill: CHART_COLORS.axis }}
                     tickFormatter={(value: string) => value.replace(/^\d+年/, '')}
                     interval={0}
+                    tickLine={false}
+                    axisLine={{ stroke: '#e9e3d6' }}
                   />
-                  <YAxis tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10, fill: CHART_COLORS.axis }} tickLine={false} axisLine={false} />
                   <Tooltip
                     formatter={(value: number) => [`¥${formatCurrency(value)}`, '']}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+                    contentStyle={TOOLTIP_STYLE}
+                    cursor={{ fill: CHART_COLORS.cursor }}
                   />
-                  <Legend wrapperStyle={{ paddingTop: 10 }} />
-                  <Bar dataKey="income" name="收入" fill="#10B981" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="expense" name="支出" fill="#EF4444" radius={[6, 6, 0, 0]} />
+                  <Legend wrapperStyle={{ paddingTop: 10, fontSize: 12, color: 'var(--ink-2)' }} />
+                  <Bar dataKey="income" name="收入" fill={CHART_COLORS.income} radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="expense" name="支出" fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

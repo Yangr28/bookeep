@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { ArrowLeft, Star, Trophy, Target, Zap, Award, TrendingUp, Wallet, Clock, Calendar } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
+import Empty from '../components/Empty';
 
 interface StatsProps {
   onBack: () => void;
@@ -111,10 +112,10 @@ export const Stats = ({ onBack }: StatsProps) => {
 
     const sortedDates = Array.from(dates).sort();
     const firstDate = sortedDates[0];
-    
+
     let consecutiveDays = 0;
     const currentDate = new Date();
-    
+
     while (true) {
       const dateStr = currentDate.toISOString().slice(0, 10);
       if (dates.has(dateStr)) {
@@ -128,15 +129,15 @@ export const Stats = ({ onBack }: StatsProps) => {
     }
 
     const totalAmount = transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
-    
+
     const categories = new Set(transactions.map((t) => t.categoryId));
-    
+
     if (firstDate) {
       const first = new Date(firstDate);
       const now = new Date();
       const months = (now.getFullYear() - first.getFullYear()) * 12 + now.getMonth() - first.getMonth();
       const monthlyAverage = months > 0 ? Math.round(totalAmount / months) : totalAmount;
-      
+
       return {
         consecutiveDays,
         totalTransactions: transactions.length,
@@ -183,122 +184,101 @@ export const Stats = ({ onBack }: StatsProps) => {
     }
   };
 
+  const statCards = [
+    { icon: Clock, label: '连续记账', value: statsData.consecutiveDays, unit: '天', color: '#d9930f' },
+    { icon: Target, label: '累计交易', value: statsData.totalTransactions, unit: '笔', color: 'var(--primary)', soft: true },
+    { icon: Wallet, label: '记账金额', value: formatCurrency(statsData.totalAmount), unit: '', color: '#7c6ef0' },
+    { icon: TrendingUp, label: '月均金额', value: formatCurrency(statsData.monthlyAverage), unit: '', color: '#14b8a6' },
+    { icon: Calendar, label: '活跃天数', value: statsData.daysWithTransactions, unit: '天', color: '#06b6d4' },
+    { icon: Star, label: '使用分类', value: statsData.categoryCount, unit: '个', color: '#ec4899' },
+  ];
+
   return (
-    <div className="page-enter min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white px-6 pt-8 pb-6 safe-top">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold">记账统计</h1>
-            <p className="text-amber-100 text-sm mt-1">记录你的每一笔收支</p>
-          </div>
+    <div className="page-root pb-nav">
+      {/* 页头 */}
+      <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
+        <button onClick={onBack} className="icon-btn" aria-label="返回">
+          <ArrowLeft size={20} />
+        </button>
+        <div className="flex-1">
+          <h1 className="page-title">记账统计</h1>
+          <p className="page-subtitle">记录你的每一笔收支</p>
         </div>
       </div>
 
       <div className="px-4 mt-4">
+        {/* 数据概览 */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                <Clock size={14} className="text-amber-500" />
+          {statCards.map((card) => {
+            const IconComponent = card.icon;
+            return (
+              <div key={card.label} className="card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div
+                    className="p-1.5 rounded-button flex items-center justify-center"
+                    style={
+                      'soft' in card && card.soft
+                        ? { background: 'var(--primary-soft)', color: 'var(--primary)' }
+                        : { background: `${card.color}1f`, color: card.color }
+                    }
+                  >
+                    <IconComponent size={14} />
+                  </div>
+                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{card.label}</p>
+                </div>
+                <p className="text-2xl font-bold amount-num" style={{ color: 'var(--ink)' }}>
+                  {card.value}
+                  {card.unit && <span className="text-sm font-normal" style={{ color: 'var(--ink-2)' }}> {card.unit}</span>}
+                </p>
               </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">连续记账</p>
-            </div>
-            <p className="text-2xl font-bold text-gray-800 dark:text-white">{statsData.consecutiveDays} <span className="text-sm font-normal text-gray-400">天</span></p>
-          </div>
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
-                <Target size={14} className="text-primary-500" />
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">累计交易</p>
-            </div>
-            <p className="text-2xl font-bold text-gray-800 dark:text-white">{statsData.totalTransactions} <span className="text-sm font-normal text-gray-400">笔</span></p>
-          </div>
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <Wallet size={14} className="text-blue-500" />
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">记账金额</p>
-            </div>
-            <p className="text-2xl font-bold text-gray-800 dark:text-white">{formatCurrency(statsData.totalAmount)}</p>
-          </div>
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <TrendingUp size={14} className="text-purple-500" />
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">月均金额</p>
-            </div>
-            <p className="text-2xl font-bold text-gray-800 dark:text-white">{formatCurrency(statsData.monthlyAverage)}</p>
-          </div>
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-                <Calendar size={14} className="text-cyan-500" />
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">活跃天数</p>
-            </div>
-            <p className="text-2xl font-bold text-gray-800 dark:text-white">{statsData.daysWithTransactions} <span className="text-sm font-normal text-gray-400">天</span></p>
-          </div>
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
-                <Star size={14} className="text-pink-500" />
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">使用分类</p>
-            </div>
-            <p className="text-2xl font-bold text-gray-800 dark:text-white">{statsData.categoryCount} <span className="text-sm font-normal text-gray-400">个</span></p>
-          </div>
+            );
+          })}
         </div>
 
+        {/* 已获得成就 */}
         <div className="mt-6">
-          <h3 className="font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
-            <Trophy size={20} className="text-amber-500" />
+          <h3 className="section-title flex items-center gap-2">
+            <Trophy size={18} style={{ color: '#d9930f' }} />
             已获得成就 ({earnedAchievements.length}/{achievements.length})
           </h3>
-          <div className="grid grid-cols-4 gap-3">
-            {earnedAchievements.map((achievement) => {
-              const IconComponent = achievement.icon;
-              return (
-                <div
+          {earnedAchievements.length === 0 ? (
+            <Empty
+              icon={Trophy}
+              title="还没有获得任何成就"
+              description="开始记账，解锁更多成就！"
+            />
+          ) : (
+            <div className="grid grid-cols-4 gap-3">
+              {earnedAchievements.map((achievement) => {
+                const IconComponent = achievement.icon;
+                return (
+                  <div
                     key={achievement.id}
-                    className="card p-3 text-center"
+                    className="card p-3 text-center card-hover"
                     title={achievement.description}
                   >
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2"
-                    style={{ backgroundColor: `${achievement.color}20` }}
-                  >
-                    <IconComponent
-                      size={24}
-                      style={{ color: achievement.color }}
-                    />
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2"
+                      style={{ backgroundColor: `${achievement.color}20` }}
+                    >
+                      <IconComponent
+                        size={24}
+                        style={{ color: achievement.color }}
+                      />
+                    </div>
+                    <p className="text-xs font-medium truncate" style={{ color: 'var(--ink)' }}>{achievement.name}</p>
                   </div>
-                  <p className="text-xs font-medium text-gray-800 dark:text-white truncate">{achievement.name}</p>
-                </div>
-              );
-            })}
-            {earnedAchievements.length === 0 && (
-              <div className="col-span-4 text-center py-8 text-gray-400">
-                <Trophy size={48} className="mx-auto mb-3 opacity-50" />
-                <p>还没有获得任何成就</p>
-                <p className="text-sm">开始记账，解锁更多成就！</p>
-              </div>
-            )}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
+        {/* 进行中成就 */}
         {progressAchievements.length > 0 && (
           <div className="mt-6">
-            <h3 className="font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
-              <Target size={20} className="text-blue-500" />
+            <h3 className="section-title flex items-center gap-2">
+              <Target size={18} style={{ color: 'var(--primary)' }} />
               进行中
             </h3>
             <div className="space-y-3">
@@ -306,13 +286,10 @@ export const Stats = ({ onBack }: StatsProps) => {
                 const IconComponent = achievement.icon;
                 const progress = getProgress(achievement);
                 return (
-                  <div
-                    key={achievement.id}
-                    className="card p-4"
-                  >
+                  <div key={achievement.id} className="card p-4">
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center opacity-50"
+                        className="w-10 h-10 rounded-full flex items-center justify-center opacity-50 flex-shrink-0"
                         style={{ backgroundColor: `${achievement.color}20` }}
                       >
                         <IconComponent
@@ -320,12 +297,12 @@ export const Stats = ({ onBack }: StatsProps) => {
                           style={{ color: achievement.color }}
                         />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-800 dark:text-white">{achievement.name}</span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">{progress.toFixed(0)}%</span>
+                          <span className="font-medium" style={{ color: 'var(--ink)' }}>{achievement.name}</span>
+                          <span className="text-sm amount-num flex-shrink-0 ml-2" style={{ color: 'var(--ink-2)' }}>{progress.toFixed(0)}%</span>
                         </div>
-                        <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mt-2">
+                        <div className="h-2 rounded-full overflow-hidden mt-2" style={{ background: 'var(--paper-deep)' }}>
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{ width: `${progress}%`, backgroundColor: achievement.color }}
@@ -340,12 +317,13 @@ export const Stats = ({ onBack }: StatsProps) => {
           </div>
         )}
 
-        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-card p-4">
+        {/* 小贴士 */}
+        <div className="card p-4 mt-6">
           <div className="flex items-start gap-3">
-            <Zap size={20} className="text-blue-500 flex-shrink-0 mt-0.5" />
+            <Zap size={20} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--primary)' }} />
             <div>
-              <h3 className="font-medium text-blue-700 dark:text-blue-400">记账小贴士</h3>
-              <p className="text-sm text-blue-600 dark:text-blue-500 mt-1">
+              <h3 className="font-medium" style={{ color: 'var(--ink)' }}>记账小贴士</h3>
+              <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>
                 定期记账可以帮助您更好地了解自己的消费习惯，合理规划财务。建议每周至少记账2-3次，保持财务记录的完整性。
               </p>
             </div>

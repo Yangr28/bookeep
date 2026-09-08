@@ -3,14 +3,18 @@ import { useStore } from '../store/useStore';
 import { exportData, downloadExportFile, parseImportData } from '../utils/export';
 import { getLocalVersions, compareVersions } from '../utils/update';
 import type { UpdateFlowState } from '../hooks/useUpdateCheck';
-import { ArrowLeft, Download, Upload, Info, HelpCircle, Shield, Sun, Moon, X, RefreshCw, RotateCcw, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Download, Upload, Info, HelpCircle, Shield, Sun, Moon, X, RefreshCw, RotateCcw, Loader2, AlertCircle, Tags, ChevronRight } from 'lucide-react';
 
 interface SettingsProps {
-  onBack: () => void;
+  /** 以 tab 形式渲染（/profile「我的」）：标题改为「我的」、无返回键、底部 pb-nav */
+  isTab?: boolean;
+  onBack?: () => void;
   theme: 'light' | 'dark';
   isDark: boolean;
   onToggleTheme: () => void;
   onCheckUpdate: () => void;
+  /** 跳转到分类管理页 */
+  onGoToCategories?: () => void;
   /** 手动回退到指定历史热更新版本 */
   onRollback?: (targetVersion: string) => void;
   /** 回退流程状态（与更新流程共用） */
@@ -28,7 +32,7 @@ interface FetchedRelease {
   hasHotPackage: boolean;
 }
 
-export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollback, rollbackFlow }: SettingsProps) => {
+export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheckUpdate, onGoToCategories, onRollback, rollbackFlow }: SettingsProps) => {
   const [showChangelog, setShowChangelog] = useState(false);
   const [rollbackOpen, setRollbackOpen] = useState(false);
   const [nativeVersion, setNativeVersion] = useState('');
@@ -177,98 +181,130 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
-      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white px-6 pt-8 pb-6 safe-top">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
-          >
-            <ArrowLeft size={24} />
+    <div className={`page-root ${isTab ? 'pb-nav' : 'pb-24'}`}>
+      <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
+        {!isTab && onBack && (
+          <button onClick={onBack} className="icon-btn" aria-label="返回">
+            <ArrowLeft size={20} />
           </button>
-          <h1 className="text-xl font-bold">设置</h1>
+        )}
+        <div className="flex-1">
+          <h1 className="page-title">{isTab ? '我的' : '设置'}</h1>
         </div>
       </div>
 
-      <div className="px-4 mt-4">
+      <div className="px-4 mt-3 space-y-3">
+        {/* 数据管理 */}
         <div className="card overflow-hidden">
-          <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">数据管理</h3>
+          <div className="p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+            <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>数据管理</h3>
           </div>
-          
+
           <button
             onClick={handleExport}
-            className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center gap-4 p-4 active:brightness-95"
           >
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-card">
-              <Download size={22} className="text-blue-600" />
+            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+              <Download size={21} />
             </div>
-            <div className="flex-1 text-left">
-              <p className="font-semibold text-gray-800 dark:text-white">导出数据</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">将所有数据导出为 JSON 文件</p>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>导出数据</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>将所有数据导出为 JSON 文件</p>
             </div>
-            <span className="text-gray-400 text-xl">›</span>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
-          
+
           <button
             onClick={handleImport}
-            className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            style={{ borderTop: '1px solid var(--line)' }}
           >
-            <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-card">
-              <Upload size={22} className="text-green-600" />
+            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+              <Upload size={21} />
             </div>
-            <div className="flex-1 text-left">
-              <p className="font-semibold text-gray-800 dark:text-white">导入数据</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">从 JSON 文件恢复数据</p>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>导入数据</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>从 JSON 文件恢复数据</p>
             </div>
-            <span className="text-gray-400 text-xl">›</span>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
         </div>
 
-        <div className="card overflow-hidden mt-4">
-          <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">外观</h3>
+        {/* 分类管理（仅当传入回调时显示） */}
+        {onGoToCategories && (
+          <div className="card overflow-hidden">
+            <div className="p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+              <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>记账管理</h3>
+            </div>
+            <button
+              onClick={onGoToCategories}
+              className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            >
+              <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+                <Tags size={21} />
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="font-semibold" style={{ color: 'var(--ink)' }}>分类管理</p>
+                <p className="text-sm" style={{ color: 'var(--ink-2)' }}>自定义收入/支出分类</p>
+              </div>
+              <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+            </button>
           </div>
-          
+        )}
+
+        {/* 外观 */}
+        <div className="card overflow-hidden">
+          <div className="p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+            <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>外观</h3>
+          </div>
+
           <button
             onClick={onToggleTheme}
-            className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center gap-4 p-4 active:brightness-95"
           >
-            <div className={`p-3 rounded-card ${isDark ? 'bg-indigo-900/30' : 'bg-amber-50'}`}>
-              {isDark ? (
-                <Moon size={22} className="text-indigo-400" />
-              ) : (
-                <Sun size={22} className="text-amber-600" />
-              )}
+            <div
+              className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0"
+              style={isDark
+                ? { background: '#1e2c42', color: 'var(--primary)' }
+                : { background: '#faf1dc', color: '#d9930f' }}
+            >
+              {isDark ? <Moon size={21} /> : <Sun size={21} />}
             </div>
-            <div className="flex-1 text-left">
-              <p className="font-semibold text-gray-800 dark:text-white">深色模式</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{isDark ? '已开启' : '已关闭'}</p>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>深色模式</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{isDark ? '已开启' : '已关闭'}</p>
             </div>
-            <div className={`relative w-12 h-6 rounded-full transition-colors ${isDark ? 'bg-indigo-500' : 'bg-gray-300'}`}>
-              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${isDark ? 'translate-x-7' : 'translate-x-1'}`} />
+            <div
+              className="relative w-12 h-6 rounded-full transition-colors flex-shrink-0"
+              style={{ background: isDark ? 'var(--primary)' : 'var(--paper-deep)' }}
+            >
+              <div
+                className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform"
+                style={{ transform: isDark ? 'translateX(28px)' : 'translateX(4px)' }}
+              />
             </div>
           </button>
         </div>
 
-        <div className="card overflow-hidden mt-4">
-          <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">关于</h3>
+        {/* 关于 */}
+        <div className="card overflow-hidden">
+          <div className="p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+            <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>关于</h3>
           </div>
-          
+
           <button
             onClick={() => setShowChangelog(true)}
-            className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center gap-4 p-4 active:brightness-95"
           >
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-card">
-              <Info size={22} className="text-indigo-600 dark:text-indigo-400" />
+            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+              <Info size={21} />
             </div>
-            <div className="flex-1 text-left">
-              <p className="font-semibold text-gray-800 dark:text-white">版本与更新</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>版本与更新</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
                 当前版本 v{appVersion}
                 {hotVersion && nativeVersion && (
-                  <span className="text-primary-500">（热更新 · 内置 v{nativeVersion}）</span>
+                  <span style={{ color: 'var(--primary)' }}>（热更新 · 内置 v{nativeVersion}）</span>
                 )}
                 {' · 更新日志'}
               </p>
@@ -280,7 +316,8 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
                 e.stopPropagation();
                 onCheckUpdate();
               }}
-              className="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-full active:bg-indigo-100 dark:active:bg-indigo-900/50 transition-colors flex-shrink-0"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full flex-shrink-0 active:brightness-95"
+              style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
             >
               <RefreshCw size={12} />
               检查更新
@@ -290,69 +327,77 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
           {rollbackTarget && (
             <button
               onClick={() => setRollbackOpen(true)}
-              className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="w-full flex items-center gap-4 p-4 active:brightness-95"
+              style={{ borderTop: '1px solid var(--line)' }}
             >
-              <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-card">
-                <RotateCcw size={22} className="text-amber-600 dark:text-amber-400" />
+              <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: '#faf1dc', color: '#d9930f' }}>
+                <RotateCcw size={21} />
               </div>
-              <div className="flex-1 text-left">
-                <p className="font-semibold text-gray-800 dark:text-white">回退到旧版本</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex-1 text-left min-w-0">
+                <p className="font-semibold" style={{ color: 'var(--ink)' }}>回退到旧版本</p>
+                <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
                   当前新版界面不满意？可一键回退到 v{rollbackTarget}，数据不受影响
                 </p>
               </div>
-              <span className="text-gray-400 text-xl">›</span>
+              <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
             </button>
           )}
 
-          <button 
+          <button
             onClick={() => alert('帮助与反馈功能开发中，敬请期待！')}
-            className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            style={{ borderTop: '1px solid var(--line)' }}
           >
-            <div className="p-3 bg-orange-50 dark:bg-orange-900/30 rounded-card">
-              <HelpCircle size={22} className="text-orange-600" />
+            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}>
+              <HelpCircle size={21} />
             </div>
-            <div className="flex-1 text-left">
-              <p className="font-semibold text-gray-800 dark:text-white">帮助与反馈</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">使用指南和问题反馈</p>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>帮助与反馈</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>使用指南和问题反馈</p>
             </div>
-            <span className="text-gray-400 text-xl">›</span>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
-          
-          <button 
+
+          <button
             onClick={() => alert('隐私政策功能开发中，敬请期待！')}
-            className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            style={{ borderTop: '1px solid var(--line)' }}
           >
-            <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-card">
-              <Shield size={22} className="text-red-600" />
+            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}>
+              <Shield size={21} />
             </div>
-            <div className="flex-1 text-left">
-              <p className="font-semibold text-gray-800 dark:text-white">隐私政策</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">了解数据处理方式</p>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>隐私政策</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>了解数据处理方式</p>
             </div>
-            <span className="text-gray-400 text-xl">›</span>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
         </div>
       </div>
 
       {showChangelog && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-card max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white">版本更新日志</h3>
-              <div className="flex items-center gap-1">
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-fade-in"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => setShowChangelog(false)}
+        >
+          <div
+            className="card w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+              <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>版本更新日志</h3>
+              <div className="flex items-center gap-2">
                 <button
                   onClick={onCheckUpdate}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full active:brightness-95"
+                  style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
                 >
                   <RefreshCw size={12} />
                   检查更新
                 </button>
-                <button
-                  onClick={() => setShowChangelog(false)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                >
-                  <X size={20} className="text-gray-500" />
+                <button onClick={() => setShowChangelog(false)} className="icon-btn w-9 h-9">
+                  <X size={18} />
                 </button>
               </div>
             </div>
@@ -361,16 +406,16 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
                 releases.map((rel) => (
                   <div key={rel.version}>
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v{rel.version}</span>
+                      <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v{rel.version}</span>
                       {rel.version === appVersion && (
-                        <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-full">当前版本</span>
+                        <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">当前版本</span>
                       )}
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{rel.date}</span>
+                      <span className="text-sm text-[var(--ink-2)]">{rel.date}</span>
                     </div>
-                    <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                    <ul className="space-y-2 text-sm text-[var(--ink)]">
                       {rel.notes.map((line, idx) => (
                         <li key={idx} className="flex items-start gap-2">
-                          <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                          <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                           <span>{line}</span>
                         </li>
                       ))}
@@ -381,20 +426,20 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
               <>
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.4.6</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-09-07</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.4.6</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-09-07</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>分类删除按钮恢复隐藏样式，配合确认弹窗与撤销机制防误删</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>侧滑返回改为边缘手势触发，与系统返回手感对齐，避免误触</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>交易明细页新增分类筛选，支持筛选未分类记录</span>
                   </li>
                 </ul>
@@ -402,40 +447,40 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.4.5</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-09-07</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.4.5</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-09-07</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复记账完成后首页余额卡片显示丢失的问题</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>合并首页重复的交易明细入口</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复进入明细页先滚动到页面中部再跳顶部的问题</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>全部交易明细新增分类筛选（含未分类）</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复列表滑动误触编辑或删除的问题</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>编辑记录保存后返回进入前的页面</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>优化键盘自动弹出时机，仅在首次启动时聚焦</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>分类删除增加二次确认与撤销机制，防误删</span>
                   </li>
                 </ul>
@@ -443,16 +488,16 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.4.4</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-12</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.4.4</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-12</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>智能记账支持币种识别，自动识别美元、欧元、港币、日元等常见币种</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复汇率换算弹窗定位异常问题</span>
                   </li>
                 </ul>
@@ -460,20 +505,20 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.4.3</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-12</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.4.3</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-12</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复汇率换算器切换币种弹窗位置异常及底部遮挡问题</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>桌面小组件缩小为2×1尺寸，优化紧凑布局</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复小组件输入弹窗被键盘遮挡的问题</span>
                   </li>
                 </ul>
@@ -481,16 +526,16 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.4.2</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-12</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.4.2</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-12</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>小组件改为智能输入模式，桌面直接输入记账内容，跳转应用自动解析</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>货币种类扩展至150+种，覆盖全球所有ISO 4217货币代码</span>
                   </li>
                 </ul>
@@ -498,24 +543,24 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.4.1</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-12</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.4.1</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-12</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>汇率支持实时更新，从开放API获取最新汇率数据</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>货币种类扩展至80+种，覆盖全球各大洲包括小众货币</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>货币选择器支持搜索，快速找到目标货币</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>汇率列表按地区分组，显示汇率来源（实时/默认/自定义）</span>
                   </li>
                 </ul>
@@ -523,24 +568,24 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.4.0</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-12</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.4.0</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-12</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增汇率转换工具，支持16种主流货币实时换算</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>记账支持选择外币，自动按汇率换算为人民币入账</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>支持自定义汇率编辑，可手动调整各货币对人民币汇率</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增 2x2 桌面小组件，支持直接在桌面一键记账，无需打开应用</span>
                   </li>
                 </ul>
@@ -548,20 +593,20 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.3.5</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-12</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.3.5</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-12</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>支持银行简称+尾号识别（如"工商6894"→工商银行6894账户）</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复银行卡尾号被误判为金额的问题</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>优化金额提取：先识别并移除账户关键词，再提取金额</span>
                   </li>
                 </ul>
@@ -569,16 +614,16 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.3.4</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-12</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.3.4</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-12</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复"午餐"等关键词无法识别分类的问题</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复银行名称被误识别为分类关键词的问题</span>
                   </li>
                 </ul>
@@ -586,16 +631,16 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.3.3</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-12</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.3.3</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-12</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>优化智能记账识别算法：优先匹配用户现有账户和分类名称</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>更换应用图标为最新版本</span>
                   </li>
                 </ul>
@@ -603,16 +648,16 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.3.2</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-12</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.3.2</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-12</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>优化智能记账：支持自动识别账户（银行名、支付宝、微信等）</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>智能记账识别账户后自动从备注中去除账户关键词</span>
                   </li>
                 </ul>
@@ -620,12 +665,12 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.3.1</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-11</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.3.1</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-11</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复账户选择弹窗被底部导航栏遮挡的问题</span>
                   </li>
                 </ul>
@@ -633,24 +678,24 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-medium rounded-full">v4.3.0</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-11</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.3.0</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-11</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增周期记账功能：支持每天/每周/每月/每年定时自动记账</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增记账模板功能：保存常用记录，一键快速记账</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>重新设计账户选择：改为选择器条+底部弹出面板，支持查看余额</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>快捷操作改为4宫格布局：周期记账、记账模板、预算、统计</span>
                   </li>
                 </ul>
@@ -658,16 +703,16 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 text-xs font-medium rounded-full">v4.2.0</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-11</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.2.0</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-11</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>优化快速记账布局：备注上移、日期时间下移</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>优化分类图标尺寸和间距，提升视觉体验</span>
                   </li>
                 </ul>
@@ -675,20 +720,20 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 text-xs font-medium rounded-full">v4.1.0</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-08-11</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.1.0</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-08-11</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复全部记录页面缺失快捷日期预设的问题</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>修复日期筛选重置按钮的逻辑错误</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>优化全部记录页面深色模式适配</span>
                   </li>
                 </ul>
@@ -696,24 +741,24 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 text-xs font-medium rounded-full">v4.0.0</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-07-16</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v4.0.0</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-07-16</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>优化记账统计页面：减少连续记账天数强调，新增月均金额和使用分类统计</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>优化首页记账提醒：调整为超过3天才显示提醒，不再每天催促</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>更换应用图标，使用全新设计</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>移除连续记账相关成就，新增累计活跃天数成就</span>
                   </li>
                 </ul>
@@ -721,36 +766,36 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 text-xs font-medium rounded-full">v3.8.0</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-07-16</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v3.8.0</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-07-16</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增记账提醒功能（未记账天数提醒）</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增账户余额预警功能</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增批量操作优化（多选+批量删除）</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增快捷操作栏</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增记录卡片手势操作（左滑删除+右滑编辑）</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增日期选择器快捷选项</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增应用锁功能（4位数字密码）</span>
                   </li>
                 </ul>
@@ -758,24 +803,24 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 text-xs font-medium rounded-full">v3.7.0</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2026-07-16</span>
+                  <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">v3.7.0</span>
+                  <span className="text-sm text-[var(--ink-2)]">2026-07-16</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增全局搜索功能</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增预算管理功能</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>新增记账统计功能（连续记账天数+成就徽章）</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>改进快速记账智能识别功能</span>
                   </li>
                 </ul>
@@ -783,28 +828,28 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 text-xs font-medium rounded-full">v3.0.0+</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">早期版本</span>
+                  <span className="px-2 py-1 bg-[var(--paper-deep)] text-[var(--ink)] text-xs font-medium rounded-full">v3.0.0+</span>
+                  <span className="text-sm text-[var(--ink-2)]">早期版本</span>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <ul className="space-y-2 text-sm text-[var(--ink)]">
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--ink-2)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>基础记账功能（收入/支出记录）</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--ink-2)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>账户管理（银行卡、现金等）</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--ink-2)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>分类管理（自定义分类）</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--ink-2)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>数据统计与图表展示</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 bg-[var(--ink-2)] rounded-full mt-1.5 flex-shrink-0" />
                     <span>数据导出/导入功能</span>
                   </li>
                 </ul>
@@ -812,10 +857,10 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
               </>
               )}
             </div>
-            <div className="p-4 border-t border-gray-100 dark:border-gray-700">
+            <div className="p-4" style={{ borderTop: '1px solid var(--line)' }}>
               <button
                 onClick={() => setShowChangelog(false)}
-                className="w-full py-3 bg-primary-500 text-white rounded-card font-medium hover:bg-primary-600 transition-colors"
+                className="btn-primary w-full py-3 font-medium"
               >
                 知道了
               </button>
@@ -826,16 +871,26 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
 
       {/* 回退版本确认/进度弹窗 */}
       {rollbackOpen && rollbackTarget && (
-        <div className="fixed inset-0 bg-black/50 z-[110] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-card overflow-hidden shadow-2xl">
-            <div className="px-6 pt-6 pb-4 bg-gradient-to-br from-amber-500 to-orange-500 text-white">
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => !rollbackBusy && setRollbackOpen(false)}
+        >
+          <div
+            className="card w-full max-w-md overflow-hidden animate-bounce-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 pt-6 pb-4" style={{ background: 'var(--expense-soft)' }}>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 rounded-card flex items-center justify-center flex-shrink-0">
+                <div
+                  className="w-12 h-12 rounded-card flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#fff', color: 'var(--expense)' }}
+                >
                   <RotateCcw size={26} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">回退到 v{rollbackTarget}</h3>
-                  <p className="text-sm text-white/80">下载旧版界面资源并自动切换</p>
+                  <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>回退到 v{rollbackTarget}</h3>
+                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>下载旧版界面资源并自动切换</p>
                 </div>
               </div>
             </div>
@@ -844,51 +899,57 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
               {rollbackFlow?.phase === 'downloading' ? (
                 <div className="py-2">
                   <div className="flex items-center gap-3 mb-4">
-                    <Loader2 size={22} className="text-amber-500 animate-spin flex-shrink-0" />
+                    <Loader2 size={22} className="animate-spin flex-shrink-0" style={{ color: 'var(--expense)' }} />
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-800 dark:text-white">正在下载旧版本...</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{rollbackFlow.percent}% · 资源包很小，请稍候</p>
+                      <p className="font-semibold" style={{ color: 'var(--ink)' }}>正在下载旧版本...</p>
+                      <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{rollbackFlow.percent}% · 资源包很小，请稍候</p>
                     </div>
                   </div>
-                  <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
                     <div
-                      className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.max(rollbackFlow.percent, 2)}%` }}
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{ width: `${Math.max(rollbackFlow.percent, 2)}%`, background: 'var(--expense)' }}
                     />
                   </div>
                 </div>
               ) : rollbackFlow?.phase === 'error' ? (
                 <div className="flex flex-col items-center text-center py-4">
-                  <div className="w-14 h-14 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-3">
-                    <AlertCircle size={28} className="text-red-500" />
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center mb-3"
+                    style={{ background: 'var(--expense-soft)' }}
+                  >
+                    <AlertCircle size={28} style={{ color: 'var(--expense)' }} />
                   </div>
-                  <p className="font-semibold text-gray-800 dark:text-white mb-1">回退失败</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{rollbackFlow.error}</p>
+                  <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>回退失败</p>
+                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{rollbackFlow.error}</p>
                 </div>
               ) : rollbackFlow?.phase === 'done' ? (
                 <div className="flex flex-col items-center text-center py-4">
-                  <div className="w-14 h-14 bg-primary-50 dark:bg-primary-900/30 rounded-full flex items-center justify-center mb-3">
-                    <RotateCcw size={28} className="text-primary-500" />
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center mb-3"
+                    style={{ background: 'var(--primary-soft)' }}
+                  >
+                    <RotateCcw size={28} style={{ color: 'var(--primary)' }} />
                   </div>
-                  <p className="font-semibold text-gray-800 dark:text-white mb-1">回退完成，正在重新加载...</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">页面将自动刷新到旧版本</p>
+                  <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>回退完成，正在重新加载...</p>
+                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>页面将自动刷新到旧版本</p>
                 </div>
               ) : (
                 <div className="py-2">
-                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
-                    将把界面从 <span className="font-semibold text-gray-800 dark:text-white">v{appVersion}</span> 回退到 <span className="font-semibold text-gray-800 dark:text-white">v{rollbackTarget}</span>。
+                  <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--ink-2)' }}>
+                    将把界面从 <span className="font-semibold" style={{ color: 'var(--ink)' }}>v{appVersion}</span> 回退到 <span className="font-semibold" style={{ color: 'var(--ink)' }}>v{rollbackTarget}</span>。
                   </p>
-                  <ul className="text-sm text-gray-500 dark:text-gray-400 space-y-1.5">
+                  <ul className="text-sm space-y-1.5" style={{ color: 'var(--ink-2)' }}>
                     <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5 flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--expense)' }} />
                       <span>仅切换界面资源，记账数据、账户、分类等完全不受影响</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5 flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--expense)' }} />
                       <span>回退后随时可通过「检查更新」再升级回新版本</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5 flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--expense)' }} />
                       <span>若旧版异常无法启动，连续打开 2 次应用会自动恢复到当前版本</span>
                     </li>
                   </ul>
@@ -896,19 +957,11 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700">
+            <div className="px-6 py-4" style={{ borderTop: '1px solid var(--line)' }}>
               {rollbackFlow?.phase === 'error' ? (
                 <div className="flex gap-3">
-                  <button
-                    onClick={() => setRollbackOpen(false)}
-                    className="flex-1 py-3 rounded-card bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    关闭
-                  </button>
-                  <button
-                    onClick={handleRollback}
-                    className="flex-1 py-3 rounded-card bg-amber-500 text-white font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
-                  >
+                  <button onClick={() => setRollbackOpen(false)} className="btn-ghost flex-1">关闭</button>
+                  <button onClick={handleRollback} className="btn-danger flex-1 flex items-center justify-center gap-2">
                     <RefreshCw size={18} />
                     重试
                   </button>
@@ -916,23 +969,15 @@ export const Settings = ({ onBack, isDark, onToggleTheme, onCheckUpdate, onRollb
               ) : rollbackBusy || rollbackFlow?.phase === 'done' ? (
                 <button
                   disabled
-                  className="w-full py-3 rounded-card bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 font-medium cursor-not-allowed flex items-center justify-center gap-2"
+                  className="btn-ghost w-full flex items-center justify-center gap-2 cursor-not-allowed"
                 >
                   <Loader2 size={18} className="animate-spin" />
                   请稍候...
                 </button>
               ) : (
                 <div className="flex gap-3">
-                  <button
-                    onClick={() => setRollbackOpen(false)}
-                    className="flex-1 py-3 rounded-card bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    取消
-                  </button>
-                  <button
-                    onClick={handleRollback}
-                    className="flex-1 py-3 rounded-card bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-600 hover:to-orange-600 transition-all flex items-center justify-center gap-2"
-                  >
+                  <button onClick={() => setRollbackOpen(false)} className="btn-ghost flex-1">取消</button>
+                  <button onClick={handleRollback} className="btn-danger flex-1 flex items-center justify-center gap-2">
                     <RotateCcw size={18} />
                     确认回退
                   </button>

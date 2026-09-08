@@ -2,16 +2,17 @@ import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
 import { formatCurrencyShort, formatDateTime } from '../utils/format';
-import { ArrowLeft, Calendar, ArrowRightLeft, ArrowRight, Wallet } from 'lucide-react';
+import { ArrowLeft, Calendar, ArrowRightLeft, Wallet, X } from 'lucide-react';
 import { Transaction, Transfer } from '../types';
 
 interface AllRecordsProps {
-  onBack: () => void;
+  isTab?: boolean;
+  onBack?: () => void;
   onEditTransaction?: (transaction: Transaction) => void;
 }
 
-export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
-  
+export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllRecordsProps) => {
+
   const transactions = useStore((state) => state.transactions);
   const transfers = useStore((state) => state.transfers);
   const accounts = useStore((state) => state.accounts);
@@ -93,7 +94,7 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
     return true;
   });
 
-  const sortedRecords = filteredRecords.sort((a, b) => 
+  const sortedRecords = filteredRecords.sort((a, b) =>
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
@@ -104,6 +105,8 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
   const totalExpense = sortedRecords
     .filter((r) => r.type === 'transaction' && r.direction === 'out')
     .reduce((sum, r) => sum + r.amount, 0);
+
+  const hasFilter = !!(startDate || endDate || categoryFilter !== 'all');
 
   const handleResetFilter = () => {
     setStartDate('');
@@ -118,45 +121,50 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
   ];
 
   return (
-    <div className="page-enter min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 pt-8 pb-6 safe-top">
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={onBack}
-            className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
-          >
-            <ArrowLeft size={24} />
+    <div className={`page-root ${isTab ? 'pb-nav' : 'pb-24'}`}>
+      {/* 头部 */}
+      <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
+        {!isTab && onBack && (
+          <button onClick={onBack} className="icon-btn" aria-label="返回">
+            <ArrowLeft size={20} />
           </button>
-          <h1 className="text-xl font-bold">全部记录</h1>
+        )}
+        <div className="flex-1">
+          <h1 className="page-title">{isTab ? '账单' : '全部记录'}</h1>
+          <p className="page-subtitle">共 {sortedRecords.length} 条记录</p>
         </div>
-        
-        <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
-          <div className="flex justify-between items-center mb-3">
-            <div>
-              <p className="text-white/80 text-sm">总收入</p>
-              <p className="text-xl font-bold text-green-300">+{formatCurrencyShort(totalIncome)}</p>
+      </div>
+
+      {/* 收支概览 */}
+      <div className="px-4 mt-3">
+        <div className="card p-4">
+          <div className="flex items-center justify-around">
+            <div className="text-center flex-1">
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>收入</p>
+              <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--primary)' }}>
+                +{formatCurrencyShort(totalIncome)}
+              </p>
             </div>
-            <div className="text-right">
-              <p className="text-white/80 text-sm">总支出</p>
-              <p className="text-xl font-bold text-red-300">-{formatCurrencyShort(totalExpense)}</p>
+            <div className="w-px self-stretch" style={{ background: 'var(--line)' }} />
+            <div className="text-center flex-1">
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>支出</p>
+              <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
+                -{formatCurrencyShort(totalExpense)}
+              </p>
             </div>
-          </div>
-          <div className="text-center">
-            <p className="text-white/60 text-sm">共 {sortedRecords.length} 条记录</p>
           </div>
         </div>
       </div>
 
+      {/* 筛选 */}
       <div className="px-4 mt-4">
-        <div className="card p-4 mb-4">
+        <div className="card p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Calendar size={18} className="text-gray-500" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">日期筛选</span>
-            {(startDate || endDate || categoryFilter !== 'all') && (
-              <button
-                onClick={handleResetFilter}
-                className="ml-auto text-xs text-red-500 hover:text-red-600"
-              >
+            <Calendar size={16} style={{ color: 'var(--ink-2)' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>筛选</span>
+            {hasFilter && (
+              <button onClick={handleResetFilter} className="ml-auto flex items-center gap-1 text-xs font-medium" style={{ color: 'var(--expense)' }}>
+                <X size={12} />
                 重置
               </button>
             )}
@@ -176,7 +184,7 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
                   today.setHours(0, 0, 0, 0);
                   let start = new Date(today);
                   let end = new Date(today);
-                  
+
                   if (typeof preset.days === 'number') {
                     start.setDate(today.getDate() - preset.days);
                   } else if (preset.days === 'month') {
@@ -186,11 +194,11 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
                     start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
                     end = new Date(today.getFullYear(), today.getMonth(), 0);
                   }
-                  
+
                   setStartDate(start.toISOString().split('T')[0]);
                   setEndDate(end.toISOString().split('T')[0]);
                 }}
-                className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="chip chip-inactive"
               >
                 {preset.label}
               </button>
@@ -198,35 +206,34 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 mb-1">开始日期</label>
+              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>开始日期</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
+                className="input-field py-2 text-sm"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 mb-1">结束日期</label>
+              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>结束日期</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
+                className="input-field py-2 text-sm"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0">分类</span>
-            <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1">
+          <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+            <div className="flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
               {categoryFilterChips.map((chip) => {
                 const active = categoryFilter === chip.value;
                 return (
                   <button
                     key={chip.value}
                     onClick={() => setCategoryFilter(chip.value)}
-                    className={`flex-shrink-0 chip ${active ? 'chip-active' : 'chip-inactive'}`}
+                    className={`chip flex-shrink-0 ${active ? 'chip-active' : 'chip-inactive'}`}
                   >
                     {'color' in chip && chip.color && (
                       <span
@@ -241,10 +248,13 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
             </div>
           </div>
         </div>
+      </div>
 
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">交易明细</h2>
+      {/* 明细列表 */}
+      <div className="px-4 mt-5">
+        <h2 className="section-title">交易明细</h2>
         {sortedRecords.length > 0 ? (
-          <div className="space-y-3">
+          <div>
             {sortedRecords.map((record) => {
               if (record.type === 'transaction' && record.transaction) {
                 return (
@@ -252,58 +262,55 @@ export const AllRecords = ({ onBack, onEditTransaction }: AllRecordsProps) => {
                     key={record.id}
                     transaction={record.transaction}
                     onDelete={() => deleteTransaction(record.id)}
-                    onEdit={onEditTransaction ? () => onEditTransaction(record.transaction) : undefined}
+                    onEdit={onEditTransaction ? () => onEditTransaction(record.transaction!) : undefined}
                   />
                 );
               }
-              
+
               return (
-                <div
-                  key={record.id}
-                  className="card p-3"
-                >
+                <div key={record.id} className="card p-3 mb-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center">
-                        <ArrowRightLeft size={18} className="text-blue-500" />
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
+                      >
+                        <ArrowRightLeft size={17} />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-1">
-                          <ArrowRight size={12} className="text-gray-300" />
-                          <span className="text-sm font-medium text-gray-800">
+                          <span className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>
                             {record.relatedAccountName || '转账'}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {record.note || '转账'}
+                        <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-2)' }}>
+                          {record.note || '转账'} · {formatDateTime(record.createdAt)}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-blue-500">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <p className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>
                         {formatCurrencyShort(record.amount)}
                       </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {formatDateTime(record.createdAt)}
-                      </p>
+                      <button
+                        onClick={() => deleteTransfer(record.id)}
+                        className="text-xs px-2 py-1 rounded-button"
+                        style={{ color: 'var(--expense)', background: 'var(--expense-soft)' }}
+                      >
+                        删除
+                      </button>
                     </div>
                   </div>
-                  <button
-                    onClick={() => deleteTransfer(record.id)}
-                    className="mt-2 text-xs text-red-500 hover:text-red-600"
-                  >
-                    删除
-                  </button>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="text-center py-12 text-gray-400">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Wallet size={28} className="text-gray-300" />
+          <div className="card flex flex-col items-center py-12">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--paper-deep)' }}>
+              <Wallet size={28} style={{ color: 'var(--ink-2)' }} />
             </div>
-            <p className="text-gray-500">暂无记录</p>
+            <p className="text-sm" style={{ color: 'var(--ink-2)' }}>暂无记录</p>
           </div>
         )}
       </div>

@@ -95,52 +95,55 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 page-enter">
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-6 safe-top">
-        <div className="flex items-center gap-3 mb-4">
-          <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors">
-            <ArrowLeft size={24} />
+    <div className="page-root pb-nav">
+      <div className="safe-top px-4 pt-2 pb-1">
+        <div className="flex items-center gap-3 mb-3">
+          <button onClick={onBack} className="icon-btn" aria-label="返回">
+            <ArrowLeft size={20} />
           </button>
-          <h1 className="text-xl font-bold">周期记账</h1>
+          <div>
+            <h1 className="page-title">周期记账</h1>
+            <p className="page-subtitle">设置自动记账，免去重复录入</p>
+          </div>
         </div>
-        <p className="text-sm text-white/80">设置自动记账，免去重复录入</p>
-      </div>
 
-      <div className="px-4 -mt-4">
-        <div className="card p-4 grid grid-cols-3 gap-3">
+        <div className="card grid grid-cols-3 gap-3">
           <div className="text-center">
-            <p className="text-2xl font-bold text-gray-800 dark:text-white">{recurringRecords.length}</p>
-            <p className="text-xs text-gray-500">周期任务</p>
+            <p className="text-2xl font-bold amount-num" style={{ color: 'var(--ink)' }}>{recurringRecords.length}</p>
+            <p className="text-xs" style={{ color: 'var(--ink-2)' }}>周期任务</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary-500">{recurringRecords.filter(r => r.enabled).length}</p>
-            <p className="text-xs text-gray-500">运行中</p>
+            <p className="text-2xl font-bold amount-num" style={{ color: 'var(--primary)' }}>{recurringRecords.filter(r => r.enabled).length}</p>
+            <p className="text-xs" style={{ color: 'var(--ink-2)' }}>运行中</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-orange-500">
+            <p className="text-2xl font-bold amount-num" style={{ color: '#d9930f' }}>
               {recurringRecords.filter(r => r.enabled).reduce((sum, r) => sum + r.amount, 0).toFixed(0)}
             </p>
-            <p className="text-xs text-gray-500">月度金额</p>
+            <p className="text-xs" style={{ color: 'var(--ink-2)' }}>月度金额</p>
           </div>
         </div>
       </div>
 
       <div className="px-4 mt-4">
         {recurringRecords.length === 0 ? (
-          <div className="card p-8 text-center">
-            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Repeat size={36} className="text-gray-400" />
+          <div className="card text-center">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{ background: 'var(--paper-deep)' }}
+            >
+              <Repeat size={36} style={{ color: 'var(--ink-2)' }} />
             </div>
-            <p className="text-gray-500 mb-4">还没有设置周期记账</p>
+            <p className="mb-4" style={{ color: 'var(--ink-2)' }}>还没有设置周期记账</p>
             <button
               onClick={openAddModal}
-              className="px-6 py-2.5 bg-primary-500 text-white rounded-card font-medium hover:bg-primary-600 transition-colors"
+              className="btn-primary"
             >
               创建周期任务
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div>
             {recurringRecords.map((record) => {
               const category = categories.find((c) => c.id === record.categoryId);
               const account = accounts.find((a) => a.id === record.accountId);
@@ -149,59 +152,65 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
               return (
                 <div
                   key={record.id}
-                  className={`card p-4 transition-all ${
-                    !record.enabled ? 'opacity-60' : ''
-                  }`}
+                  className="card mb-3"
+                  style={!record.enabled ? { opacity: 0.6 } : undefined}
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${category?.color || '#6366f1'}20`, color: category?.color || '#6366f1' }}
+                      style={{ backgroundColor: `${category?.color || '#2e85de'}20`, color: category?.color || '#2e85de' }}
                     >
                       <IconComponent size={20} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-lg font-bold ${record.type === 'income' ? 'text-primary-500' : 'text-red-500'}`}>
+                        <span
+                          className="text-lg font-bold amount-num"
+                          style={{ color: record.type === 'income' ? 'var(--primary)' : 'var(--expense)' }}
+                        >
                           {record.type === 'income' ? '+' : '-'}¥{record.amount.toFixed(2)}
                         </span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full"
+                          style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}
+                        >
                           {getFrequencyText(record)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>
                         {category?.name} · {account?.name}
                       </p>
                       {record.note && (
-                        <p className="text-xs text-gray-400 mt-1">{record.note}</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--ink-2)' }}>{record.note}</p>
                       )}
                     </div>
                     <div className="flex flex-col gap-1">
                       <button
                         onClick={() => openEditModal(record)}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-500"
+                        className="p-2 rounded-full"
+                        style={{ color: 'var(--ink-2)' }}
                       >
                         <Edit3 size={16} />
                       </button>
                       <button
                         onClick={() => deleteRecurringRecord(record.id)}
-                        className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full text-red-500"
+                        className="p-2 rounded-full"
+                        style={{ color: 'var(--expense)' }}
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>
                       开始: {record.startDate}{record.endDate ? ` · 结束: ${record.endDate}` : ''}
                     </span>
                     <button
                       onClick={() => toggleRecurringRecord(record.id)}
-                      className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                        record.enabled
-                          ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
-                      }`}
+                      className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors"
+                      style={record.enabled
+                        ? { background: 'var(--primary-soft)', color: 'var(--primary-ink)' }
+                        : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
                     >
                       {record.enabled ? <Play size={12} /> : <X size={12} />}
                       {record.enabled ? '运行中' : '已暂停'}
@@ -215,47 +224,54 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowModal(false)}>
-          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-card max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="text-lg font-bold">{editingRecord ? '编辑周期任务' : '新建周期任务'}</h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
-                <X size={20} className="text-gray-500" />
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="sheet w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+              <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{editingRecord ? '编辑周期任务' : '新建周期任务'}</h3>
+              <button onClick={() => setShowModal(false)} className="icon-btn" aria-label="关闭">
+                <X size={18} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div className="flex gap-2">
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex gap-2 mb-4">
                 {(['expense', 'income'] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => {
                       setForm({ ...form, type: t, categoryId: categories.find(c => c.type === t)?.id || '' });
                     }}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                      form.type === t
-                        ? t === 'expense' ? 'bg-red-500 text-white' : 'bg-primary-500 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
-                    }`}
+                    className="flex-1 py-2.5 rounded-button text-sm font-medium transition-all"
+                    style={form.type === t
+                      ? { background: t === 'expense' ? 'var(--expense)' : 'var(--primary)', color: '#fff' }
+                      : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
                   >
                     {t === 'expense' ? '支出' : '收入'}
                   </button>
                 ))}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">金额</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>金额</label>
                 <input
                   type="number"
                   value={form.amount}
                   onChange={(e) => setForm({ ...form, amount: e.target.value })}
                   placeholder="0.00"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-card text-xl font-bold text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-3 rounded-card text-xl font-bold outline-none"
+                  style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">分类</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>分类</label>
                 <div className="grid grid-cols-4 gap-2">
                   {filteredCategories.map((cat) => {
                     const IconComponent = getIcon(cat.icon);
@@ -263,24 +279,23 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                       <button
                         key={cat.id}
                         onClick={() => setForm({ ...form, categoryId: cat.id })}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
-                          form.categoryId === cat.id
-                            ? 'bg-indigo-50 dark:bg-indigo-900/30 ring-2 ring-indigo-500'
-                            : 'bg-gray-50 dark:bg-gray-700'
-                        }`}
+                        className="flex flex-col items-center gap-1 p-2 rounded-card transition-all"
+                        style={form.categoryId === cat.id
+                          ? { background: 'var(--primary-soft)', border: '1.5px solid var(--primary)' }
+                          : { background: 'var(--paper-deep)', border: '1.5px solid transparent' }}
                       >
                         <div className="p-1.5 rounded-full" style={{ backgroundColor: `${cat.color}20`, color: cat.color }}>
                           <IconComponent size={16} />
                         </div>
-                        <span className="text-xs text-gray-600 dark:text-gray-400">{cat.name}</span>
+                        <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{cat.name}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">账户</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>账户</label>
                 <div className="flex gap-2 flex-wrap">
                   {accounts.map((acc) => {
                     const IconComponent = getIcon(acc.icon);
@@ -288,11 +303,10 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                       <button
                         key={acc.id}
                         onClick={() => setForm({ ...form, accountId: acc.id })}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
-                          form.accountId === acc.id
-                            ? 'bg-indigo-500 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600'
-                        }`}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-button transition-all"
+                        style={form.accountId === acc.id
+                          ? { background: 'var(--primary)', color: '#fff' }
+                          : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
                       >
                         <IconComponent size={14} />
                         <span className="text-xs font-medium">{acc.name}</span>
@@ -302,8 +316,8 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">周期</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>周期</label>
                 <div className="grid grid-cols-4 gap-2 mb-2">
                   {([
                     { value: 'daily', label: '每天' },
@@ -314,11 +328,10 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                     <button
                       key={f.value}
                       onClick={() => setForm({ ...form, frequency: f.value })}
-                      className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                        form.frequency === f.value
-                          ? 'bg-indigo-500 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600'
-                      }`}
+                      className="py-2 rounded-button text-sm font-medium transition-all"
+                      style={form.frequency === f.value
+                        ? { background: 'var(--primary)', color: '#fff' }
+                        : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
                     >
                       {f.label}
                     </button>
@@ -331,11 +344,10 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                       <button
                         key={idx}
                         onClick={() => setForm({ ...form, dayOfWeek: idx })}
-                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                          form.dayOfWeek === idx
-                            ? 'bg-indigo-500 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600'
-                        }`}
+                        className="flex-1 py-2 rounded-button text-sm font-medium transition-all"
+                        style={form.dayOfWeek === idx
+                          ? { background: 'var(--primary)', color: '#fff' }
+                          : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
                       >
                         {day}
                       </button>
@@ -345,61 +357,62 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
 
                 {(form.frequency === 'monthly' || form.frequency === 'yearly') && (
                   <div className="mt-2">
-                    <label className="block text-xs text-gray-500 mb-1">日期</label>
+                    <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>日期</label>
                     <input
                       type="number"
                       min="1"
                       max="31"
                       value={form.dayOfMonth}
                       onChange={(e) => setForm({ ...form, dayOfMonth: parseInt(e.target.value) || 1 })}
-                      className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-center text-lg font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-2 rounded-button text-center text-lg font-bold outline-none"
+                      style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
                     />
                   </div>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">备注</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>备注</label>
                 <input
                   type="text"
                   value={form.note}
                   onChange={(e) => setForm({ ...form, note: e.target.value })}
                   placeholder="添加备注..."
-                  className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2.5 rounded-button text-sm outline-none"
+                  style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">开始日期</label>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>开始日期</label>
                   <input
                     type="date"
                     value={form.startDate}
                     onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm outline-none"
+                    className="w-full px-3 py-2 rounded-button text-sm outline-none"
+                    style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">结束日期 (可选)</label>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>结束日期 (可选)</label>
                   <input
                     type="date"
                     value={form.endDate}
                     onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm outline-none"
+                    className="w-full px-3 py-2 rounded-button text-sm outline-none"
+                    style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-gray-100 dark:border-gray-700">
+            <div className="p-4" style={{ borderTop: '1px solid var(--line)' }}>
               <button
                 onClick={handleSubmit}
                 disabled={!form.amount || !form.categoryId || !form.accountId}
-                className={`w-full py-3 rounded-card font-bold text-white transition-all ${
-                  form.amount && form.categoryId && form.accountId
-                    ? 'bg-indigo-500 hover:bg-indigo-600'
-                    : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
-                }`}
+                className="btn-primary w-full"
+                style={(!form.amount || !form.categoryId || !form.accountId) ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
               >
                 {editingRecord ? '保存修改' : '创建周期任务'}
               </button>
@@ -410,7 +423,17 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
 
       <button
         onClick={openAddModal}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-600 transition-all z-40"
+        className="fixed right-5 flex items-center justify-center transition-all z-40"
+        style={{
+          bottom: 'calc(env(safe-area-inset-bottom) + 80px)',
+          width: '56px',
+          height: '56px',
+          background: 'var(--primary)',
+          color: '#fff',
+          borderRadius: '50%',
+          boxShadow: 'var(--shadow-fab)',
+        }}
+        aria-label="新建周期任务"
       >
         <Plus size={24} />
       </button>

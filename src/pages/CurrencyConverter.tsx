@@ -35,40 +35,42 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={handleClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      style={{ background: 'rgba(43,41,37,0.45)' }}
+      onClick={handleClose}
+    >
       <div
-        className="bg-white dark:bg-gray-800 w-full max-w-md rounded-card max-h-[70vh] overflow-hidden flex flex-col shadow-2xl"
+        className="sheet w-full max-h-[78vh] overflow-hidden flex flex-col animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
-          <h3 className="font-bold text-gray-800 dark:text-white">选择货币</h3>
-          <button
-            onClick={handleClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-          >
-            <XIcon size={20} className="text-gray-500" />
+        <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>选择货币</h3>
+          <button onClick={handleClose} className="icon-btn" aria-label="关闭">
+            <XIcon size={18} />
           </button>
         </div>
-        <div className="p-3 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2">
-            <SearchIcon size={16} className="text-gray-400 flex-shrink-0" />
+        <div className="p-3" style={{ borderBottom: '1px solid var(--line)' }}>
+          <div className="flex items-center gap-2 rounded-button px-3 py-2" style={{ background: 'var(--paper-deep)' }}>
+            <SearchIcon size={16} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
             <input
               type="text"
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="搜索货币名称或代码"
-              className="flex-1 bg-transparent outline-none text-sm text-gray-800 dark:text-white placeholder-gray-400"
+              className="flex-1 bg-transparent outline-none text-sm"
+              style={{ color: 'var(--ink)' }}
             />
             {searchValue && (
               <button onClick={() => onSearchChange('')} className="flex-shrink-0">
-                <XIcon size={14} className="text-gray-400" />
+                <XIcon size={14} style={{ color: 'var(--ink-2)' }} />
               </button>
             )}
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-1 pb-6">
+        <div className="flex-1 overflow-y-auto p-3 pb-8">
           {filtered.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm py-8">未找到匹配的货币</p>
+            <p className="text-center text-sm py-8" style={{ color: 'var(--ink-2)' }}>未找到匹配的货币</p>
           ) : (
             filtered.map((currency) => (
               <button
@@ -78,20 +80,19 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
                   onSearchChange('');
                   onClose();
                 }}
-                className={`w-full flex items-center gap-3 p-3 rounded-card transition-all border-2 ${
-                  selected === currency.code
-                    ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-500'
-                    : 'bg-gray-50 dark:bg-gray-700 border-transparent hover:bg-gray-100 dark:hover:bg-gray-600'
-                }`}
+                className="w-full flex items-center gap-3 p-3 rounded-card mb-1.5 transition-all"
+                style={selected === currency.code
+                  ? { background: 'var(--primary-soft)', border: '1.5px solid var(--primary)' }
+                  : { background: 'var(--paper-deep)', border: '1.5px solid transparent' }}
               >
                 <span className="text-2xl flex-shrink-0">{currency.flag}</span>
                 <div className="flex-1 text-left min-w-0">
-                  <p className="font-medium text-gray-800 dark:text-white">{currency.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{currency.code} · {currency.region}</p>
+                  <p className="font-medium" style={{ color: 'var(--ink)' }}>{currency.name}</p>
+                  <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{currency.code} · {currency.region}</p>
                 </div>
-                <span className="text-gray-400 text-sm flex-shrink-0">{currency.symbol}</span>
+                <span className="text-sm flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{currency.symbol}</span>
                 {selected === currency.code && (
-                  <CheckIcon size={18} className="text-cyan-500 flex-shrink-0" />
+                  <CheckIcon size={18} className="flex-shrink-0" style={{ color: 'var(--primary)' }} />
                 )}
               </button>
             ))
@@ -223,51 +224,51 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
   const renderRateSourceBadge = (code: string) => {
     const source = getRateSource(code);
     if (source === 'custom') {
-      return <span className="text-xs px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded">自定义</span>;
+      return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#f5e8d0', color: '#a9782c' }}>自定义</span>;
     }
     if (source === 'live') {
-      return <span className="text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded">实时</span>;
+      return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#e0f0e4', color: '#2f7a45' }}>实时</span>;
     }
-    return <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 rounded">默认</span>;
+    return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}>默认</span>;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+    <div className="page-root pb-nav">
       {/* 头部 */}
-      <div className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white px-6 pt-8 pb-6 safe-top">
+      <div className="safe-top px-4 pt-2 pb-1">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onBack}
-              className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
-            >
-              <ArrowLeft size={24} />
+          <div className="flex items-center gap-3">
+            <button onClick={onBack} className="icon-btn" aria-label="返回">
+              <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-xl font-bold">汇率转换</h1>
-              <p className="text-cyan-100 text-sm mt-1">{lastUpdateText}</p>
+              <h1 className="page-title">汇率转换</h1>
+              <p className="page-subtitle">{lastUpdateText}</p>
             </div>
           </div>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2.5 bg-white/20 rounded-full hover:bg-white/30 transition-colors disabled:opacity-50"
+            className="icon-btn disabled:opacity-50"
+            style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
+            aria-label="刷新汇率"
           >
-            <RefreshCw size={20} className={isRefreshing ? 'animate-spin' : ''} />
+            <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
         </div>
 
         {/* 转换器主体 */}
-        <div className="mt-5 bg-white/10 backdrop-blur-sm rounded-card p-4">
+        <div className="card mt-4" style={{ background: 'var(--primary-soft)' }}>
           {/* From */}
           <button
             onClick={() => setShowFromPicker(true)}
-            className="w-full flex items-center gap-3 p-3 bg-white/10 rounded-card hover:bg-white/20 transition-colors mb-2"
+            className="w-full flex items-center gap-3 p-3 rounded-card mb-2"
+            style={{ background: 'var(--card)' }}
           >
             <span className="text-2xl">{fromCurrencyInfo?.flag}</span>
             <div className="flex-1 text-left">
-              <p className="font-semibold text-sm">{fromCurrency}</p>
-              <p className="text-xs text-white/70">{fromCurrencyInfo?.name}</p>
+              <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>{fromCurrency}</p>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{fromCurrencyInfo?.name}</p>
             </div>
             <input
               type="number"
@@ -275,7 +276,8 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
               onChange={(e) => setAmount(e.target.value)}
               onClick={(e) => e.stopPropagation()}
               placeholder="输入金额"
-              className="bg-white/20 text-right text-lg font-bold rounded-lg px-3 py-1.5 w-32 outline-none placeholder-white/50"
+              className="text-right text-lg font-bold rounded-button px-3 py-1.5 w-32 outline-none"
+              style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
             />
           </button>
 
@@ -283,7 +285,9 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
           <div className="flex justify-center -my-1 relative z-10">
             <button
               onClick={handleSwap}
-              className="p-2 bg-white/30 rounded-full hover:bg-white/40 active:rotate-180 transition-all"
+              className="p-2 rounded-full active:rotate-180 transition-all"
+              style={{ background: 'var(--primary)', color: '#fff', boxShadow: 'var(--shadow-fab)' }}
+              aria-label="交换货币"
             >
               <ArrowDownUp size={18} />
             </button>
@@ -292,23 +296,24 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
           {/* To */}
           <button
             onClick={() => setShowToPicker(true)}
-            className="w-full flex items-center gap-3 p-3 bg-white/10 rounded-card hover:bg-white/20 transition-colors"
+            className="w-full flex items-center gap-3 p-3 rounded-card"
+            style={{ background: 'var(--card)' }}
           >
             <span className="text-2xl">{toCurrencyInfo?.flag}</span>
             <div className="flex-1 text-left">
-              <p className="font-semibold text-sm">{toCurrency}</p>
-              <p className="text-xs text-white/70">{toCurrencyInfo?.name}</p>
+              <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>{toCurrency}</p>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{toCurrencyInfo?.name}</p>
             </div>
             <div className="text-right">
-              <p className="text-lg font-bold">
+              <p className="text-lg font-bold amount-num" style={{ color: 'var(--primary)' }}>
                 {isZeroDecimalCurrency(toCurrency) ? convertedAmount.toFixed(0) : convertedAmount.toFixed(2)}
               </p>
-              <p className="text-xs text-white/60">{getCurrencySymbol(toCurrency)}</p>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{getCurrencySymbol(toCurrency)}</p>
             </div>
           </button>
 
           {/* 汇率说明 */}
-          <div className="mt-3 text-center text-xs text-white/70">
+          <div className="mt-3 text-center text-xs" style={{ color: 'var(--primary-ink)' }}>
             1 {fromCurrency} = {rateText} {toCurrency}
           </div>
         </div>
@@ -318,17 +323,16 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
       <div className="px-4 mt-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Globe size={18} className="text-gray-500 dark:text-gray-400" />
-            <h2 className="font-semibold text-gray-800 dark:text-white text-sm">各货币对人民币汇率</h2>
-            <span className="text-xs text-gray-400">({currencies.length}种)</span>
+            <Globe size={18} style={{ color: 'var(--ink-2)' }} />
+            <h2 className="section-title">各货币对人民币汇率</h2>
+            <span className="text-xs" style={{ color: 'var(--ink-2)' }}>({currencies.length}种)</span>
           </div>
           <button
             onClick={() => setShowRateEditor(!showRateEditor)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              showRateEditor
-                ? 'bg-primary-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-            }`}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+            style={showRateEditor
+              ? { background: 'var(--primary)', color: '#fff' }
+              : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
           >
             <Edit3 size={12} />
             {showRateEditor ? '完成' : '编辑'}
@@ -338,25 +342,24 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
         {/* 按地区分组显示 */}
         {Object.entries(groupedCurrencies).map(([region, regionCurrencies]) => (
           <div key={region} className="mb-4">
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2 px-1">{region}</p>
-            <div className="bg-white dark:bg-gray-800 rounded-card shadow-sm overflow-hidden">
+            <p className="text-xs font-medium mb-2 px-1" style={{ color: 'var(--ink-2)' }}>{region}</p>
+            <div className="card overflow-hidden p-0">
               {regionCurrencies.map((currency, index) => {
                 const rate = getRate(currency.code);
                 const isCustom = customRates[currency.code] !== undefined;
                 return (
                   <div
                     key={currency.code}
-                    className={`flex items-center gap-3 p-3 ${
-                      index > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''
-                    }`}
+                    className="flex items-center gap-3 p-3"
+                    style={index > 0 ? { borderTop: '1px solid var(--line)' } : undefined}
                   >
                     <span className="text-xl flex-shrink-0">{currency.flag}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-800 dark:text-white text-sm">{currency.code}</p>
+                        <p className="font-medium text-sm" style={{ color: 'var(--ink)' }}>{currency.code}</p>
                         {renderRateSourceBadge(currency.code)}
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{currency.name}</p>
+                      <p className="text-xs truncate" style={{ color: 'var(--ink-2)' }}>{currency.name}</p>
                     </div>
                     {showRateEditor && currency.code !== 'CNY' ? (
                       editingRate === currency.code ? (
@@ -366,37 +369,42 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
                             value={editRateValue}
                             onChange={(e) => setEditRateValue(e.target.value)}
                             autoFocus
-                            className="w-20 text-right text-sm px-2 py-1 bg-gray-50 dark:bg-gray-700 rounded outline-none text-gray-800 dark:text-white"
+                            className="w-20 text-right text-sm px-2 py-1 rounded outline-none"
+                            style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
                           />
                           <button
                             onClick={() => handleSaveRate(currency.code)}
-                            className="p-1 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
+                            className="p-1 rounded"
+                            style={{ color: 'var(--primary)' }}
                           >
                             <CheckIcon size={16} />
                           </button>
                           <button
                             onClick={() => setEditingRate(null)}
-                            className="p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                            className="p-1 rounded"
+                            style={{ color: 'var(--ink-2)' }}
                           >
                             <XIcon size={16} />
                           </button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1">
-                          <span className="text-sm text-gray-600 dark:text-gray-300">¥{rate.toFixed(rate < 0.01 ? 6 : 4)}</span>
+                          <span className="text-sm" style={{ color: 'var(--ink)' }}>¥{rate.toFixed(rate < 0.01 ? 6 : 4)}</span>
                           <button
                             onClick={() => {
                               setEditingRate(currency.code);
                               setEditRateValue(rate.toString());
                             }}
-                            className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                            className="p-1 rounded"
+                            style={{ color: 'var(--primary)' }}
                           >
                             <Edit3 size={14} />
                           </button>
                           {isCustom && (
                             <button
                               onClick={() => handleResetRate(currency.code)}
-                              className="p-1 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                              className="p-1 rounded"
+                              style={{ color: 'var(--expense)' }}
                             >
                               <XIcon size={14} />
                             </button>
@@ -405,8 +413,8 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
                       )
                     ) : (
                       <div className="text-right">
-                        <p className="text-sm font-medium text-gray-800 dark:text-white">¥{rate.toFixed(rate < 0.01 ? 6 : 4)}</p>
-                        <p className="text-xs text-gray-400">{currency.symbol}</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>¥{rate.toFixed(rate < 0.01 ? 6 : 4)}</p>
+                        <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{currency.symbol}</p>
                       </div>
                     )}
                   </div>
@@ -416,7 +424,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
           </div>
         ))}
 
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 text-center pb-4">
+        <p className="text-xs mt-3 text-center pb-4" style={{ color: 'var(--ink-2)' }}>
           实时汇率来自开放API，每6小时自动更新。点击右上角刷新按钮手动更新。可点击"编辑"自定义汇率。
         </p>
       </div>

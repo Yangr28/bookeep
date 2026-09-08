@@ -85,17 +85,21 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
-      <div className="bg-white dark:bg-gray-800 px-6 pt-8 pb-6 safe-top">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">分类管理</h1>
-        <p className="text-gray-400 dark:text-gray-500 text-sm mt-2 leading-relaxed">管理您的收支分类</p>
+    <div className="page-root pb-nav">
+      {/* 页头 */}
+      <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
+        <div className="flex-1">
+          <h1 className="page-title">分类管理</h1>
+          <p className="page-subtitle">管理您的收支分类</p>
+        </div>
       </div>
 
       <div className="px-4 mt-4">
-        <div className="card p-5">
+        {/* 支出分类 */}
+        <div className="card p-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+            <h2 className="section-title mb-0 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--expense)' }} />
               支出分类
             </h2>
             <button
@@ -103,26 +107,30 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                 setNewCategory((prev) => ({ ...prev, type: 'expense' }));
                 setShowAddModal(true);
               }}
-              className="p-2.5 text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-card transition-all"
+              className="icon-btn w-9 h-9"
+              aria-label="添加支出分类"
             >
-              <Plus size={20} />
+              <Plus size={18} />
             </button>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-2">
             {expenseCategories.map((category) => {
               const IconComponent = getIcon(category.icon);
               return (
                 <button
                   key={category.id}
                   onClick={() => onViewCategoryDetail(category.id)}
-                  className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-card relative group hover:bg-gray-100 dark:hover:bg-gray-600 active:bg-gray-200 transition-all duration-200 min-h-[80px]"
+                  className="flex flex-col items-center p-3 rounded-button relative group min-h-[80px] transition-colors active:scale-95"
+                  style={{ background: 'var(--paper)' }}
                 >
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setCategoryToDelete(category);
                     }}
-                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                    className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    style={{ background: 'var(--expense)', color: '#fff' }}
+                    aria-label="删除分类"
                   >
                     <X size={12} />
                   </button>
@@ -132,7 +140,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                   >
                     <IconComponent size={22} style={{ color: category.color }} />
                   </div>
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center leading-tight max-w-[60px] truncate">
+                  <span className="text-xs font-medium text-center leading-tight max-w-[60px] truncate" style={{ color: 'var(--ink)' }}>
                     {category.name}
                   </span>
                 </button>
@@ -141,10 +149,11 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
           </div>
         </div>
 
-        <div className="card p-5 mt-4">
+        {/* 收入分类 */}
+        <div className="card p-4 mt-3">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-primary-500 rounded-full"></span>
+            <h2 className="section-title mb-0 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--primary)' }} />
               收入分类
             </h2>
             <button
@@ -152,26 +161,30 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                 setNewCategory((prev) => ({ ...prev, type: 'income' }));
                 setShowAddModal(true);
               }}
-              className="p-2.5 text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-card transition-all"
+              className="icon-btn w-9 h-9"
+              aria-label="添加收入分类"
             >
-              <Plus size={20} />
+              <Plus size={18} />
             </button>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-2">
             {incomeCategories.map((category) => {
               const IconComponent = getIcon(category.icon);
               return (
                 <button
                   key={category.id}
                   onClick={() => onViewCategoryDetail(category.id)}
-                  className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-card relative group hover:bg-gray-100 dark:hover:bg-gray-600 active:bg-gray-200 transition-all duration-200 min-h-[80px]"
+                  className="flex flex-col items-center p-3 rounded-button relative group min-h-[80px] transition-colors active:scale-95"
+                  style={{ background: 'var(--paper)' }}
                 >
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setCategoryToDelete(category);
                     }}
-                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                    className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    style={{ background: 'var(--expense)', color: '#fff' }}
+                    aria-label="删除分类"
                   >
                     <X size={12} />
                   </button>
@@ -181,7 +194,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                   >
                     <IconComponent size={22} style={{ color: category.color }} />
                   </div>
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center leading-tight max-w-[60px] truncate">
+                  <span className="text-xs font-medium text-center leading-tight max-w-[60px] truncate" style={{ color: 'var(--ink)' }}>
                     {category.name}
                   </span>
                 </button>
@@ -191,46 +204,60 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
         </div>
       </div>
 
+      {/* 添加分类底部弹层 */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white z-10 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">添加分类</h2>
+        <div
+          className="fixed inset-0 z-[90] flex items-end justify-center"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => setShowAddModal(false)}
+        >
+          <div
+            className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="sticky top-0 z-10 px-5 py-4 flex items-center justify-between"
+              style={{ background: 'var(--card)', borderBottom: '1px solid var(--line)' }}
+            >
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>添加分类</h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="icon-btn w-9 h-9"
+                aria-label="关闭"
               >
-                <X size={24} className="text-gray-500" />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 pb-24 space-y-5">
+            <div className="p-5 pb-8 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">分类名称</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>分类名称</label>
                 <input
                   type="text"
                   value={newCategory.name}
                   onChange={(e) => setNewCategory((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="输入分类名称"
                   maxLength={10}
-                  className="w-full px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
+                  className="input-field"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">选择图标</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>选择图标</label>
                 <div className="grid grid-cols-6 gap-2">
                   {iconList.map((icon) => {
                     const IconComponent = getIcon(icon);
+                    const selected = newCategory.icon === icon;
                     return (
                       <button
                         key={icon}
                         onClick={() => setNewCategory((prev) => ({ ...prev, icon }))}
-                        className={`p-2 rounded-card transition-all ${
-                          newCategory.icon === icon
-                            ? 'bg-primary-50 border-2 border-primary-500'
-                            : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
-                        }`}
+                        className="p-2.5 rounded-button transition-all flex items-center justify-center border-2"
+                        style={
+                          selected
+                            ? { background: 'var(--primary-soft)', borderColor: 'var(--primary)', color: 'var(--primary)' }
+                            : { background: 'var(--paper)', borderColor: 'transparent', color: 'var(--ink-2)' }
+                        }
                       >
                         <IconComponent size={20} />
                       </button>
@@ -240,32 +267,42 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">选择颜色</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>选择颜色</label>
                 <div className="flex flex-wrap gap-2">
-                  {colorList.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setNewCategory((prev) => ({ ...prev, color }))}
-                      className={`w-10 h-10 rounded-full transition-transform ${
-                        newCategory.color === color ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : 'hover:scale-110'
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
+                  {colorList.map((color) => {
+                    const selected = newCategory.color === color;
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => setNewCategory((prev) => ({ ...prev, color }))}
+                        className="w-10 h-10 rounded-full transition-transform hover:scale-110"
+                        style={{
+                          backgroundColor: color,
+                          outline: selected ? '2px solid var(--ink-2)' : 'none',
+                          outlineOffset: 2,
+                          transform: selected ? 'scale(1.1)' : undefined,
+                        }}
+                        aria-label={`颜色 ${color}`}
+                      />
+                    );
+                  })}
                   <button
                     onClick={() => setShowColorPicker(!showColorPicker)}
-                    className={`w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center transition-colors ${
-                      !colorList.includes(newCategory.color) ? 'border-primary-400' : 'border-gray-300 hover:border-primary-400'
-                    }`}
-                    style={!colorList.includes(newCategory.color) ? { backgroundColor: newCategory.color } : {}}
+                    className="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center transition-colors"
+                    style={{
+                      borderColor: !colorList.includes(newCategory.color) ? 'var(--primary)' : 'var(--line)',
+                      backgroundColor: !colorList.includes(newCategory.color) ? newCategory.color : 'transparent',
+                      color: 'var(--ink-2)',
+                    }}
+                    aria-label="自定义颜色"
                   >
-                    <Palette size={18} className="text-gray-400" />
+                    <Palette size={18} />
                   </button>
                 </div>
 
                 {showColorPicker && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-card">
-                    <p className="text-sm text-gray-500 mb-3">自定义颜色</p>
+                  <div className="mt-4 p-4 rounded-button" style={{ background: 'var(--paper)' }}>
+                    <p className="text-sm mb-3" style={{ color: 'var(--ink-2)' }}>自定义颜色</p>
                     <div className="grid grid-cols-6 gap-2 mb-3">
                       {['#FF0000', '#FF6B00', '#FFCC00', '#00CC00', '#0066FF', '#9933FF', '#FF0099', '#00CCCC',
                         '#FF3366', '#FF9933', '#FFFF00', '#33CC66', '#3399FF', '#CC33FF', '#FF66CC', '#66CCCC'].map((color) => (
@@ -275,10 +312,14 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                             setNewCategory((prev) => ({ ...prev, color }));
                             setShowColorPicker(false);
                           }}
-                          className={`w-8 h-8 rounded-full transition-all ${
-                            newCategory.color === color ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''
-                          }`}
-                          style={{ backgroundColor: color }}
+                          className="w-8 h-8 rounded-full transition-all hover:scale-110"
+                          style={{
+                            backgroundColor: color,
+                            outline: newCategory.color === color ? '2px solid var(--ink-2)' : 'none',
+                            outlineOffset: 2,
+                            transform: newCategory.color === color ? 'scale(1.1)' : undefined,
+                          }}
+                          aria-label={`颜色 ${color}`}
                         />
                       ))}
                     </div>
@@ -287,7 +328,8 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                         type="color"
                         value={newCategory.color}
                         onChange={(e) => setNewCategory((prev) => ({ ...prev, color: e.target.value }))}
-                        className="w-16 h-16 rounded-lg cursor-pointer border-0"
+                        className="w-16 h-16 rounded-lg cursor-pointer border-0 flex-shrink-0"
+                        style={{ background: 'var(--card)' }}
                       />
                       <input
                         type="text"
@@ -309,7 +351,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                             setNewCategory((prev) => ({ ...prev, color: '#EF4444' }));
                           }
                         }}
-                        className="flex-1 px-4 py-3 rounded-card border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all uppercase"
+                        className="input-field flex-1 uppercase"
                         placeholder="#RRGGBB"
                         maxLength={7}
                       />
@@ -321,7 +363,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
               <button
                 onClick={handleAddCategory}
                 disabled={!newCategory.name.trim()}
-                className="w-full bg-primary-500 text-white py-3 rounded-card font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6"
+                className="btn-primary w-full mt-2"
               >
                 添加分类
               </button>
@@ -330,32 +372,34 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
         </div>
       )}
 
+      {/* 删除确认弹窗 */}
       {categoryToDelete && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
           onClick={() => setCategoryToDelete(null)}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-card p-6 mx-4 w-full max-w-sm shadow-xl"
+            className="card w-full max-w-sm p-6 animate-bounce-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">删除分类</h3>
-            <p className="text-gray-600 dark:text-gray-300 mt-3">
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>删除分类</h3>
+            <p className="mt-3 text-sm" style={{ color: 'var(--ink-2)' }}>
               确定删除分类「{categoryToDelete.name}」吗？
             </p>
-            <p className="text-sm text-red-500 dark:text-red-400 mt-2">
+            <p className="text-sm mt-2" style={{ color: 'var(--expense)' }}>
               该分类下有 {recordCountOf(categoryToDelete.id)} 条记录，删除后这些记录将归入「未分类」。
             </p>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setCategoryToDelete(null)}
-                className="flex-1 py-2.5 rounded-card bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="btn-ghost flex-1"
               >
                 取消
               </button>
               <button
                 onClick={confirmDeleteCategory}
-                className="flex-1 py-2.5 rounded-card bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                className="btn-danger flex-1"
               >
                 删除
               </button>
@@ -364,12 +408,17 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
         </div>
       )}
 
+      {/* 撤销提示 */}
       {recentDeleted && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-black/90 text-white pl-5 pr-2 py-2.5 rounded-full z-[90] flex items-center gap-3 shadow-2xl">
+        <div
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 pl-5 pr-2 py-2.5 rounded-full z-[95] flex items-center gap-3 animate-slide-up"
+          style={{ background: 'var(--ink)', color: 'var(--paper)', boxShadow: 'var(--shadow-card-hover)' }}
+        >
           <span className="text-sm whitespace-nowrap">已删除「{recentDeleted.category.name}」</span>
           <button
             onClick={handleUndoDelete}
-            className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium transition-colors whitespace-nowrap"
+            className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap"
+            style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
           >
             撤销
           </button>

@@ -3,7 +3,7 @@ export const VersionInfo = () => {
 
   return (
     <div className="text-center py-4">
-      <p className="text-xs text-gray-400">版本号: v{version}</p>
+      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>版本号: v{version}</p>
     </div>
   );
 };

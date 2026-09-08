@@ -27,10 +27,10 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
   const expenseCategories = categories.filter((c) => c.type === 'expense');
 
   const getBudgetColor = (percentage: number) => {
-    if (percentage >= 100) return 'bg-red-500';
-    if (percentage >= 80) return 'bg-orange-500';
-    if (percentage >= 50) return 'bg-yellow-500';
-    return 'bg-primary-500';
+    if (percentage >= 100) return 'var(--expense)';
+    if (percentage >= 80) return '#d9930f';
+    if (percentage >= 50) return '#e0a93f';
+    return 'var(--primary)';
   };
 
   const handleEdit = (categoryId: string) => {
@@ -69,36 +69,35 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
-      <div className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white px-6 pt-8 pb-6 safe-top">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
-          >
-            <ArrowLeft size={24} />
+    <div className="page-root pb-nav">
+      <div className="safe-top px-4 pt-2 pb-1">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="icon-btn" aria-label="返回">
+            <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-xl font-bold">预算管理</h1>
-            <p className="text-purple-100 text-sm mt-1">{selectedMonth.replace('-', '年')}月</p>
+            <h1 className="page-title">预算管理</h1>
+            <p className="page-subtitle">{selectedMonth.replace('-', '年')}月</p>
           </div>
         </div>
 
-        <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-card p-4">
+        <div className="card mt-4" style={{ background: 'var(--primary-soft)' }}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-purple-100">总预算使用</span>
-            <span className="text-sm font-medium">{formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}</span>
+            <span className="text-sm" style={{ color: 'var(--primary-ink)' }}>总预算使用</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--primary-ink)' }}>
+              {formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}
+            </span>
           </div>
-          <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(46,133,222,0.12)' }}>
             <div
-              className={`h-full transition-all duration-500 ${getBudgetColor(totalPercentage)}`}
-              style={{ width: `${totalPercentage}%` }}
+              className="h-full transition-all duration-500"
+              style={{ width: `${totalPercentage}%`, background: getBudgetColor(totalPercentage) }}
             />
           </div>
           <div className="flex items-center justify-between mt-2">
-            <span className="text-xs text-purple-200">已使用 {totalPercentage.toFixed(0)}%</span>
+            <span className="text-xs" style={{ color: 'var(--primary-ink)' }}>已使用 {totalPercentage.toFixed(0)}%</span>
             {overBudgetCategories.length > 0 && (
-              <span className="text-xs text-red-300 flex items-center gap-1">
+              <span className="text-xs flex items-center gap-1" style={{ color: 'var(--expense-ink)' }}>
                 <AlertCircle size={12} />
                 {overBudgetCategories.length} 项超支
               </span>
@@ -109,64 +108,61 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
 
       <div className="px-4 mt-4">
         <div className="flex items-center justify-between mb-3">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">选择月份</label>
+          <label className="section-title">选择月份</label>
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-purple-500"
+            className="rounded-button px-3 py-2 text-sm outline-none"
+            style={{ background: 'var(--card)', color: 'var(--ink)', boxShadow: 'var(--shadow-card)' }}
           />
         </div>
 
-        <div className="space-y-3">
+        <div>
           {expenseCategories.map((category) => {
             const usage = calculateBudgetUsage(category.id, selectedMonth, transactions);
             const isOverBudget = usage.budget > 0 && usage.spent >= usage.budget;
             const IconComponent = getIcon(category.icon);
+            const pctColor = usage.percentage >= 100 ? 'var(--expense)' : usage.percentage >= 80 ? '#d9930f' : 'var(--ink-2)';
 
             return (
               <div
                 key={category.id}
-                className={`card p-4 ${isOverBudget ? 'border-2 border-red-200 dark:border-red-800' : ''}`}
+                className="card mb-3"
+                style={isOverBudget ? { border: '1.5px solid var(--expense)' } : undefined}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div
                     className="p-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: `${category.color}20` }}
                   >
-                    <IconComponent
-                      size={20}
-                      style={{ color: category.color }}
-                    />
+                    <IconComponent size={20} style={{ color: category.color }} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-800 dark:text-white">{category.name}</span>
+                      <span className="font-medium" style={{ color: 'var(--ink)' }}>{category.name}</span>
                       {isOverBudget && (
-                        <span className="text-xs text-red-500 flex items-center gap-1">
+                        <span className="text-xs flex items-center gap-1" style={{ color: 'var(--expense)' }}>
                           <AlertCircle size={12} />
                           超支
                         </span>
                       )}
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="text-sm" style={{ color: 'var(--ink-2)' }}>
                         {formatCurrencyShort(usage.spent)} / {formatCurrencyShort(usage.budget)}
                       </span>
-                      <span className={`text-sm font-medium ${
-                        usage.percentage >= 100 ? 'text-red-500' :
-                        usage.percentage >= 80 ? 'text-orange-500' : 'text-gray-500'
-                      }`}>
+                      <span className="text-sm font-medium" style={{ color: pctColor }}>
                         {usage.percentage.toFixed(0)}%
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
+                <div className="h-2 rounded-full overflow-hidden mb-3" style={{ background: 'var(--paper-deep)' }}>
                   <div
-                    className={`h-full transition-all duration-500 ${getBudgetColor(usage.percentage)}`}
-                    style={{ width: `${usage.percentage}%` }}
+                    className="h-full transition-all duration-500"
+                    style={{ width: `${usage.percentage}%`, background: getBudgetColor(usage.percentage) }}
                   />
                 </div>
 
@@ -177,11 +173,13 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                       value={editAmount}
                       onChange={(e) => setEditAmount(e.target.value)}
                       placeholder="输入预算金额"
-                      className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-purple-500"
+                      className="flex-1 rounded-button px-3 py-2 text-sm outline-none"
+                      style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
                     />
                     <button
                       onClick={() => handleSave(category.id)}
-                      className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                      className="p-2 rounded-button"
+                      style={{ background: 'var(--primary)', color: '#fff' }}
                     >
                       <CheckCircle size={18} />
                     </button>
@@ -190,7 +188,8 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                         setEditingCategoryId(null);
                         setEditAmount('');
                       }}
-                      className="p-2 bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                      className="p-2 rounded-button"
+                      style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
                     >
                       <Trash2 size={18} />
                     </button>
@@ -201,7 +200,8 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                       <>
                         <button
                           onClick={() => handleEdit(category.id)}
-                          className="text-sm text-gray-500 dark:text-gray-400 hover:text-purple-500 transition-colors"
+                          className="text-sm"
+                          style={{ color: 'var(--ink-2)' }}
                         >
                           修改预算
                         </button>
@@ -210,7 +210,8 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                             const budget = useStore.getState().getBudgetByCategory(category.id, selectedMonth);
                             if (budget) deleteBudget(budget.id);
                           }}
-                          className="text-sm text-red-500 hover:text-red-600 transition-colors"
+                          className="text-sm"
+                          style={{ color: 'var(--expense)' }}
                         >
                           删除预算
                         </button>
@@ -218,7 +219,8 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                     ) : (
                       <button
                         onClick={() => handleEdit(category.id)}
-                        className="flex items-center gap-1 text-sm text-purple-500 hover:text-purple-600 transition-colors"
+                        className="flex items-center gap-1 text-sm"
+                        style={{ color: 'var(--primary)' }}
                       >
                         <Plus size={16} />
                         设置预算
@@ -232,12 +234,12 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
         </div>
 
         {overBudgetCategories.length > 0 && (
-          <div className="mt-4 bg-red-50 dark:bg-red-900/20 rounded-card p-4">
+          <div className="card mt-4" style={{ background: 'var(--expense-soft)' }}>
             <div className="flex items-start gap-3">
-              <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+              <AlertCircle size={20} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--expense-ink)' }} />
               <div>
-                <h3 className="font-medium text-red-700 dark:text-red-400">预算超支提醒</h3>
-                <p className="text-sm text-red-600 dark:text-red-500 mt-1">
+                <h3 className="font-medium" style={{ color: 'var(--expense-ink)' }}>预算超支提醒</h3>
+                <p className="text-sm mt-1" style={{ color: 'var(--expense-ink)' }}>
                   以下分类已超过预算：{overBudgetCategories.map((c) => c.name).join('、')}
                 </p>
               </div>
@@ -245,12 +247,12 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
           </div>
         )}
 
-        <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-card p-4">
+        <div className="card mt-4" style={{ background: 'var(--primary-soft)' }}>
           <div className="flex items-start gap-3">
-            <Clock size={20} className="text-blue-500 flex-shrink-0 mt-0.5" />
+            <Clock size={20} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--primary-ink)' }} />
             <div>
-              <h3 className="font-medium text-blue-700 dark:text-blue-400">预算小贴士</h3>
-              <p className="text-sm text-blue-600 dark:text-blue-500 mt-1">
+              <h3 className="font-medium" style={{ color: 'var(--primary-ink)' }}>预算小贴士</h3>
+              <p className="text-sm mt-1" style={{ color: 'var(--primary-ink)' }}>
                 合理规划预算有助于控制开支，建议每月初设置各项预算目标。当某项支出超过预算的80%时，系统会提醒您注意控制。
               </p>
             </div>

@@ -133,87 +133,105 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
   const isMonthBalance = filterType === 'month-balance';
   const isCategoryDetail = !!selectedCategory;
 
-  const gradientClass = isCategoryDetail && selectedCategory
-    ? `bg-gradient-to-br ${selectedCategory.type === 'income' ? 'from-primary-500 to-green-600' : 'from-red-500 to-orange-500'}`
-    : isTotalBalance 
-      ? 'bg-gradient-to-br from-purple-500 to-indigo-600' 
-      : isIncome 
-        ? 'bg-gradient-to-br from-primary-500 to-green-600' 
-        : 'bg-gradient-to-br from-red-500 to-orange-500';
-
-  const pageTitle = isCategoryDetail && selectedCategory 
-    ? `${selectedCategory.name}明细` 
+  const pageTitle = isCategoryDetail && selectedCategory
+    ? `${selectedCategory.name}明细`
     : config.title;
 
+  const categoryFilterChips = [
+    { value: 'all', label: '全部' },
+    ...categories.map((c) => ({ value: c.id, label: c.name, color: c.color })),
+    { value: 'uncategorized', label: '未分类' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
-      <div className={`p-6 ${gradientClass} text-white`}>
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={onBack}
-            className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <h1 className="text-xl font-bold">{pageTitle}</h1>
+    <div className="page-root pb-6">
+      {/* 页头 */}
+      <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
+        <button onClick={onBack} className="icon-btn flex-shrink-0" aria-label="返回">
+          <ArrowLeft size={20} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <h1 className="page-title truncate">{pageTitle}</h1>
+          <p className="page-subtitle">共 {filteredTransactions.length} 笔记录</p>
         </div>
+      </div>
+
+      {/* 汇总卡片 */}
+      <div className="px-4 mt-3">
         {isCategoryDetail && selectedCategory ? (
-          <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
-            <p className="text-white/80 text-sm">累计{selectedCategory.type === 'income' ? '收入' : '支出'}</p>
-            <p className="text-3xl font-bold mt-1">
+          <div className="card p-5">
+            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>
+              累计{selectedCategory.type === 'income' ? '收入' : '支出'}
+            </p>
+            <p
+              className="text-3xl font-bold amount-num mt-1.5"
+              style={{ color: selectedCategory.type === 'income' ? 'var(--primary)' : 'var(--expense)' }}
+            >
               {selectedCategory.type === 'income' ? '+' : ''}{formatCurrencyShort(totalAmount)}
             </p>
-            <p className="text-white/60 text-sm mt-2">共{filteredTransactions.length}笔记录</p>
+            <p className="text-sm mt-2" style={{ color: 'var(--ink-2)' }}>共{filteredTransactions.length}笔记录</p>
           </div>
         ) : isTotalBalance ? (
-          <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
-            <p className="text-white/80 text-sm">资产总计</p>
-            <p className="text-3xl font-bold mt-1">{formatCurrencyShort(totalIncome - totalExpense)}</p>
-            <div className="flex justify-between mt-4 text-sm">
+          <div className="card p-5">
+            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>资产总计</p>
+            <p className="text-3xl font-bold amount-num mt-1.5" style={{ color: 'var(--ink)' }}>
+              {formatCurrencyShort(totalIncome - totalExpense)}
+            </p>
+            <div className="flex justify-between mt-4 pt-3 text-sm" style={{ borderTop: '1px solid var(--line)' }}>
               <div>
-                <p className="text-white/60">总收入</p>
-                <p className="text-green-300 font-semibold">+{formatCurrencyShort(totalIncome)}</p>
+                <p style={{ color: 'var(--ink-2)' }}>总收入</p>
+                <p className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>+{formatCurrencyShort(totalIncome)}</p>
               </div>
               <div className="text-right">
-                <p className="text-white/60">总支出</p>
-                <p className="text-red-300 font-semibold">{formatCurrencyShort(-totalExpense)}</p>
+                <p style={{ color: 'var(--ink-2)' }}>总支出</p>
+                <p className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(-totalExpense)}</p>
               </div>
             </div>
           </div>
         ) : isMonthBalance ? (
-          <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
-            <p className="text-white/80 text-sm">本月余额</p>
-            <p className="text-3xl font-bold mt-1">{formatCurrencyShort(monthIncome - monthExpense)}</p>
-            <div className="flex justify-between mt-4 text-sm">
+          <div className="card p-5">
+            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月余额</p>
+            <p
+              className="text-3xl font-bold amount-num mt-1.5"
+              style={{ color: monthIncome - monthExpense >= 0 ? 'var(--primary)' : 'var(--expense)' }}
+            >
+              {formatCurrencyShort(monthIncome - monthExpense)}
+            </p>
+            <div className="flex justify-between mt-4 pt-3 text-sm" style={{ borderTop: '1px solid var(--line)' }}>
               <div>
-                <p className="text-white/60">本月收入</p>
-                <p className="text-green-300 font-semibold">+{formatCurrencyShort(monthIncome)}</p>
+                <p style={{ color: 'var(--ink-2)' }}>本月收入</p>
+                <p className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>+{formatCurrencyShort(monthIncome)}</p>
               </div>
               <div className="text-right">
-                <p className="text-white/60">本月支出</p>
-                <p className="text-red-300 font-semibold">{formatCurrencyShort(-monthExpense)}</p>
+                <p style={{ color: 'var(--ink-2)' }}>本月支出</p>
+                <p className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(-monthExpense)}</p>
               </div>
             </div>
           </div>
         ) : (
-          <div className="bg-white/10 backdrop-blur-sm rounded-card p-4">
-            <p className="text-white/80 text-sm">{config.period}总计</p>
-            <p className="text-3xl font-bold mt-1">
+          <div className="card p-5">
+            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{config.period}总计</p>
+            <p
+              className="text-3xl font-bold amount-num mt-1.5"
+              style={{ color: isIncome ? 'var(--primary)' : 'var(--expense)' }}
+            >
               {isIncome ? '+' : ''}{formatCurrencyShort(totalAmount)}
             </p>
           </div>
         )}
       </div>
 
-      <div className="px-4 mt-4">
+      <div className={`px-4 mt-4 ${isMultiSelect ? 'pb-28' : 'pb-6'}`}>
+        {/* 筛选 */}
         <div className="card p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
-            <Calendar size={18} className="text-gray-500" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">日期筛选</span>
+            <Calendar size={18} style={{ color: 'var(--ink-2)' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>日期筛选</span>
             {(startDate || endDate) && (
               <button
                 onClick={resetDateFilter}
-                className="ml-auto text-xs text-red-500 hover:text-red-600"
+                className="ml-auto text-xs font-medium"
+                style={{ color: 'var(--expense)' }}
               >
                 重置
               </button>
@@ -235,7 +253,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
                     today.setHours(0, 0, 0, 0);
                     let start = new Date(today);
                     let end = new Date(today);
-                    
+
                     if (typeof preset.days === 'number') {
                       start.setDate(today.getDate() - preset.days);
                     } else if (preset.days === 'month') {
@@ -245,11 +263,11 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
                       start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
                       end = new Date(today.getFullYear(), today.getMonth(), 0);
                     }
-                    
+
                     setStartDate(start.toISOString().split('T')[0]);
                     setEndDate(end.toISOString().split('T')[0]);
                   }}
-                  className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="chip chip-inactive text-xs"
                 >
                   {preset.label}
                 </button>
@@ -258,44 +276,36 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
           )}
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 mb-1">开始日期</label>
+              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>开始日期</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-white"
+                className="input-field py-2 text-sm"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 mb-1">结束日期</label>
+              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>结束日期</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-white"
+                className="input-field py-2 text-sm"
               />
             </div>
           </div>
 
           {!categoryId && (
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0">分类</span>
-              <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1">
-                {[
-                  { value: 'all', label: '全部' },
-                  ...categories.map((c) => ({ value: c.id, label: c.name, color: c.color })),
-                  { value: 'uncategorized', label: '未分类' },
-                ].map((chip) => {
+            <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+              <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>分类</span>
+              <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
+                {categoryFilterChips.map((chip) => {
                   const active = categoryFilter === chip.value;
                   return (
                     <button
                       key={chip.value}
                       onClick={() => setCategoryFilter(chip.value)}
-                      className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                        active
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                      }`}
+                      className={`chip flex-shrink-0 text-xs ${active ? 'chip-active' : 'chip-inactive'}`}
                     >
                       {'color' in chip && chip.color && (
                         <span
@@ -312,27 +322,32 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
           )}
         </div>
 
+        {/* 明细标题 + 多选 */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className={`p-2 rounded-full ${isIncome ? 'bg-primary-100' : 'bg-red-100'}`}>
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={isIncome
+                ? { background: 'var(--primary-soft)', color: 'var(--primary)' }
+                : { background: 'var(--expense-soft)', color: 'var(--expense)' }}
+            >
               {isIncome ? (
-                <TrendingUp size={20} className="text-primary-500" />
+                <TrendingUp size={18} />
               ) : (
-                <TrendingDown size={20} className="text-red-500" />
+                <TrendingDown size={18} />
               )}
             </div>
-            <h2 className="font-semibold text-gray-800">交易明细</h2>
-            <span className="text-gray-400 text-sm">({filteredTransactions.length}笔)</span>
+            <h2 className="font-semibold text-base" style={{ color: 'var(--ink)' }}>交易明细</h2>
+            <span className="text-sm" style={{ color: 'var(--ink-2)' }}>({filteredTransactions.length}笔)</span>
           </div>
           <button
             onClick={() => setIsMultiSelect(!isMultiSelect)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              isMultiSelect
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+            className="chip text-xs"
+            style={isMultiSelect
+              ? { background: 'var(--primary)', color: '#fff' }
+              : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
           >
-            {isMultiSelect ? <CheckSquare size={16} /> : <Square size={16} />}
+            {isMultiSelect ? <CheckSquare size={15} /> : <Square size={15} />}
             {isMultiSelect ? '退出多选' : '批量选择'}
           </button>
         </div>
@@ -346,19 +361,20 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
         ) : (
           <>
             {isMultiSelect && (
-              <div className="flex items-center justify-between mb-3 bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-3 rounded-button p-3" style={{ background: 'var(--paper)' }}>
                 <button
                   onClick={toggleSelectAll}
-                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"
+                  className="flex items-center gap-2 text-sm"
+                  style={{ color: 'var(--ink-2)' }}
                 >
                   {selectedIds.length === filteredTransactions.length ? (
-                    <CheckSquare size={18} className="text-blue-500" />
+                    <CheckSquare size={18} style={{ color: 'var(--primary)' }} />
                   ) : (
                     <Square size={18} />
                   )}
                   全选
                 </button>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm" style={{ color: 'var(--ink-2)' }}>
                   已选 {selectedIds.length} 项
                 </span>
               </div>
@@ -367,19 +383,19 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
               {filteredTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className={`flex items-start gap-2 p-1 rounded-lg transition-colors ${
-                    selectedIds.includes(transaction.id) ? 'bg-blue-50 dark:bg-blue-900/30' : ''
-                  }`}
+                  className="flex items-start gap-2 p-1 rounded-button transition-colors"
+                  style={selectedIds.includes(transaction.id) ? { background: 'var(--primary-soft)' } : undefined}
                 >
                   {isMultiSelect && (
                     <button
                       onClick={() => toggleSelect(transaction.id)}
                       className="mt-2 flex-shrink-0"
+                      aria-label="选择记录"
                     >
                       {selectedIds.includes(transaction.id) ? (
-                        <CheckSquare size={20} className="text-blue-500" />
+                        <CheckSquare size={20} style={{ color: 'var(--primary)' }} />
                       ) : (
-                        <Square size={20} className="text-gray-300" />
+                        <Square size={20} style={{ color: 'var(--ink-2)' }} />
                       )}
                     </button>
                   )}
@@ -398,17 +414,21 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
         )}
       </div>
 
+      {/* 底部批量删除条 */}
       {isMultiSelect && selectedIds.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 safe-bottom shadow-lg">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+        <div
+          className="fixed bottom-0 left-0 right-0 p-4 safe-bottom z-40"
+          style={{ background: 'var(--card)', borderTop: '1px solid var(--line)' }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm amount-num" style={{ color: 'var(--ink-2)' }}>
               已选择 {selectedIds.length} 条记录
             </span>
             <button
               onClick={handleBatchDelete}
-              className="flex items-center gap-2 px-6 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+              className="btn-danger px-5 py-2.5 text-sm"
             >
-              <Trash2 size={18} />
+              <Trash2 size={16} />
               批量删除
             </button>
           </div>

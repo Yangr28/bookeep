@@ -46,89 +46,81 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
   };
 
   return (
-    <div className="page-enter min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-white dark:bg-gray-800 px-4 pt-8 pb-4 shadow-sm safe-top">
+    <div className="page-root pb-nav">
+      <div className="safe-top px-4 pt-2 pb-3">
         <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-          >
-            <ArrowLeft size={24} className="text-gray-600 dark:text-gray-300" />
+          <button onClick={onBack} className="icon-btn" aria-label="返回">
+            <ArrowLeft size={20} />
           </button>
           <div className="flex-1 relative">
-            <SearchIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <SearchIcon
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2"
+              style={{ color: 'var(--ink-2)' }}
+            />
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="搜索备注、金额、分类..."
-              className="w-full bg-gray-100 dark:bg-gray-700 rounded-card pl-10 pr-10 py-3 text-gray-800 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-button pl-10 pr-10 py-3 text-sm outline-none"
+              style={{ background: 'var(--card)', color: 'var(--ink)', boxShadow: 'var(--shadow-card)' }}
             />
             {query && (
               <button
                 onClick={clearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full"
               >
-                <X size={16} className="text-gray-400" />
+                <X size={16} style={{ color: 'var(--ink-2)' }} />
               </button>
             )}
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2 mt-3">
-          <Filter size={16} className="text-gray-400" />
-          <div className="flex gap-1">
+          <Filter size={15} style={{ color: 'var(--ink-2)' }} />
+          <div className="flex gap-1.5">
             <button
               onClick={() => setFilterType('all')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                filterType === 'all'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filterType === 'all' ? 'chip-active' : 'chip-inactive'}`}
             >
               全部
             </button>
             <button
               onClick={() => setFilterType('expense')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
-                filterType === 'expense'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1"
+              style={filterType === 'expense'
+                ? { background: 'var(--expense)', color: '#fff' }
+                : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
             >
-              <TrendingDown size={14} />
+              <TrendingDown size={13} />
               支出
             </button>
             <button
               onClick={() => setFilterType('income')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
-                filterType === 'income'
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1"
+              style={filterType === 'income'
+                ? { background: 'var(--primary)', color: '#fff' }
+                : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
             >
-              <TrendingUp size={14} />
+              <TrendingUp size={13} />
               收入
             </button>
           </div>
         </div>
       </div>
 
-      <div className="px-4 mt-4">
+      <div className="px-4 mt-2">
         {filteredTransactions.length > 0 ? (
-          <div className="space-y-3">
+          <div>
             {filteredTransactions.map((transaction) => (
-              <div
+              <TransactionCard
                 key={transaction.id}
-                className="card p-4"
-              >
-                <TransactionCard
-                  transaction={transaction}
-                  onDelete={() => deleteTransaction(transaction.id)}
-                  onEdit={() => onEditTransaction(transaction)}
-                />
-              </div>
+                transaction={transaction}
+                onDelete={() => deleteTransaction(transaction.id)}
+                onEdit={() => onEditTransaction(transaction)}
+              />
             ))}
           </div>
         ) : (

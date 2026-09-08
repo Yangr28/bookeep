@@ -4,10 +4,12 @@ import { CategoryCard } from '../components/CategoryCard';
 import { TransactionType, Transaction } from '../types';
 import { formatDateTime } from '../utils/format';
 import { parseSmartInput, findCategoryByIdentifier } from '../utils/smartParser';
-import { Check, Calendar, Clock, Wallet, Sparkles } from 'lucide-react';
+import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
+import { getIcon } from '../utils/iconMap';
 
 interface RecordProps {
   editTransaction?: Transaction | null;
+  onBack?: () => void;
   selectedDateTime: Date;
   selectedAccountId: string | null;
   onShowDatePicker: () => void;
@@ -24,7 +26,7 @@ interface RecordProps {
   onSubmit: () => void;
 }
 
-const RecordComponent = ({ editTransaction, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onSubmit }: RecordProps) => {
+const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onSubmit }: RecordProps) => {
   const [smartInput, setSmartInput] = useState('');
   const [showSmartResult, setShowSmartResult] = useState(false);
 
@@ -56,6 +58,7 @@ const RecordComponent = ({ editTransaction, selectedDateTime, selectedAccountId,
   const hasAmountError = amount !== '' && parseFloat(amount) <= 0;
   const hasCategoryError = !categoryId;
   const hasAccountError = !selectedAccountId;
+  const canSubmit = !!amount && parseFloat(amount) > 0 && !!categoryId && !!selectedAccountId;
 
   const handleSmartSubmit = useCallback(() => {
     if (!smartInput.trim()) return;
@@ -68,15 +71,15 @@ const RecordComponent = ({ editTransaction, selectedDateTime, selectedAccountId,
     }
 
     onTypeChange(result.type);
-    
+
     if (result.amount) {
       onAmountChange(result.amount);
     }
-    
+
     if (autoCategoryId) {
       onCategoryChange(autoCategoryId);
     }
-    
+
     if (result.note) {
       onNoteChange(result.note);
     }
@@ -86,199 +89,208 @@ const RecordComponent = ({ editTransaction, selectedDateTime, selectedAccountId,
     setSmartInput('');
   }, [smartInput, categories, onTypeChange, onAmountChange, onCategoryChange, onNoteChange]);
 
+  const AccountIcon = selectedAccount ? getIcon(selectedAccount.icon) : Wallet;
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col page-enter">
-      <div className="flex-1 overflow-y-auto pb-[100px]">
-        <div className="bg-white dark:bg-gray-800 px-6 pt-8 pb-6 safe-top">
-          <h1 className="text-xl font-bold text-gray-800 dark:text-white text-center mb-4 tracking-tight">
-            {isEditMode ? '编辑记录' : '记账'}
-          </h1>
+    <div className="page-root flex flex-col" style={{ minHeight: '100vh' }}>
+      {/* 头部 */}
+      <div className="safe-top px-4 pt-2 pb-2 flex items-center gap-3">
+        {onBack && (
+          <button onClick={onBack} className="icon-btn" aria-label="返回">
+            <ArrowLeft size={20} />
+          </button>
+        )}
+        <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>
+          {isEditMode ? '编辑记录' : '记一笔'}
+        </h1>
+      </div>
 
-          {!isEditMode && (
-            <div className="relative mb-6">
-              <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-card px-4 py-3">
-                <Sparkles size={18} className="text-amber-500 mr-3 flex-shrink-0" />
-                <input
-                  type="text"
-                  value={smartInput}
-                  onChange={(e) => setSmartInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSmartSubmit();
-                    }
-                  }}
-                  placeholder="智能记账（如：午饭28）"
-                  className="flex-1 bg-transparent outline-none text-gray-800 dark:text-white placeholder-gray-400 text-sm"
-                />
-                <button
-                  onClick={handleSmartSubmit}
-                  disabled={!smartInput.trim()}
-                  className={`ml-2 p-2 rounded-lg transition-all ${
-                    smartInput.trim()
-                      ? 'bg-amber-500 text-white hover:bg-amber-600'
-                      : 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  <Check size={16} />
-                </button>
-              </div>
-              {showSmartResult && (
-                <div className="absolute -bottom-8 left-0 right-0 text-center text-xs text-primary-500 animate-fade-in">
-                  ✓ 智能解析成功
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <button
-              onClick={() => {
-                onTypeChange('expense');
-                onCategoryChange(null);
-              }}
-              className={`px-8 py-2.5 rounded-full font-medium transition-all ${
-                type === 'expense'
-                  ? 'bg-red-500 text-white scale-105 shadow-lg shadow-red-500/30'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-              }`}
-            >
-              支出
-            </button>
-            <button
-              onClick={() => {
-                onTypeChange('income');
-                onCategoryChange(null);
-              }}
-              className={`px-8 py-2.5 rounded-full font-medium transition-all ${
-                type === 'income'
-                  ? 'bg-primary-500 text-white scale-105 shadow-lg shadow-primary-500/30'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-              }`}
-            >
-              收入
-            </button>
-          </div>
-
-          <div className={`bg-gray-50 dark:bg-gray-700 rounded-card p-5 mb-4 transition-all ${hasCategoryError ? 'ring-2 ring-red-200 bg-red-50/50 dark:bg-red-900/20' : ''}`}>
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">选择分类</h3>
-            <div className="grid grid-cols-4 gap-3">
-              {filteredCategories.map((category) => (
-                <CategoryCard
-                  key={category.id}
-                  category={category}
-                  isSelected={categoryId === category.id}
-                  onClick={() => onCategoryChange(category.id)}
-                />
-              ))}
-            </div>
-            {hasCategoryError && (
-              <p className="text-red-500 text-xs mt-3 text-center animate-pulse">请选择一个分类</p>
-            )}
-          </div>
-
-          <div className={`bg-white dark:bg-gray-800 rounded-card p-4 mb-4 transition-all ${hasAccountError ? 'ring-2 ring-red-200' : ''}`}>
-            <button
-                onClick={onShowAccountPicker}
-                className="flex items-center gap-4 w-full"
-              >
-              <div className={`p-3 rounded-card transition-colors ${hasAccountError ? 'bg-red-50 dark:bg-red-900/30' : 'bg-green-50 dark:bg-green-900/30'}`}>
-                <Wallet size={22} className={hasAccountError ? 'text-red-500' : 'text-green-600'} />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">账户</p>
-                <p className={`text-base font-semibold mt-0.5 transition-colors ${selectedAccount ? 'text-gray-800 dark:text-white' : 'text-red-500'}`}>
-                  {selectedAccount ? selectedAccount.name : '请选择账户'}
-                </p>
-              </div>
-              <span className="text-gray-400 text-xl">›</span>
-            </button>
-          </div>
-
-          <div className={`bg-gray-50 dark:bg-gray-700 py-4 rounded-card transition-colors ${hasAmountError ? 'bg-red-50 dark:bg-red-900/20' : ''}`}>
-            <div className="flex items-center justify-center px-4">
-              <span className={`text-4xl font-bold transition-colors flex-shrink-0 ${hasAmountError ? 'text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>¥</span>
+      <div className="flex-1 px-4 pb-36 space-y-3">
+        {/* 智能记账（仅新增） */}
+        {!isEditMode && (
+          <div className="card p-3">
+            <div className="flex items-center rounded-button px-3 py-2.5" style={{ background: 'var(--paper)' }}>
+              <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: '#d9930f' }} />
               <input
                 type="text"
-                inputMode="decimal"
-                pattern="[0-9.]*"
-                value={amount}
-                onChange={(e) => onAmountChange(e.target.value)}
-                placeholder="0.00"
-                className={`text-5xl font-bold ml-2 tracking-tight transition-colors bg-transparent outline-none text-left flex-1 max-w-[200px] ${hasAmountError ? 'text-red-500' : 'text-gray-800 dark:text-white'}`}
+                value={smartInput}
+                onChange={(e) => setSmartInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSmartSubmit();
+                  }
+                }}
+                placeholder="智能记账，如「午饭28」"
+                className="flex-1 bg-transparent outline-none text-sm"
+                style={{ color: 'var(--ink)' }}
               />
+              <button
+                onClick={handleSmartSubmit}
+                disabled={!smartInput.trim()}
+                className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0"
+                style={smartInput.trim()
+                  ? { background: 'var(--primary)', color: '#fff' }
+                  : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
+              >
+                <Check size={16} />
+              </button>
             </div>
-            {hasAmountError && (
-              <p className="text-red-500 text-xs mt-2 text-center animate-pulse">金额必须大于0</p>
+            {showSmartResult && (
+              <p className="text-xs mt-2 text-center animate-fade-in" style={{ color: 'var(--primary)' }}>
+                已智能解析，确认后保存
+              </p>
             )}
           </div>
+        )}
+
+        {/* 支出/收入切换 */}
+        <div className="seg">
+          <button
+            onClick={() => {
+              onTypeChange('expense');
+              onCategoryChange(null);
+            }}
+            className="seg-item"
+            style={type === 'expense'
+              ? { background: 'var(--expense)', color: '#fff', fontWeight: 600, boxShadow: '0 4px 12px rgba(224,104,79,0.3)' }
+              : undefined}
+          >
+            支出
+          </button>
+          <button
+            onClick={() => {
+              onTypeChange('income');
+              onCategoryChange(null);
+            }}
+            className="seg-item"
+            style={type === 'income'
+              ? { background: 'var(--primary)', color: '#fff', fontWeight: 600, boxShadow: '0 4px 12px rgba(46,133,222,0.3)' }
+              : undefined}
+          >
+            收入
+          </button>
         </div>
 
-        <div className="px-4 mt-3 pb-[120px]">
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-card">
-            <button
-              onClick={onShowDatePicker}
-              className="flex items-center gap-4 w-full"
-            >
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-card">
-                <Calendar size={22} className="text-blue-600" />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">日期</p>
-                <p className="text-base font-semibold text-gray-800 dark:text-white mt-0.5">
-                  {isToday() ? '今天' : formatDateTime(selectedDateTime.toISOString()).split(' ')[0]}
-                </p>
-              </div>
-              <span className="text-gray-400 text-xl">›</span>
-            </button>
+        {/* 分类 */}
+        <div className="card p-4">
+          <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>选择分类</p>
+          <div className="grid grid-cols-4 gap-2">
+            {filteredCategories.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                isSelected={categoryId === category.id}
+                onClick={() => onCategoryChange(category.id)}
+              />
+            ))}
           </div>
+          {hasCategoryError && (
+            <p className="text-xs mt-3 text-center" style={{ color: 'var(--expense)' }}>请选择一个分类</p>
+          )}
+        </div>
 
-          <div className="bg-white dark:bg-gray-800 mt-3 p-5 rounded-card">
-            <button
-              onClick={onShowTimePicker}
-              className="flex items-center gap-4 w-full"
+        {/* 金额 */}
+        <div className="card p-4">
+          <div className="flex items-center px-2">
+            <span
+              className="text-3xl font-bold mr-2 amount-num flex-shrink-0"
+              style={{ color: hasAmountError ? 'var(--expense)' : 'var(--ink-2)' }}
             >
-              <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-card">
-                <Clock size={22} className="text-purple-600" />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">时间</p>
-                <p className="text-base font-semibold text-gray-800 dark:text-white mt-0.5">
-                  {formatDateTime(selectedDateTime.toISOString()).split(' ')[1]}
-                </p>
-              </div>
-              <span className="text-gray-400 text-xl">›</span>
-            </button>
+              ¥
+            </span>
+            <input
+              type="text"
+              inputMode="decimal"
+              pattern="[0-9.]*"
+              value={amount}
+              onChange={(e) => onAmountChange(e.target.value)}
+              placeholder="0.00"
+              className="text-4xl font-bold bg-transparent outline-none flex-1 min-w-0 amount-num"
+              style={{ color: hasAmountError ? 'var(--expense)' : 'var(--ink)' }}
+              autoFocus={isEditMode}
+            />
           </div>
+          {hasAmountError && (
+            <p className="text-xs mt-2 text-center" style={{ color: 'var(--expense)' }}>金额必须大于 0</p>
+          )}
+        </div>
 
-          <div className="bg-white dark:bg-gray-800 mt-3 p-4 rounded-card">
+        {/* 账户 / 日期 / 时间 / 备注 */}
+        <div className="card overflow-hidden">
+          <button onClick={onShowAccountPicker} className="w-full flex items-center gap-3 p-4 active:brightness-95">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+              style={selectedAccount
+                ? { backgroundColor: `${selectedAccount.color}20`, color: selectedAccount.color }
+                : { background: hasAccountError ? 'var(--expense-soft)' : 'var(--primary-soft)', color: hasAccountError ? 'var(--expense)' : 'var(--primary)' }}
+            >
+              <AccountIcon size={19} />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>账户</p>
+              <p className="text-sm font-semibold mt-0.5 truncate" style={{ color: selectedAccount ? 'var(--ink)' : 'var(--expense)' }}>
+                {selectedAccount ? selectedAccount.name : '请选择账户'}
+              </p>
+            </div>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+          </button>
+
+          <button onClick={onShowDatePicker} className="w-full flex items-center gap-3 p-4 active:brightness-95" style={{ borderTop: '1px solid var(--line)' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--paper-deep)', color: 'var(--primary)' }}>
+              <Calendar size={19} />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>日期</p>
+              <p className="text-sm font-semibold mt-0.5" style={{ color: 'var(--ink)' }}>
+                {isToday() ? '今天' : formatDateTime(selectedDateTime.toISOString()).split(' ')[0]}
+              </p>
+            </div>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+          </button>
+
+          <button onClick={onShowTimePicker} className="w-full flex items-center gap-3 p-4 active:brightness-95" style={{ borderTop: '1px solid var(--line)' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--paper-deep)', color: 'var(--primary)' }}>
+              <Clock size={19} />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>时间</p>
+              <p className="text-sm font-semibold mt-0.5" style={{ color: 'var(--ink)' }}>
+                {formatDateTime(selectedDateTime.toISOString()).split(' ')[1]}
+              </p>
+            </div>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+          </button>
+
+          <div className="flex items-center gap-3 p-4" style={{ borderTop: '1px solid var(--line)' }}>
             <input
               type="text"
               value={note}
               onChange={(e) => onNoteChange(e.target.value)}
               placeholder="添加备注"
-              className="w-full bg-transparent outline-none text-gray-800 dark:text-white placeholder-gray-400 text-sm"
+              className="flex-1 bg-transparent outline-none text-sm"
+              style={{ color: 'var(--ink)' }}
             />
           </div>
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-50 shadow-2xl">
-      <button
-        onClick={() => {
-          if (amount && parseFloat(amount) > 0 && categoryId && selectedAccountId) {
-            onSubmit();
-          }
-        }}
-        disabled={!amount || parseFloat(amount) <= 0 || !categoryId || !selectedAccountId}
-        className={`w-full py-3.5 rounded-card font-bold text-white text-lg transition-all ${
-          amount && parseFloat(amount) > 0 && categoryId && selectedAccountId
-            ? 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-primary-500/40 active:scale-95'
-            : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
-        }`}
+      {/* 底部固定保存按钮 */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 safe-bottom"
+        style={{ background: 'var(--card)', borderTop: '1px solid var(--line)' }}
       >
-        {isEditMode ? '保存修改' : '确认记账'}
-      </button>
-    </div>
+        <button
+          onClick={() => {
+            if (canSubmit) {
+              onSubmit();
+            }
+          }}
+          disabled={!canSubmit}
+          className="btn-primary w-full text-base py-3.5"
+        >
+          {isEditMode ? '保存修改' : '确认记账'}
+        </button>
+      </div>
     </div>
   );
 };
