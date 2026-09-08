@@ -45,7 +45,6 @@ interface AccountsProps {
   onGoToRecurring?: () => void;
   onGoToTemplates?: () => void;
   onGoToCurrencyConverter?: () => void;
-  onGoToTransfer?: () => void;
 }
 
 export const Accounts = ({
@@ -55,7 +54,6 @@ export const Accounts = ({
   onGoToRecurring,
   onGoToTemplates,
   onGoToCurrencyConverter,
-  onGoToTransfer,
 }: AccountsProps) => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -191,7 +189,6 @@ export const Accounts = ({
   const liquidAssets = accounts.reduce((sum, a) => sum + a.balance, 0);
 
   const quickTools = [
-    { icon: ArrowRightLeft, label: '转账', onClick: onGoToTransfer, color: 'var(--primary)', bg: 'var(--primary-soft)' },
     { icon: Repeat, label: '周期记账', onClick: onGoToRecurring, color: '#7c6ef0', bg: '#eeecfd' },
     { icon: Bookmark, label: '模板', onClick: onGoToTemplates, color: 'var(--expense)', bg: 'var(--expense-soft)' },
     { icon: PiggyBank, label: '预算', onClick: onGoToBudgets, color: '#d9930f', bg: '#faf1dc' },
@@ -520,7 +517,8 @@ export const Accounts = ({
             <button
               onClick={handleOpenAddModal}
               className="fixed bottom-24 right-6 w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-all z-40"
-              style={{ background: 'var(--primary)', color: '#fff', boxShadow: 'var(--shadow-fab)' }}
+              style={{ background: 'var(--card)', color: 'var(--primary)', border: '2px solid var(--primary)', boxShadow: 'var(--shadow-card)' }}
+              aria-label="添加账户"
             >
               <Plus size={24} />
             </button>
@@ -799,7 +797,8 @@ export const Accounts = ({
             <button
               onClick={() => setShowDepositModal(true)}
               className="fixed bottom-24 right-6 w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-all z-40"
-              style={{ background: 'var(--primary)', color: '#fff', boxShadow: 'var(--shadow-fab)' }}
+              style={{ background: 'var(--card)', color: 'var(--primary)', border: '2px solid var(--primary)', boxShadow: 'var(--shadow-card)' }}
+              aria-label="添加定期存款"
             >
               <Plus size={24} />
             </button>
@@ -905,7 +904,8 @@ export const Accounts = ({
             <button
               onClick={() => setShowLoanModal(true)}
               className="fixed bottom-24 right-6 w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-all z-40"
-              style={{ background: 'var(--expense)', color: '#fff', boxShadow: 'var(--shadow-fab)' }}
+              style={{ background: 'var(--card)', color: 'var(--expense)', border: '2px solid var(--expense)', boxShadow: 'var(--shadow-card)' }}
+              aria-label="添加贷款"
             >
               <Plus size={24} />
             </button>

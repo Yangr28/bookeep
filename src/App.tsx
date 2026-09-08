@@ -210,17 +210,6 @@ export default function App() {
     }, 0);
   }, [handlePageChange, setSelectedAccountId]);
 
-  // 底部导航中央「记一笔」：重置记账状态后进入记账页（保留上次使用的账户）
-  const handleFabRecord = useCallback(() => {
-    setEditTransaction(null);
-    setRecordAmount('');
-    setRecordCategoryId(null);
-    setRecordNote('');
-    setRecordType('expense');
-    setRecordDateTime(new Date());
-    handlePageChange('/record');
-  }, [handlePageChange, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setRecordDateTime]);
-
   const handleConfirmExit = useCallback(() => {
     CapApp.exitApp();
   }, []);
@@ -515,7 +504,6 @@ export default function App() {
             onGoToRecurring={() => handlePageChange('/recurring')}
             onGoToTemplates={() => handlePageChange('/templates')}
             onGoToCurrencyConverter={() => handlePageChange('/currency-converter')}
-            onGoToTransfer={() => handlePageChange('/transfer')}
           />
         );
       case '/account-detail':
@@ -625,7 +613,7 @@ export default function App() {
         />
       )}
 
-      {showBottomNav && <BottomNav currentPage={currentPage} onPageChange={handlePageChange} onRecord={handleFabRecord} />}
+      {showBottomNav && <BottomNav currentPage={currentPage} onPageChange={handlePageChange} />}
 
       {showCalendar && (
         <CalendarPicker
