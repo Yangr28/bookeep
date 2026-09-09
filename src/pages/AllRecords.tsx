@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
 import { CalendarPicker } from '../components/CalendarPicker';
@@ -327,7 +328,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
       </div>
 
       {/* 日期选择弹窗 */}
-      {showDatePicker && (
+      {showDatePicker && createPortal(
         <CalendarPicker
           selectedDate={new Date(showDatePicker === 'start' ? startDate || new Date() : endDate || new Date())}
           onDateChange={(date) => {
@@ -340,7 +341,8 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
             setShowDatePicker(null);
           }}
           onClose={() => setShowDatePicker(null)}
-        />
+        />,
+        document.body
       )}
     </div>
   );

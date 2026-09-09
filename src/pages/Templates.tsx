@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowLeft, Plus, Bookmark, Trash2, Edit3, X, Check } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getIcon } from '../utils/iconMap';
@@ -185,9 +186,9 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
         )}
       </div>
 
-      {showModal && (
+      {showModal && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
           style={{ background: 'rgba(43,41,37,0.45)' }}
           onClick={() => setShowModal(false)}
         >
@@ -341,7 +342,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
               </div>
             </div>
 
-            <div className="p-4" style={{ borderTop: '1px solid var(--line)' }}>
+            <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]" style={{ borderTop: '1px solid var(--line)' }}>
               <button
                 onClick={handleSubmit}
                 disabled={!form.name || !form.amount || !form.categoryId || !form.accountId}
@@ -352,7 +353,8 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <button

@@ -1,13 +1,22 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowLeft, Plus, Calendar, Repeat, Trash2, Edit3, Play, Check, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getIcon } from '../utils/iconMap';
+import { CalendarPicker } from '../components/CalendarPicker';
 import { RecurringRecord } from '../types';
 
 const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
   const { recurringRecords, categories, accounts, addRecurringRecord, updateRecurringRecord, deleteRecurringRecord, toggleRecurringRecord } = useStore();
   const [showModal, setShowModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<RecurringRecord | null>(null);
+  // 日期选择弹窗目标：'start' | 'end' | null
+  const [datePickerTarget, setDatePickerTarget] = useState<'start' | 'end' | null>(null);
+
+  const parseDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1);
+  };
 
   const [form, setForm] = useState({
     type: 'expense' as 'expense' | 'income',
@@ -223,9 +232,9 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
         )}
       </div>
 
-      {showModal && (
+      {showModal && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
           style={{ background: 'rgba(43,41,37,0.45)' }}
           onClick={() => setShowModal(false)}
         >
@@ -386,28 +395,30 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>开始日期</label>
-                  <input
-                    type="date"
-                    value={form.startDate}
-                    onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                    className="w-full px-3 py-2 rounded-button text-sm outline-none"
+                  <button
+                    type="button"
+                    onClick={() => setDatePickerTarget('start')}
+                    className="w-full px-3 py-2 rounded-button text-sm text-left amount-num"
                     style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
-                  />
+                  >
+                    {form.startDate}
+                  </button>
                 </div>
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>结束日期 (可选)</label>
-                  <input
-                    type="date"
-                    value={form.endDate}
-                    onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                    className="w-full px-3 py-2 rounded-button text-sm outline-none"
-                    style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setDatePickerTarget('end')}
+                    className="w-full px-3 py-2 rounded-button text-sm text-left amount-num"
+                    style={{ background: 'var(--paper-deep)', color: form.endDate ? 'var(--ink)' : 'var(--ink-2)' }}
+                  >
+                    {form.endDate || '不限'}
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="p-4" style={{ borderTop: '1px solid var(--line)' }}>
+            <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]" style={{ borderTop: '1px solid var(--line)' }}>
               <button
                 onClick={handleSubmit}
                 disabled={!form.amount || !form.categoryId || !form.accountId}
@@ -418,7 +429,25 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {datePickerTarget && createPortal(
+        <CalendarPicker
+          selectedDate={parseDate(datePickerTarget === 'start' ? form.startDate : (form.endDate || form.startDate))}
+          onDateChange={(date) => {
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            if (datePickerTarget === 'start') {
+              setForm({ ...form, startDate: dateStr });
+            } else {
+              setForm({ ...form, endDate: dateStr });
+            }
+            setDatePickerTarget(null);
+          }}
+          onClose={() => setDatePickerTarget(null)}
+        />,
+        document.body
       )}
 
       <button

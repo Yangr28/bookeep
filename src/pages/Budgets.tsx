@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
-import { ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle, Clock, ChevronDown } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
+import { CalendarPicker } from '../components/CalendarPicker';
 
 interface BudgetsProps {
   onBack: () => void;
@@ -13,6 +15,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState('');
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   const categories = useStore((state) => state.categories);
   const transactions = useStore((state) => state.transactions);
@@ -109,13 +112,14 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
       <div className="px-4 mt-4">
         <div className="flex items-center justify-between mb-3">
           <label className="section-title">选择月份</label>
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="rounded-button px-3 py-2 text-sm outline-none"
+          <button
+            onClick={() => setShowMonthPicker(true)}
+            className="rounded-button px-3 py-2 text-sm flex items-center gap-1 amount-num"
             style={{ background: 'var(--card)', color: 'var(--ink)', boxShadow: 'var(--shadow-card)' }}
-          />
+          >
+            {selectedMonth.slice(0, 4)}年{selectedMonth.slice(5)}月
+            <ChevronDown size={14} style={{ color: 'var(--ink-2)' }} />
+          </button>
         </div>
 
         <div>
@@ -259,6 +263,20 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
           </div>
         </div>
       </div>
+
+      {showMonthPicker && createPortal(
+        <CalendarPicker
+          selectedDate={new Date(Number(selectedMonth.slice(0, 4)), Number(selectedMonth.slice(5)) - 1, 1)}
+          onDateChange={(date) => {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            setSelectedMonth(`${y}-${m}`);
+            setShowMonthPicker(false);
+          }}
+          onClose={() => setShowMonthPicker(false)}
+        />,
+        document.body
+      )}
     </div>
   );
 };
