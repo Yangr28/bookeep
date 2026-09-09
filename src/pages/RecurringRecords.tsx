@@ -164,7 +164,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
               return (
                 <div
                   key={record.id}
-                  className="card mb-3"
+                  className="card mb-3 p-4"
                   style={!record.enabled ? { opacity: 0.6 } : undefined}
                 >
                   <div className="flex items-start gap-3">

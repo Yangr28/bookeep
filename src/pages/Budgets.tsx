@@ -132,7 +132,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
             return (
               <div
                 key={category.id}
-                className="card mb-3"
+                className="card mb-3 p-4"
                 style={isOverBudget ? { border: '1.5px solid var(--expense)' } : undefined}
               >
                 <div className="flex items-center gap-3 mb-3">
@@ -238,7 +238,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
         </div>
 
         {overBudgetCategories.length > 0 && (
-          <div className="card mt-4" style={{ background: 'var(--expense-soft)' }}>
+          <div className="card mt-4 p-4" style={{ background: 'var(--expense-soft)' }}>
             <div className="flex items-start gap-3">
               <AlertCircle size={20} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--expense-ink)' }} />
               <div>

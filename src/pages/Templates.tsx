@@ -141,7 +141,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
               const TemplateIcon = getIcon(template.icon);
 
               return (
-                <div key={template.id} className="card">
+                <div key={template.id} className="card p-4">
                   <button
                     onClick={() => handleUseTemplate(template)}
                     className="w-full text-left"

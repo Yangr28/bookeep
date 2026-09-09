@@ -258,7 +258,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
         </div>
 
         {/* 转换器主体 */}
-        <div className="card mt-4" style={{ background: 'var(--primary-soft)' }}>
+        <div className="card mt-4 p-3" style={{ background: 'var(--primary-soft)' }}>
           {/* From */}
           <button
             onClick={() => setShowFromPicker(true)}
