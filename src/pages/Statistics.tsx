@@ -1,7 +1,7 @@
 import { useState, useEffect, memo } from 'react';
 import { useStore } from '../store/useStore';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Sector, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Calendar, ChevronDown, CircleDot } from 'lucide-react';
 interface StatisticsProps {
   onBack?: () => void;
@@ -156,7 +156,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     outerRadius={90}
                     paddingAngle={4}
                     dataKey="value"
-                    activeShape={null}
+                    activeShape={(props) => <Sector {...props} stroke="none" strokeWidth={0} />}
                     isAnimationActive={false}
                   >
                     {expenseData.map((item, index) => (
@@ -207,7 +207,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     outerRadius={90}
                     paddingAngle={4}
                     dataKey="value"
-                    activeShape={null}
+                    activeShape={(props) => <Sector {...props} stroke="none" strokeWidth={0} />}
                     isAnimationActive={false}
                   >
                     {incomeData.map((item, index) => (

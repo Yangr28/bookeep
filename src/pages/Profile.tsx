@@ -1,7 +1,7 @@
 import { useEffect, useMemo, memo, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Sector, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Settings as SettingsIcon } from 'lucide-react';
 
 interface ProfileProps {
@@ -120,7 +120,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                       paddingAngle={3}
                       dataKey="value"
                       isAnimationActive={false}
-                      activeShape={null}
+                      activeShape={(props) => <Sector {...props} stroke="none" strokeWidth={0} />}
                       onMouseDown={(_entry, index) => setExpenseSelected((prev) => (prev === index ? null : index))}
                     >
                       {expenseData.map((item, index) => (
@@ -191,7 +191,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                       paddingAngle={3}
                       dataKey="value"
                       isAnimationActive={false}
-                      activeShape={null}
+                      activeShape={(props) => <Sector {...props} stroke="none" strokeWidth={0} />}
                       onMouseDown={(_entry, index) => setIncomeSelected((prev) => (prev === index ? null : index))}
                     >
                       {incomeData.map((item, index) => (
