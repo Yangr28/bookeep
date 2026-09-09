@@ -156,6 +156,8 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     outerRadius={90}
                     paddingAngle={4}
                     dataKey="value"
+                    activeShape={null}
+                    isAnimationActive={false}
                   >
                     {expenseData.map((item, index) => (
                       <Cell key={`cell-${index}`} fill={item.category.color} />
@@ -167,19 +169,11 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="w-full mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2">
+              <div className="w-full mt-2 flex flex-wrap gap-x-3 gap-y-1.5 justify-center">
                 {expenseData.map((item, index) => (
-                  <div key={`legend-${index}`} className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: item.category.color }}
-                    />
-                    <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-                      {item.category.name}
-                    </span>
-                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>
-                      {monthExpense > 0 ? `(${(item.total / monthExpense * 100).toFixed(0)}%)` : '(0%)'}
-                    </span>
+                  <div key={`legend-${index}`} className="flex items-center gap-1.5 px-2 py-1 rounded-full">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.category.color }} />
+                    <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
                   </div>
                 ))}
               </div>
@@ -213,6 +207,8 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     outerRadius={90}
                     paddingAngle={4}
                     dataKey="value"
+                    activeShape={null}
+                    isAnimationActive={false}
                   >
                     {incomeData.map((item, index) => (
                       <Cell key={`cell-${index}`} fill={item.category.color} />
@@ -224,19 +220,11 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="w-full mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2">
+              <div className="w-full mt-2 flex flex-wrap gap-x-3 gap-y-1.5 justify-center">
                 {incomeData.map((item, index) => (
-                  <div key={`legend-${index}`} className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: item.category.color }}
-                    />
-                    <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-                      {item.category.name}
-                    </span>
-                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>
-                      {monthIncome > 0 ? `(${(item.total / monthIncome * 100).toFixed(0)}%)` : '(0%)'}
-                    </span>
+                  <div key={`legend-${index}`} className="flex items-center gap-1.5 px-2 py-1 rounded-full">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.category.color }} />
+                    <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
                   </div>
                 ))}
               </div>

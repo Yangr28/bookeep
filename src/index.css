@@ -315,3 +315,16 @@ select {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* === Recharts 兜底 === */
+/* 彻底移除饼图/柱状图等组件的 active 橘黄色描边框 */
+.recharts-active-shape,
+.recharts-pie-sector:focus,
+.recharts-bar-rectangle:focus {
+  outline: none !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
+}
+.recharts-pie .recharts-active-shape {
+  fill-opacity: 1 !important;
+}
