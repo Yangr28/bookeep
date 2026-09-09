@@ -317,14 +317,34 @@ select {
 }
 
 /* === Recharts 兜底 === */
-/* 彻底移除饼图/柱状图等组件的 active 橘黄色描边框 */
-.recharts-active-shape,
-.recharts-pie-sector:focus,
-.recharts-bar-rectangle:focus {
+/* 彻底移除饼图点击后 WebView 加的焦点环（金黄色→橙色那个框） */
+.recharts-wrapper,
+.recharts-wrapper svg,
+.recharts-wrapper svg *,
+.recharts-surface,
+.recharts-surface * {
   outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+}
+.recharts-wrapper svg path,
+.recharts-wrapper svg circle,
+.recharts-wrapper svg rect,
+.recharts-wrapper svg polygon,
+.recharts-wrapper svg g {
+  outline: none !important;
+}
+.recharts-wrapper *:focus,
+.recharts-wrapper *:focus-visible,
+.recharts-wrapper *:active {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+.recharts-active-shape {
   stroke: none !important;
   stroke-width: 0 !important;
 }
-.recharts-pie .recharts-active-shape {
-  fill-opacity: 1 !important;
+.recharts-pie-sector {
+  outline: none !important;
 }
