@@ -260,73 +260,27 @@ export interface RecognizeOptions {
 export const recognizeImage = async (imageDataUrl: string, options?: RecognizeOptions): Promise<string> => {
   const { createWorker } = await import('tesseract.js');
 
-  const bundledWorkerPath = '/ocr/worker.min.js';
-  const bundledCorePath = '/ocr';
-  const bundledLangPath = '/ocr';
+  let workerPath: string;
+  let corePath: string;
+  let langPath: string;
 
-  let workerPath = bundledWorkerPath;
-  let corePath = bundledCorePath;
-  let langPath = bundledLangPath;
-  let blobUrl: string | null = null;
-
-  // 检测本地内置资源是否可用
-  let useBundled = false;
-  try {
-    const resp = await fetch(bundledWorkerPath, { method: 'HEAD' });
-    useBundled = resp.ok;
-  } catch {
-    useBundled = false;
-  }
-
-  if (useBundled) {
-    // Android WebView 不支持从本地路径直接 new Worker()
-    // 解决方案：fetch worker 脚本内容 → 创建 Blob URL → 用 blob URL 当 workerPath
-    try {
-      const resp = await fetch(bundledWorkerPath);
-      const workerText = await resp.text();
-      const blob = new Blob([workerText], { type: 'application/javascript' });
-      blobUrl = URL.createObjectURL(blob);
-      workerPath = blobUrl;
-      // corePath 和 langPath 用本地路径，worker 内部会 fetch 这些资源
-      corePath = bundledCorePath;
-      langPath = bundledLangPath;
-    } catch {
-      useBundled = false;
+  if (Capacitor.isNativePlatform()) {
+    // 原生平台：检查 Filesystem 是否已有 OCR 资源
+    const ready = await isOCRReady();
+    if (!ready) {
+      // 首次使用：从内置 /ocr/ 复制到 Filesystem（快），CDN 兜底
+      await downloadOCRData(options?.onProgress);
     }
-  }
-
-  if (!useBundled) {
-    // 本地资源不可用，回退到 CDN
-    options?.onProgress?.({
-      langDownloaded: false,
-      workerDownloaded: false,
-      coreDownloaded: false,
-      totalSizeMB: 0,
-      isDownloading: true,
-      downloadProgress: 10,
-      currentFile: '识别引擎',
-    });
-
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const ready = await isOCRReady();
-        if (!ready) {
-          await downloadOCRData(options?.onProgress);
-        }
-        const local = await getOCREndpoints();
-        workerPath = local.workerPath;
-        corePath = local.corePath;
-        langPath = local.langPath;
-      } catch {
-        workerPath = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js';
-        corePath = 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5';
-        langPath = 'https://tessdata.project.files.com/4.0.0';
-      }
-    } else {
-      workerPath = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js';
-      corePath = 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5';
-      langPath = 'https://tessdata.project.files.com/4.0.0';
-    }
+    // 用 Filesystem URL（Capacitor.convertFileSrc 转换）—— 已验证在 Android WebView 可创建 Worker
+    const local = await getOCREndpoints();
+    workerPath = local.workerPath;
+    corePath = local.corePath;
+    langPath = local.langPath;
+  } else {
+    // 浏览器：直接用 CDN
+    workerPath = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js';
+    corePath = 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5';
+    langPath = 'https://tessdata.project.files.com/4.0.0';
   }
 
   // 超时保护：60 秒未完成则报错，防止永远转圈
@@ -335,20 +289,18 @@ export const recognizeImage = async (imageDataUrl: string, options?: RecognizeOp
     setTimeout(() => reject(new Error('OCR 识别超时，请重试')), timeoutMs);
   });
 
+  const worker = await Promise.race([
+    createWorker('chi_sim', 1, { workerPath, corePath, langPath }),
+    timeoutPromise,
+  ]);
+
   try {
-    const workerPromise = createWorker('chi_sim', 1, {
-      workerPath,
-      corePath,
-      langPath,
-    });
-    const worker = await Promise.race([workerPromise, timeoutPromise]);
-
-    const recognizePromise = worker.recognize(imageDataUrl);
-    const { data: { text } } = await Promise.race([recognizePromise, timeoutPromise]);
-
+    const { data: { text } } = await Promise.race([
+      worker.recognize(imageDataUrl),
+      timeoutPromise,
+    ]);
     return text;
   } finally {
-    // 清理 blob URL
-    if (blobUrl) URL.revokeObjectURL(blobUrl);
+    await worker.terminate();
   }
 };

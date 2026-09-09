@@ -10,18 +10,27 @@ const CDN_BASE = 'https://cdn.jsdelivr.net/npm';
 const TESSERACT_VERSION = '5';
 const TESSERACT_CORE_VERSION = '5';
 
-// 多个 CDN 源，国内网络下逐个尝试
+// 内置资源路径（public/ocr/ → 构建后 dist/ocr/ → APK assets/public/ocr/）
+// 作为首选源：本地复制比 CDN 下载快且稳定
+const BUNDLED_LANG_URL = '/ocr/chi_sim.traineddata.gz';
+const BUNDLED_WORKER_URL = '/ocr/worker.min.js';
+const BUNDLED_CORE_BASE = '/ocr';
+
+// 多个源，内置优先，CDN 兜底
 const LANG_CDN_URLS = [
+  BUNDLED_LANG_URL,
   'https://tessdata.projectnaptha.com/4.0.0/chi_sim.traineddata.gz',
   'https://cdn.jsdelivr.net/npm/tesseract.js-lang-data@4.0.0/chi_sim.traineddata.gz',
   'https://unpkg.com/tesseract.js-lang-data@4.0.0/chi_sim.traineddata.gz',
 ];
 const WORKER_CDN_URLS = [
+  BUNDLED_WORKER_URL,
   `${CDN_BASE}/tesseract.js@${TESSERACT_VERSION}/dist/worker.min.js`,
   `https://unpkg.com/tesseract.js@${TESSERACT_VERSION}/dist/worker.min.js`,
   `https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/tesseract.js/${TESSERACT_VERSION}/dist/worker.min.js`,
 ];
 const CORE_CDN_BASES = [
+  BUNDLED_CORE_BASE,
   `${CDN_BASE}/tesseract.js-core@${TESSERACT_CORE_VERSION}`,
   `https://unpkg.com/tesseract.js-core@${TESSERACT_CORE_VERSION}`,
 ];
@@ -140,9 +149,11 @@ const downloadFile = async (
 
 const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
   const bytes = new Uint8Array(buffer);
+  const chunkSize = 8192;
   let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const end = Math.min(i + chunkSize, bytes.length);
+    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, end)));
   }
   return btoa(binary);
 };
