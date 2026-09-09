@@ -94,22 +94,25 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
             <BarChart data={monthlyChartData} barSize={24}>
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: CHART_COLORS.axis }} tickLine={false} axisLine={{ stroke: 'var(--line)' }} />
               <YAxis tick={{ fontSize: 10, fill: CHART_COLORS.axis }} tickLine={false} axisLine={false} />
-              <Tooltip formatter={(value: number, name: string) => [`${formatCurrency(value)}`, name === 'income' ? '收入' : '支出']} contentStyle={TOOLTIP_STYLE} cursor={{ fill: CHART_COLORS.cursor }} />
-              <Bar dataKey="income" name="收入" fill={CHART_COLORS.income} radius={[6, 6, 0, 0]} onMouseDown={(_data, index) => setTrendSelected((prev) => (prev === index ? null : index))}>
+              <Bar dataKey="income" name="收入" fill={CHART_COLORS.income} radius={[6, 6, 0, 0]}>
                 {monthlyChartData.map((_, index) => (
                   <Cell
                     key={`income-${index}`}
-                    fillOpacity={trendSelected === null || trendSelected === index ? 1 : 0.3}
-                    style={{ cursor: 'pointer', transition: 'fill-opacity 0.2s' }}
+                    fill={CHART_COLORS.income}
+                    opacity={trendSelected === null || trendSelected === index ? 1 : 0.3}
+                    style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+                    onMouseDown={() => setTrendSelected((prev) => (prev === index ? null : index))}
                   />
                 ))}
               </Bar>
-              <Bar dataKey="expense" name="支出" fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]} onMouseDown={(_data, index) => setTrendSelected((prev) => (prev === index ? null : index))}>
+              <Bar dataKey="expense" name="支出" fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]}>
                 {monthlyChartData.map((_, index) => (
                   <Cell
                     key={`expense-${index}`}
-                    fillOpacity={trendSelected === null || trendSelected === index ? 1 : 0.3}
-                    style={{ cursor: 'pointer', transition: 'fill-opacity 0.2s' }}
+                    fill={CHART_COLORS.expense}
+                    opacity={trendSelected === null || trendSelected === index ? 1 : 0.3}
+                    style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+                    onMouseDown={() => setTrendSelected((prev) => (prev === index ? null : index))}
                   />
                 ))}
               </Bar>
