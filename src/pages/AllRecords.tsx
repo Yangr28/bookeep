@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
+import { CalendarPicker } from '../components/CalendarPicker';
 import { formatCurrencyShort, formatDateTime } from '../utils/format';
-import { ArrowLeft, Calendar, ArrowRightLeft, Wallet, X } from 'lucide-react';
+import { ArrowLeft, Calendar, ArrowRightLeft, Wallet, X, ChevronDown } from 'lucide-react';
 import { Transaction, Transfer } from '../types';
 
 interface AllRecordsProps {
@@ -24,6 +25,8 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
   const [endDate, setEndDate] = useState('');
   // 分类筛选：'all' 全部 | 'uncategorized' 未分类 | 分类 id
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  // 日期选择弹窗
+  const [showDatePicker, setShowDatePicker] = useState<null | 'start' | 'end'>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -207,21 +210,29 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
           <div className="flex gap-2">
             <div className="flex-1">
               <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>开始日期</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="input-field py-2 text-sm"
-              />
+              <button
+                onClick={() => setShowDatePicker('start')}
+                className="input-field w-full py-2 text-sm flex items-center justify-between"
+                style={{ textAlign: 'left' }}
+              >
+                <span style={{ color: startDate ? 'var(--ink)' : 'var(--ink-2)' }}>
+                  {startDate || '请选择'}
+                </span>
+                <ChevronDown size={16} style={{ color: 'var(--ink-2)' }} />
+              </button>
             </div>
             <div className="flex-1">
               <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>结束日期</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="input-field py-2 text-sm"
-              />
+              <button
+                onClick={() => setShowDatePicker('end')}
+                className="input-field w-full py-2 text-sm flex items-center justify-between"
+                style={{ textAlign: 'left' }}
+              >
+                <span style={{ color: endDate ? 'var(--ink)' : 'var(--ink-2)' }}>
+                  {endDate || '请选择'}
+                </span>
+                <ChevronDown size={16} style={{ color: 'var(--ink-2)' }} />
+              </button>
             </div>
           </div>
 
@@ -314,6 +325,23 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
           </div>
         )}
       </div>
+
+      {/* 日期选择弹窗 */}
+      {showDatePicker && (
+        <CalendarPicker
+          selectedDate={new Date(showDatePicker === 'start' ? startDate || new Date() : endDate || new Date())}
+          onDateChange={(date) => {
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            if (showDatePicker === 'start') {
+              setStartDate(dateStr);
+            } else {
+              setEndDate(dateStr);
+            }
+            setShowDatePicker(null);
+          }}
+          onClose={() => setShowDatePicker(null)}
+        />
+      )}
     </div>
   );
 };

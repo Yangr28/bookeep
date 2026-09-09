@@ -41,6 +41,8 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
   // 饼图选中状态（点击切片时高亮中心区域）
   const [expenseSelected, setExpenseSelected] = useState<number | null>(null);
   const [incomeSelected, setIncomeSelected] = useState<number | null>(null);
+  // 柱状图选中状态（点击某月柱状时高亮，淡化其他）
+  const [trendSelected, setTrendSelected] = useState<number | null>(null);
 
   const transactions = useStore((state) => state.transactions);
   const monthIncome = useStore((state) => state.getMonthIncome(selectedMonth, selectedYear));
@@ -93,11 +95,67 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: CHART_COLORS.axis }} tickLine={false} axisLine={{ stroke: 'var(--line)' }} />
               <YAxis tick={{ fontSize: 10, fill: CHART_COLORS.axis }} tickLine={false} axisLine={false} />
               <Tooltip formatter={(value: number) => [`¥${formatCurrency(value)}`, '']} contentStyle={TOOLTIP_STYLE} cursor={{ fill: CHART_COLORS.cursor }} />
-              <Legend wrapperStyle={{ paddingTop: 8, fontSize: 12, color: 'var(--ink-2)' }} />
-              <Bar dataKey="income" name="收入" fill={CHART_COLORS.income} radius={[6, 6, 0, 0]} />
-              <Bar dataKey="expense" name="支出" fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="income" name="收入" fill={CHART_COLORS.income} radius={[6, 6, 0, 0]}>
+                {monthlyChartData.map((_, index) => (
+                  <Cell
+                    key={`income-${index}`}
+                    fillOpacity={trendSelected === null || trendSelected === index ? 1 : 0.3}
+                    style={{ cursor: 'pointer', transition: 'fill-opacity 0.2s' }}
+                    onClick={() => setTrendSelected((prev) => (prev === index ? null : index))}
+                  />
+                ))}
+              </Bar>
+              <Bar dataKey="expense" name="支出" fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]}>
+                {monthlyChartData.map((_, index) => (
+                  <Cell
+                    key={`expense-${index}`}
+                    fillOpacity={trendSelected === null || trendSelected === index ? 1 : 0.3}
+                    style={{ cursor: 'pointer', transition: 'fill-opacity 0.2s' }}
+                    onClick={() => setTrendSelected((prev) => (prev === index ? null : index))}
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
+          {/* 月度明细 */}
+          <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+            {trendSelected !== null && monthlyChartData[trendSelected] ? (
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{monthlyChartData[trendSelected].fullMonth}</span>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="flex items-center gap-1.5 text-sm">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--primary)' }} />
+                      <span className="amount-num font-semibold" style={{ color: 'var(--primary)' }}>+{formatCurrencyShort(monthlyChartData[trendSelected].income)}</span>
+                    </span>
+                    <span className="flex items-center gap-1.5 text-sm">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--expense)' }} />
+                      <span className="amount-num font-semibold" style={{ color: 'var(--expense)' }}>-{formatCurrencyShort(monthlyChartData[trendSelected].expense)}</span>
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs" style={{ color: 'var(--ink-2)' }}>结余</span>
+                  <p className="amount-num font-bold mt-0.5" style={{
+                    color: (monthlyChartData[trendSelected].income - monthlyChartData[trendSelected].expense) >= 0 ? 'var(--primary)' : 'var(--expense)'
+                  }}>
+                    {(monthlyChartData[trendSelected].income - monthlyChartData[trendSelected].expense) >= 0 ? '+' : ''}
+                    {formatCurrencyShort(monthlyChartData[trendSelected].income - monthlyChartData[trendSelected].expense)}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-4 text-xs" style={{ color: 'var(--ink-2)' }}>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--primary)' }} />收入
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--expense)' }} />支出
+                </span>
+                <span>· 点击柱体查看月度明细</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 支出分布 */}
