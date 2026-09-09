@@ -104,20 +104,21 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
           </div>
           {expenseData.length > 0 ? (
             <div className="flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie data={expenseData.map((item) => ({ name: item.category.name, value: item.total, color: item.category.color }))} cx="50%" cy="50%" innerRadius={45} outerRadius={85} paddingAngle={4} dataKey="value">
+                  <Pie data={expenseData.map((item) => ({ name: item.category.name, value: item.total, color: item.category.color }))} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3} dataKey="value">
                     {expenseData.map((item, index) => (<Cell key={`cell-${index}`} fill={item.category.color} />))}
                   </Pie>
                   <Tooltip formatter={(value: number) => [`¥${formatCurrency(value)}`, '金额']} contentStyle={TOOLTIP_STYLE} />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="w-full mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2">
+              <div className="w-full mt-2 space-y-1.5">
                 {expenseData.slice(0, 6).map((item, index) => (
-                  <div key={`legend-${index}`} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.category.color }} />
-                    <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
-                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{monthExpense > 0 ? `${(item.total / monthExpense * 100).toFixed(0)}%` : '0%'}</span>
+                  <div key={`legend-${index}`} className="flex items-center gap-2.5 py-1">
+                    <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: item.category.color }} />
+                    <span className="text-sm font-medium flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
+                    <span className="text-sm amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>¥{formatCurrencyShort(item.total)}</span>
+                    <span className="text-xs w-10 text-right flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{monthExpense > 0 ? `${(item.total / monthExpense * 100).toFixed(0)}%` : '0%'}</span>
                   </div>
                 ))}
               </div>
@@ -135,20 +136,21 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
               <span className="text-sm font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(monthIncome)}</span>
             </div>
             <div className="flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie data={incomeData.map((item) => ({ name: item.category.name, value: item.total, color: item.category.color }))} cx="50%" cy="50%" innerRadius={45} outerRadius={85} paddingAngle={4} dataKey="value">
+                  <Pie data={incomeData.map((item) => ({ name: item.category.name, value: item.total, color: item.category.color }))} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3} dataKey="value">
                     {incomeData.map((item, index) => (<Cell key={`cell-${index}`} fill={item.category.color} />))}
                   </Pie>
                   <Tooltip formatter={(value: number) => [`¥${formatCurrency(value)}`, '金额']} contentStyle={TOOLTIP_STYLE} />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="w-full mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2">
+              <div className="w-full mt-2 space-y-1.5">
                 {incomeData.slice(0, 6).map((item, index) => (
-                  <div key={`legend-${index}`} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.category.color }} />
-                    <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
-                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{monthIncome > 0 ? `${(item.total / monthIncome * 100).toFixed(0)}%` : '0%'}</span>
+                  <div key={`legend-${index}`} className="flex items-center gap-2.5 py-1">
+                    <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: item.category.color }} />
+                    <span className="text-sm font-medium flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
+                    <span className="text-sm amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>¥{formatCurrencyShort(item.total)}</span>
+                    <span className="text-xs w-10 text-right flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{monthIncome > 0 ? `${(item.total / monthIncome * 100).toFixed(0)}%` : '0%'}</span>
                   </div>
                 ))}
               </div>

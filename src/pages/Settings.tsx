@@ -273,24 +273,23 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   }, []);
 
   /**
-   * 可回退目标版本：当前运行的是热更新版本（hotVersion 非空）时，
-   * 取比当前版本旧、且附带热更新包的最新 Release。
-   * 回退走与热更新相同的下载/激活流程，数据不受影响；旧版加载失败连续 2 次启动会自动回滚回来。
+   * 可回退的历史版本列表：当前运行的是热更新版本（hotVersion 非空）时，
+   * 取比当前版本旧、且附带热更新包的所有 Release。
+   * 用户可在弹窗中选择要回退到哪个版本。
    */
-  const rollbackTarget = (() => {
-    if (!hotVersion || !onRollback || !releases) return '';
-    const older = releases.filter(
+  const rollbackTargets = (() => {
+    if (!hotVersion || !onRollback || !releases) return [];
+    return releases.filter(
       (r) => r.hasHotPackage && compareVersions(r.version, appVersion) < 0,
     );
-    return older.length > 0 ? older[0].version : '';
   })();
 
   const rollbackBusy = rollbackFlow?.phase === 'downloading' || rollbackFlow?.phase === 'installing';
 
-  /** 确认回退：触发下载并激活旧版本热更新包（激活后 WebView 自动重载） */
-  const handleRollback = () => {
-    if (!rollbackTarget || !onRollback || rollbackBusy) return;
-    onRollback(rollbackTarget);
+  /** 确认回退：触发下载并激活用户选择的旧版本热更新包（激活后 WebView 自动重载） */
+  const handleRollback = (version: string) => {
+    if (!version || !onRollback || rollbackBusy) return;
+    onRollback(version);
   };
 
   return (
@@ -692,8 +691,8 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                 {hotVersion && nativeVersion && (
                   <span style={{ color: 'var(--primary)' }}>（热更新 · 内置 v{nativeVersion}）</span>
                 )}
-                {rollbackTarget && (
-                  <span style={{ color: 'var(--expense)' }}> · 可回退 v{rollbackTarget}</span>
+                {rollbackTargets.length > 0 && (
+                  <span style={{ color: 'var(--expense)' }}> · 可回退 {rollbackTargets.length} 个版本</span>
                 )}
                 {' · 更新日志'}
               </p>
@@ -1228,7 +1227,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               )}
             </div>
             <div className="p-4 space-y-3" style={{ borderTop: '1px solid var(--line)' }}>
-              {rollbackTarget && !rollbackBusy && rollbackFlow?.phase !== 'done' && (
+              {rollbackTargets.length > 0 && !rollbackBusy && rollbackFlow?.phase !== 'done' && (
                 <button
                   onClick={() => {
                     setRollbackOpen(true);
@@ -1238,7 +1237,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                   style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}
                 >
                   <RotateCcw size={16} />
-                  回退到旧版本 v{rollbackTarget}
+                  回退到旧版本（{rollbackTargets.length} 个可选）
                 </button>
               )}
               <button
@@ -1253,14 +1252,14 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
       )}
 
       {/* 回退版本确认/进度弹窗 */}
-      {rollbackOpen && rollbackTarget && (
+      {rollbackOpen && rollbackTargets.length > 0 && (
         <div
           className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in"
           style={{ background: 'rgba(43,41,37,0.45)' }}
           onClick={() => !rollbackBusy && setRollbackOpen(false)}
         >
           <div
-            className="card w-full max-w-md overflow-hidden animate-bounce-in"
+            className="card w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col animate-bounce-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-6 pt-6 pb-4" style={{ background: 'var(--expense-soft)' }}>
@@ -1272,13 +1271,13 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                   <RotateCcw size={26} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>回退到 v{rollbackTarget}</h3>
-                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>下载旧版界面资源并自动切换</p>
+                  <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>回退到旧版本</h3>
+                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>选择要回退到的版本</p>
                 </div>
               </div>
             </div>
 
-            <div className="px-6 py-4">
+            <div className="px-6 py-4 overflow-y-auto flex-1">
               {rollbackFlow?.phase === 'downloading' ? (
                 <div className="py-2">
                   <div className="flex items-center gap-3 mb-4">
@@ -1318,55 +1317,57 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                   <p className="text-sm" style={{ color: 'var(--ink-2)' }}>页面将自动刷新到旧版本</p>
                 </div>
               ) : (
-                <div className="py-2">
-                  <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--ink-2)' }}>
-                    将把界面从 <span className="font-semibold" style={{ color: 'var(--ink)' }}>v{appVersion}</span> 回退到 <span className="font-semibold" style={{ color: 'var(--ink)' }}>v{rollbackTarget}</span>。
-                  </p>
-                  <ul className="text-sm space-y-1.5" style={{ color: 'var(--ink-2)' }}>
+                <div className="py-2 space-y-2">
+                  {rollbackTargets.map((r) => (
+                    <button
+                      key={r.version}
+                      onClick={() => handleRollback(r.version)}
+                      className="w-full flex items-center justify-between p-3 rounded-button transition-colors active:scale-[0.98]"
+                      style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
+                    >
+                      <div className="text-left">
+                        <p className="font-semibold">v{r.version}</p>
+                        <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{r.date}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{r.notes.length} 条更新</span>
+                        <ChevronRight size={16} style={{ color: 'var(--ink-2)' }} />
+                      </div>
+                    </button>
+                  ))}
+                  <ul className="text-xs space-y-1.5 mt-3" style={{ color: 'var(--ink-2)' }}>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--expense)' }} />
-                      <span>仅切换界面资源，记账数据、账户、分类等完全不受影响</span>
+                      <span>仅切换界面资源，记账数据完全不受影响</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--expense)' }} />
-                      <span>回退后随时可通过「检查更新」再升级回新版本</span>
+                      <span>回退后可通过「检查更新」再升级回新版本</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--expense)' }} />
-                      <span>若旧版异常无法启动，连续打开 2 次应用会自动恢复到当前版本</span>
+                      <span>若旧版异常无法启动，连续打开 2 次应用会自动恢复</span>
                     </li>
                   </ul>
                 </div>
               )}
             </div>
 
-            <div className="px-6 py-4" style={{ borderTop: '1px solid var(--line)' }}>
-              {rollbackFlow?.phase === 'error' ? (
-                <div className="flex gap-3">
-                  <button onClick={() => setRollbackOpen(false)} className="btn-ghost flex-1">关闭</button>
-                  <button onClick={handleRollback} className="btn-danger flex-1 flex items-center justify-center gap-2">
-                    <RefreshCw size={18} />
-                    重试
-                  </button>
-                </div>
-              ) : rollbackBusy || rollbackFlow?.phase === 'done' ? (
-                <button
-                  disabled
-                  className="btn-ghost w-full flex items-center justify-center gap-2 cursor-not-allowed"
-                >
-                  <Loader2 size={18} className="animate-spin" />
-                  请稍候...
-                </button>
-              ) : (
-                <div className="flex gap-3">
-                  <button onClick={() => setRollbackOpen(false)} className="btn-ghost flex-1">取消</button>
-                  <button onClick={handleRollback} className="btn-danger flex-1 flex items-center justify-center gap-2">
-                    <RotateCcw size={18} />
-                    确认回退
-                  </button>
-                </div>
-              )}
-            </div>
+            {(rollbackFlow?.phase === 'error' || !rollbackFlow || rollbackFlow.phase === 'idle') && (
+              <div className="px-6 py-4" style={{ borderTop: '1px solid var(--line)' }}>
+                {rollbackFlow?.phase === 'error' ? (
+                  <div className="flex gap-3">
+                    <button onClick={() => setRollbackOpen(false)} className="btn-ghost flex-1">关闭</button>
+                    <button onClick={() => { const first = rollbackTargets[0]; if (first) handleRollback(first.version); }} className="btn-danger flex-1 flex items-center justify-center gap-2">
+                      <RefreshCw size={18} />
+                      重试
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setRollbackOpen(false)} className="btn-ghost w-full">取消</button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

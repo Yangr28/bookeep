@@ -49,6 +49,7 @@ export default function App() {
     close: closeUpdateModal,
     skip: skipUpdate,
     startUpdate,
+    startApkUpdate,
     markReady,
     rollback,
   } = useUpdateCheck();
@@ -778,6 +779,7 @@ export default function App() {
           result={updateInfo}
           flow={updateFlow}
           onUpdate={startUpdate}
+          onApkUpdate={startApkUpdate}
           onClose={closeUpdateModal}
           onSkip={skipUpdate}
         />

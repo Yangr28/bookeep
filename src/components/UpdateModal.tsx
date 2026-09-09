@@ -1,4 +1,5 @@
-import { Zap, Package, X, RefreshCw, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Zap, Package, X, RefreshCw, AlertCircle, CheckCircle, Loader2, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 import type { UpdateCheckResult } from '../utils/update';
 import type { UpdateFlowState } from '../hooks/useUpdateCheck';
 
@@ -8,9 +9,12 @@ interface UpdateModalProps {
   onUpdate: () => void;
   onClose: () => void;
   onSkip: () => void;
+  /** 整包更新回调（当热更新可用但用户想整包更新时调用） */
+  onApkUpdate?: () => void;
 }
 
-export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip }: UpdateModalProps) => {
+export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpdate }: UpdateModalProps) => {
+  const [showApkOption, setShowApkOption] = useState(false);
   const isHot = result.type === 'hot';
   const mandatory = result.mandatory;
   const busy = flow.phase === 'downloading' || flow.phase === 'installing';
@@ -202,22 +206,45 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip }: UpdateM
               </button>
             </div>
           ) : flow.phase === 'idle' ? (
-            <div className="flex gap-3">
-              {!mandatory && (
+            <div className="space-y-2">
+              <div className="flex gap-3">
+                {!mandatory && (
+                  <button
+                    onClick={onSkip}
+                    className="btn-ghost flex-1"
+                  >
+                    以后再说
+                  </button>
+                )}
                 <button
-                  onClick={onSkip}
-                  className="btn-ghost flex-1"
+                  onClick={onUpdate}
+                  className="btn-primary flex-1"
                 >
-                  以后再说
+                  {isHot ? <Zap size={18} /> : <Package size={18} />}
+                  立即更新
                 </button>
+              </div>
+              {isHot && result.apkUrl && onApkUpdate && (
+                <>
+                  <button
+                    onClick={() => setShowApkOption((v) => !v)}
+                    className="w-full flex items-center justify-center gap-1 py-1.5 text-xs font-medium"
+                    style={{ color: 'var(--ink-2)' }}
+                  >
+                    <ChevronDown size={14} className={`transition-transform ${showApkOption ? 'rotate-180' : ''}`} />
+                    整包更新（修复原生功能）
+                  </button>
+                  {showApkOption && (
+                    <button
+                      onClick={onApkUpdate}
+                      className="btn-ghost w-full flex items-center justify-center gap-2 text-sm"
+                    >
+                      <Package size={16} />
+                      下载完整安装包
+                    </button>
+                  )}
+                </>
               )}
-              <button
-                onClick={onUpdate}
-                className="btn-primary flex-1"
-              >
-                {isHot ? <Zap size={18} /> : <Package size={18} />}
-                立即更新
-              </button>
             </div>
           ) : flow.phase === 'done' && !isHot ? (
             <button

@@ -36,14 +36,14 @@ export function useUpdateCheck() {
 
   /**
    * 检查更新
-   * @param manual true=设置页手动检查（忽略跳过标记/节流），返回 'latest' 表示已是最新
+   * @param manual true=设置页手动检查（忽略跳过标记），返回 'latest' 表示已是最新
    */
   const check = useCallback(
     async (manual = false): Promise<'latest' | 'available' | 'unavailable' | void> => {
       if (checkingRef.current) return;
       checkingRef.current = true;
       try {
-        if (!manual && !shouldAutoCheck()) return;
+        // 自动检查：每次启动都检查（不再受节流限制），但跳过用户已跳过的版本
         const result = await checkForUpdate();
         if (!manual) markAutoChecked();
 
@@ -123,6 +123,35 @@ export function useUpdateCheck() {
   }, []);
 
   /**
+   * 强制整包更新（用户选择整包更新时调用）
+   * 当热更新可用但用户想整包更新时，用 APK 地址走整包更新流程
+   */
+  const startApkUpdate = useCallback(async () => {
+    if (!available?.apkUrl) return;
+    const version = available.version;
+    setFlow({ phase: 'downloading', kind: 'apk', percent: 0, error: '' });
+    let listener: PluginListenerHandle | undefined;
+    try {
+      listener = await AppUpdate.addListener('downloadProgress', (p) => {
+        if (p.kind === 'apk') {
+          setFlow((prev) =>
+            prev.phase === 'downloading' ? { ...prev, percent: p.percent } : prev,
+          );
+        }
+      });
+      await AppUpdate.downloadApk({ url: available.apkUrl!, version });
+      setFlow({ phase: 'installing', kind: 'apk', percent: 100, error: '' });
+      await AppUpdate.installApk();
+      setFlow({ phase: 'done', kind: 'apk', percent: 100, error: '' });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '整包更新失败，请重试';
+      setFlow({ phase: 'error', kind: 'apk', percent: 0, error: msg });
+    } finally {
+      listener?.remove();
+    }
+  }, [available]);
+
+  /**
    * 手动回退到指定历史版本（要求该版本在 GitHub Releases 上有 dist_v<version>.zip）
    * 复用与 startUpdate 相同的下载/激活流程：下载热更新包 -> activateHotUpdate -> WebView 自动重载
    * activateHotUpdate 会把 hot_previous 设为当前版本，4.5.0 加载失败可自动回滚到当前版本
@@ -158,6 +187,7 @@ export function useUpdateCheck() {
     close,
     skip,
     startUpdate,
+    startApkUpdate,
     markReady,
     rollback,
   };
