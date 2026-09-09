@@ -32,6 +32,7 @@ import {
   FileText,
   History,
   CheckCircle2,
+  Scale,
 } from 'lucide-react';
 
 interface SettingsProps {
@@ -109,6 +110,20 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   const setBudgets = useStore((state) => state.setBudgets);
   const setFixedDeposits = useStore((state) => state.setFixedDeposits);
   const setLoans = useStore((state) => state.setLoans);
+  const getAccountReconciliation = useStore((state) => state.getAccountReconciliation);
+  const recalculateAllBalances = useStore((state) => state.recalculateAllBalances);
+  /** 余额与流水对不上的账户数 */
+  const mismatchCount = accounts.filter((a) => Math.abs(getAccountReconciliation(a.id).diff) >= 0.005).length;
+
+  /** 按流水重算所有账户余额 */
+  const handleRecalculate = () => {
+    const changed = recalculateAllBalances();
+    if (changed > 0) {
+      showToast('success', '校正完成', `已按收支与转账流水重算 ${changed} 个账户的余额`);
+    } else {
+      showToast('success', '账目平衡', '所有账户余额与流水一致，无需校正');
+    }
+  };
 
   const handleExport = async () => {
     try {
@@ -609,6 +624,28 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               <p className="font-semibold" style={{ color: 'var(--ink)' }}>已导出数据</p>
               <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
                 {backups.length > 0 ? `${backups.length} 个备份文件` : '管理并恢复备份'}
+              </p>
+            </div>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+          </button>
+
+          <button
+            onClick={handleRecalculate}
+            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            style={{ borderTop: '1px solid var(--line)' }}
+          >
+            <div
+              className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0"
+              style={mismatchCount > 0
+                ? { background: 'var(--expense-soft)', color: 'var(--expense)' }
+                : { background: 'var(--primary-soft)', color: 'var(--primary)' }}
+            >
+              <Scale size={21} />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>账户对账校正</p>
+              <p className="text-sm" style={{ color: mismatchCount > 0 ? 'var(--expense)' : 'var(--ink-2)' }}>
+                {mismatchCount > 0 ? `${mismatchCount} 个账户余额与流水对不上，点击校正` : '按收支与转账流水重算账户余额'}
               </p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />

@@ -65,6 +65,7 @@ export interface Account {
   name: string;
   type: 'bank' | 'alipay' | 'wechat' | 'cash' | 'other';
   balance: number;
+  initialBalance?: number;   // 开户初始余额（对账基准：理论余额 = 初始余额 + 收入 - 支出 + 转入 - 转出）
   color: string;
   icon: string;
 }

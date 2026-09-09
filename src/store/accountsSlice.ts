@@ -21,6 +21,8 @@ export const createAccountsSlice: StateCreator<AccountsSlice> = (set, get) => ({
   addAccount: (account) => {
     const newAccount: Account = {
       ...account,
+      // 开户时录入的余额即初始余额（对账基准）
+      initialBalance: account.initialBalance !== undefined ? account.initialBalance : account.balance,
       id: generateId(),
     };
     set((state) => {
@@ -40,9 +42,17 @@ export const createAccountsSlice: StateCreator<AccountsSlice> = (set, get) => ({
 
   updateAccount: (id, updates) => {
     set((state) => {
-      const updated = state.accounts.map((a) =>
-        a.id === id ? { ...a, ...updates } : a
-      );
+      const updated = state.accounts.map((a) => {
+        if (a.id !== id) return a;
+        const merged = { ...a, ...updates };
+        // 手动修改余额（盘点现金/调整账户）时，差额计入初始余额，
+        // 保持「余额 = 初始 + 收入 - 支出 + 转入 - 转出」对账恒等式成立
+        if (updates.balance !== undefined && updates.balance !== a.balance) {
+          const base = a.initialBalance !== undefined ? a.initialBalance : a.balance;
+          merged.initialBalance = Math.round((base + (updates.balance - a.balance)) * 100) / 100;
+        }
+        return merged;
+      });
       saveAccounts(updated);
       return { accounts: updated };
     });

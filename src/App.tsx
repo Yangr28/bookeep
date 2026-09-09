@@ -301,6 +301,12 @@ export default function App() {
     markReady();
   }, [markReady]);
 
+  // 对账迁移：老账户缺少 initialBalance 时按当前余额反推回填（方法内部幂等）
+  const ensureInitialBalances = useStore((s) => s.ensureInitialBalances);
+  useEffect(() => {
+    ensureInitialBalances();
+  }, [ensureInitialBalances]);
+
   // 启动解锁后延迟自动检查更新（5 分钟节流；api.github.com 国内不稳定，失败自动重试 3 次）
   useEffect(() => {
     if (!appUnlocked) return;

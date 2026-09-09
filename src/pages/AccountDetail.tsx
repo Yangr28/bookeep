@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
+import { CalendarPicker } from '../components/CalendarPicker';
 import { formatCurrencyShort, formatDateTime } from '../utils/format';
-import { ArrowLeft, Wallet, TrendingUp, TrendingDown, ArrowRightLeft, ArrowRight, Calendar } from 'lucide-react';
+import { ArrowLeft, Wallet, TrendingUp, TrendingDown, ArrowRightLeft, ArrowRight, Calendar, Scale, AlertTriangle, CheckCircle2, Wrench } from 'lucide-react';
 import { Account, Transfer, Transaction } from '../types';
 
 interface AccountDetailProps {
@@ -16,14 +18,23 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
   const [currentAccount, setCurrentAccount] = useState<Account | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [showPicker, setShowPicker] = useState<'start' | 'end' | null>(null);
 
   const getAccount = useStore((state) => state.getAccountById);
   const getTransactions = useStore((state) => state.getTransactionsByAccount);
   const getTransfers = useStore((state) => state.getTransfersByAccount);
   const getIncome = useStore((state) => state.getAccountIncome);
   const getExpense = useStore((state) => state.getAccountExpense);
+  const getReconciliation = useStore((state) => state.getAccountReconciliation);
+  const recalculateAllBalances = useStore((state) => state.recalculateAllBalances);
   const deleteTransaction = useStore((state) => state.deleteTransaction);
   const deleteTransfer = useStore((state) => state.deleteTransfer);
+
+  const handleFixBalance = () => {
+    recalculateAllBalances();
+    const acc = getAccount(accountId);
+    setCurrentAccount(acc || null);
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -61,6 +72,8 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
   const transfers = getTransfers(accountId);
   const accountIncome = getIncome(accountId);
   const accountExpense = getExpense(accountId);
+  const recon = getReconciliation(accountId);
+  const hasDiff = Math.abs(recon.diff) >= 0.005;
 
   interface CombinedRecord {
     id: string;
@@ -175,6 +188,67 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
         </div>
       </div>
 
+      {/* 对账 */}
+      <div className="px-4 mt-3">
+        <div className="card p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Scale size={17} style={{ color: 'var(--ink-2)' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>对账</span>
+            <span className="text-xs ml-auto" style={{ color: 'var(--ink-2)' }}>初始 + 收入 - 支出 + 转入 - 转出</span>
+          </div>
+          <div className="space-y-1.5 text-sm">
+            {[
+              { label: '初始余额', value: recon.initialBalance },
+              { label: '收入', value: recon.income, prefix: '+', color: 'var(--primary)' },
+              { label: '支出', value: recon.expense, prefix: '-', color: 'var(--expense)' },
+              { label: '转入', value: recon.transfersIn, prefix: '+', color: 'var(--primary)' },
+              { label: '转出', value: recon.transfersOut, prefix: '-', color: 'var(--expense)' },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between">
+                <span style={{ color: 'var(--ink-2)' }}>{row.label}</span>
+                <span className="amount-num" style={{ color: row.color || 'var(--ink)' }}>
+                  {row.prefix || ''}{formatCurrencyShort(row.value)}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="my-3" style={{ borderTop: '1px dashed var(--line)' }} />
+          <div className="space-y-1.5 text-sm">
+            <div className="flex items-center justify-between">
+              <span style={{ color: 'var(--ink-2)' }}>理论余额</span>
+              <span className="amount-num font-semibold" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(recon.expectedBalance)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span style={{ color: 'var(--ink-2)' }}>当前余额</span>
+              <span className="amount-num font-semibold" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(recon.currentBalance)}</span>
+            </div>
+          </div>
+
+          {hasDiff ? (
+            <div className="mt-3 rounded-card p-3" style={{ background: 'var(--expense-soft)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle size={16} style={{ color: 'var(--expense)' }} />
+                <span className="text-sm font-medium" style={{ color: 'var(--expense)' }}>
+                  账目差额 {recon.diff > 0 ? '+' : '-'}{formatCurrencyShort(Math.abs(recon.diff))}
+                </span>
+              </div>
+              <p className="text-xs mb-2.5" style={{ color: 'var(--expense)' }}>
+                余额与流水对不上，可能是记录被误删或编辑异常。校正后余额将按流水重算。
+              </p>
+              <button onClick={handleFixBalance} className="btn-primary w-full py-2 text-sm flex items-center justify-center gap-1.5">
+                <Wrench size={15} />
+                一键校正为理论余额
+              </button>
+            </div>
+          ) : (
+            <div className="mt-3 flex items-center gap-2 rounded-card p-2.5" style={{ background: 'var(--primary-soft)' }}>
+              <CheckCircle2 size={15} style={{ color: 'var(--primary)' }} />
+              <span className="text-xs" style={{ color: 'var(--primary-ink)' }}>账目平衡，余额与流水一致</span>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="px-4 mt-4">
         {/* 日期筛选 */}
         <div className="card p-4 mb-4">
@@ -192,24 +266,22 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
             )}
           </div>
           <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>开始日期</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="input-field py-2 text-sm"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>结束日期</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="input-field py-2 text-sm"
-              />
-            </div>
+            <button
+              onClick={() => setShowPicker('start')}
+              className="input-field flex-1 py-2.5 px-3 text-left text-sm flex items-center gap-2"
+            >
+              <span className="amount-num" style={{ color: startDate ? 'var(--ink)' : 'var(--ink-3)' }}>
+                {startDate || '开始日期'}
+              </span>
+            </button>
+            <button
+              onClick={() => setShowPicker('end')}
+              className="input-field flex-1 py-2.5 px-3 text-left text-sm flex items-center gap-2"
+            >
+              <span className="amount-num" style={{ color: endDate ? 'var(--ink)' : 'var(--ink-2)' }}>
+                {endDate || '结束日期'}
+              </span>
+            </button>
           </div>
         </div>
 
@@ -289,6 +361,27 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
           </div>
         )}
       </div>
+
+      {showPicker && createPortal(
+        <CalendarPicker
+          selectedDate={(() => {
+            const raw = showPicker === 'start' ? startDate : endDate;
+            if (raw) {
+              const [y, m, d] = raw.split('-').map(Number);
+              return new Date(y, m - 1, d);
+            }
+            return new Date();
+          })()}
+          onDateChange={(date) => {
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            if (showPicker === 'start') setStartDate(dateStr);
+            else setEndDate(dateStr);
+            setShowPicker(null);
+          }}
+          onClose={() => setShowPicker(null)}
+        />,
+        document.body
+      )}
     </div>
   );
 };
