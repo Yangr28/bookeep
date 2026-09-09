@@ -110,13 +110,16 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
           <button onClick={onBack} className="icon-btn" aria-label="返回">
             <ArrowLeft size={20} />
           </button>
-          <div>
+          <div className="flex-1">
             <h1 className="page-title">周期记账</h1>
             <p className="page-subtitle">设置自动记账，免去重复录入</p>
           </div>
+          <button onClick={openAddModal} className="icon-btn" aria-label="新建周期任务">
+            <Plus size={20} />
+          </button>
         </div>
 
-        <div className="card grid grid-cols-3 gap-3">
+        <div className="card grid grid-cols-3 gap-3 p-4">
           <div className="text-center">
             <p className="text-2xl font-bold amount-num" style={{ color: 'var(--ink)' }}>{recurringRecords.length}</p>
             <p className="text-xs" style={{ color: 'var(--ink-2)' }}>周期任务</p>
@@ -136,17 +139,17 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
 
       <div className="px-4 mt-4">
         {recurringRecords.length === 0 ? (
-          <div className="card text-center">
+          <div className="card text-center p-8">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
               style={{ background: 'var(--paper-deep)' }}
             >
               <Repeat size={36} style={{ color: 'var(--ink-2)' }} />
             </div>
-            <p className="mb-4" style={{ color: 'var(--ink-2)' }}>还没有设置周期记账</p>
+            <p className="mb-5" style={{ color: 'var(--ink-2)' }}>还没有设置周期记账</p>
             <button
               onClick={openAddModal}
-              className="btn-primary"
+              className="btn-primary w-fit mx-auto px-8"
             >
               创建周期任务
             </button>
@@ -449,23 +452,6 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
         />,
         document.body
       )}
-
-      <button
-        onClick={openAddModal}
-        className="fixed right-5 flex items-center justify-center transition-all z-40"
-        style={{
-          bottom: 'calc(env(safe-area-inset-bottom) + 80px)',
-          width: '56px',
-          height: '56px',
-          background: 'var(--primary)',
-          color: '#fff',
-          borderRadius: '50%',
-          boxShadow: 'var(--shadow-fab)',
-        }}
-        aria-label="新建周期任务"
-      >
-        <Plus size={24} />
-      </button>
     </div>
   );
 };

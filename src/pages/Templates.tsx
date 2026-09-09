@@ -5,7 +5,7 @@ import { useStore } from '../store/useStore';
 import { getIcon } from '../utils/iconMap';
 import { RecordTemplate, Transaction } from '../types';
 
-const TEMPLATE_ICONS = ['Bookmark', 'Coffee', 'Utensils', 'Car', 'ShoppingBag', 'Laptop', 'Heart', 'Gift', 'Bag', 'Briefcase'];
+const TEMPLATE_ICONS = ['Bookmark', 'Coffee', 'UtensilsCrossed', 'Car', 'ShoppingBag', 'Laptop', 'Heart', 'Gift', 'Wallet', 'Briefcase'];
 const TEMPLATE_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'];
 
 const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplate?: (transaction: Transaction) => void }) => {
@@ -101,13 +101,16 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
           <button onClick={onBack} className="icon-btn" aria-label="返回">
             <ArrowLeft size={20} />
           </button>
-          <div>
+          <div className="flex-1">
             <h1 className="page-title">记账模板</h1>
             <p className="page-subtitle">保存常用记录，一键快速记账</p>
           </div>
+          <button onClick={openAddModal} className="icon-btn" aria-label="新建模板">
+            <Plus size={20} />
+          </button>
         </div>
 
-        <div className="card flex items-center justify-between">
+        <div className="card flex items-center justify-between p-4">
           <div>
             <p className="text-2xl font-bold amount-num" style={{ color: 'var(--ink)' }}>{templates.length}</p>
             <p className="text-xs" style={{ color: 'var(--ink-2)' }}>已保存模板</p>
@@ -118,15 +121,15 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
 
       <div className="px-4 mt-4">
         {templates.length === 0 ? (
-          <div className="card text-center">
+          <div className="card text-center p-8">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
               style={{ background: 'var(--paper-deep)' }}
             >
               <Bookmark size={36} style={{ color: 'var(--ink-2)' }} />
             </div>
-            <p className="mb-4" style={{ color: 'var(--ink-2)' }}>还没有保存记账模板</p>
-            <button onClick={openAddModal} className="btn-primary">
+            <p className="mb-5" style={{ color: 'var(--ink-2)' }}>还没有保存记账模板</p>
+            <button onClick={openAddModal} className="btn-primary w-fit mx-auto px-8">
               创建模板
             </button>
           </div>
@@ -216,41 +219,42 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>图标</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {TEMPLATE_ICONS.map((iconName) => {
-                      const IconComponent = getIcon(iconName);
-                      return (
-                        <button
-                          key={iconName}
-                          onClick={() => setForm({ ...form, icon: iconName })}
-                          className="p-2 rounded-card transition-all"
-                          style={form.icon === iconName
-                            ? { background: 'var(--primary-soft)', border: '1.5px solid var(--primary)' }
-                            : { background: 'var(--paper-deep)', border: '1.5px solid transparent' }}
-                        >
-                          <IconComponent size={18} style={{ color: 'var(--ink-2)' }} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>颜色</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {TEMPLATE_COLORS.map((color) => (
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>图标</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {TEMPLATE_ICONS.map((iconName) => {
+                    const IconComponent = getIcon(iconName);
+                    return (
                       <button
-                        key={color}
-                        onClick={() => setForm({ ...form, color })}
-                        className="w-8 h-8 rounded-button transition-all"
-                        style={form.color === color
-                          ? { backgroundColor: color, boxShadow: '0 0 0 2px var(--card), 0 0 0 3.5px var(--primary)' }
-                          : { backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
+                        key={iconName}
+                        onClick={() => setForm({ ...form, icon: iconName })}
+                        className="h-11 rounded-card flex items-center justify-center transition-all"
+                        style={form.icon === iconName
+                          ? { background: 'var(--primary-soft)', border: '1.5px solid var(--primary)', color: 'var(--primary-ink)' }
+                          : { background: 'var(--paper-deep)', border: '1.5px solid transparent', color: 'var(--ink-2)' }}
+                      >
+                        <IconComponent size={20} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>颜色</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {TEMPLATE_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setForm({ ...form, color })}
+                      className="h-11 rounded-card transition-all flex items-center justify-center"
+                      style={{
+                        backgroundColor: color,
+                        border: form.color === color ? '2px solid var(--card)' : '2px solid transparent',
+                        boxShadow: form.color === color ? `0 0 0 3.5px ${color}` : 'none',
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
 
@@ -356,23 +360,6 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
         </div>,
         document.body
       )}
-
-      <button
-        onClick={openAddModal}
-        className="fixed right-5 flex items-center justify-center transition-all z-40"
-        style={{
-          bottom: 'calc(env(safe-area-inset-bottom) + 80px)',
-          width: '56px',
-          height: '56px',
-          background: 'var(--primary)',
-          color: '#fff',
-          borderRadius: '50%',
-          boxShadow: 'var(--shadow-fab)',
-        }}
-        aria-label="新建模板"
-      >
-        <Plus size={24} />
-      </button>
     </div>
   );
 };

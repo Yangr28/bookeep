@@ -4,7 +4,7 @@ import { useStore } from '../store/useStore';
 import { ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle, Clock, ChevronDown } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
-import { CalendarPicker } from '../components/CalendarPicker';
+import { MonthPicker } from '../components/MonthPicker';
 
 interface BudgetsProps {
   onBack: () => void;
@@ -80,15 +80,15 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
           </button>
           <div>
             <h1 className="page-title">预算管理</h1>
-            <p className="page-subtitle">{selectedMonth.replace('-', '年')}月</p>
+            <p className="page-subtitle">{selectedMonth.slice(0, 4)}年{Number(selectedMonth.slice(5))}月</p>
           </div>
         </div>
 
         <div className="card mt-4" style={{ background: 'var(--primary-soft)' }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm" style={{ color: 'var(--primary-ink)' }}>总预算使用</span>
-            <span className="text-sm font-medium" style={{ color: 'var(--primary-ink)' }}>
-              {formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}
+            <span className="text-sm font-medium amount-num" style={{ color: 'var(--primary-ink)' }}>
+              ¥{formatCurrency(totalSpent)} / ¥{formatCurrency(totalBudget)}
             </span>
           </div>
           <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
@@ -265,12 +265,10 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
       </div>
 
       {showMonthPicker && createPortal(
-        <CalendarPicker
-          selectedDate={new Date(Number(selectedMonth.slice(0, 4)), Number(selectedMonth.slice(5)) - 1, 1)}
-          onDateChange={(date) => {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            setSelectedMonth(`${y}-${m}`);
+        <MonthPicker
+          selectedMonth={selectedMonth}
+          onMonthChange={(month) => {
+            setSelectedMonth(month);
             setShowMonthPicker(false);
           }}
           onClose={() => setShowMonthPicker(false)}
