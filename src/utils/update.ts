@@ -162,14 +162,8 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
     mandatory: !!meta.mandatory,
   };
 
-  // 1. 整包更新优先（原生版本落后）
-  if (apkAsset && compareVersions(remoteVersion, local.nativeVersion) > 0) {
-    result.type = 'apk';
-    result.apkUrl = apkAsset.browser_download_url;
-    return result;
-  }
-
-  // 2. 热更新（Web 版本落后，且当前原生版本满足热更新包的最低要求）
+  // 1. 热更新优先（Web 版本落后，且满足最低原生版本要求）
+  //    热更新优先于整包更新，确保旧基座用户也能通过热更新获取最新 Web 资源
   if (zipAsset && compareVersions(remoteVersion, local.webVersion) > 0) {
     const minNative = (meta.minNativeVersion || '').replace(/^v/, '').trim();
     const nativeOk = !minNative || compareVersions(local.nativeVersion, minNative) >= 0;
@@ -177,8 +171,19 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
       result.type = 'hot';
       result.hotUrl = zipAsset.browser_download_url;
       result.minNativeVersion = minNative || undefined;
+      // 如果同时有 APK 且原生版本也落后，附上 APK 地址供用户可选整包更新
+      if (apkAsset && compareVersions(remoteVersion, local.nativeVersion) > 0) {
+        result.apkUrl = apkAsset.browser_download_url;
+      }
       return result;
     }
+  }
+
+  // 2. 整包更新（热更新不可用或原生版本不满足要求，但原生版本落后）
+  if (apkAsset && compareVersions(remoteVersion, local.nativeVersion) > 0) {
+    result.type = 'apk';
+    result.apkUrl = apkAsset.browser_download_url;
+    return result;
   }
 
   result.type = 'none';

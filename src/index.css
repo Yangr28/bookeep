@@ -40,20 +40,21 @@
 }
 
 .dark {
-  --paper: #17181c;
-  --paper-deep: #22242c;
-  --card: #20232b;
-  --ink: #ece7de;
-  --ink-2: #9a9488;
-  --line: #2e323c;
+  /* 深色模式：分层背景 + 高对比卡片，避免各项混为一团 */
+  --paper: #14151a;        /* 页面底（最深） */
+  --paper-deep: #1c1e25;   /* 次级面（输入框/分段控件） */
+  --card: #282b35;         /* 卡片（明显亮于页面底，拉开层次） */
+  --ink: #f5f1ea;          /* 主文字（提高亮度，增强可读性） */
+  --ink-2: #8a8478;        /* 次要文字 */
+  --line: #353945;         /* 发丝分隔线（更亮，分隔更清晰） */
   --primary: #5ba0f0;
-  --primary-soft: #1e2c42;
+  --primary-soft: #1c2d44;
   --primary-ink: #a8ccf7;
   --expense: #e8806b;
   --expense-soft: #3a2420;
   --expense-ink: #f0a48f;
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.32);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.46);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.55);
   --shadow-fab: 0 10px 24px rgba(91, 160, 240, 0.32);
 }
 
@@ -175,7 +176,7 @@ body {
     background-color: var(--card);
     color: var(--ink);
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(168, 142, 110, 0.18);
+    box-shadow: var(--shadow-card);
   }
 
   /* 列表项 */
