@@ -119,6 +119,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                       outerRadius={85}
                       paddingAngle={3}
                       dataKey="value"
+                      activeShape={false}
                       onClick={(_entry, index) => setExpenseSelected((prev) => (prev === index ? null : index))}
                     >
                       {expenseData.map((item, index) => (
@@ -138,7 +139,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                     <>
                       <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{expenseData[expenseSelected].category.name}</span>
                       <span className="text-lg font-bold amount-num mt-0.5" style={{ color: 'var(--ink)' }}>
-                        ¥{formatCurrencyShort(expenseData[expenseSelected].total)}
+                        {formatCurrencyShort(expenseData[expenseSelected].total)}
                       </span>
                       <span className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
                         {monthExpense > 0 ? `${(expenseData[expenseSelected].total / monthExpense * 100).toFixed(1)}%` : '0%'}
@@ -160,7 +161,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                   >
                     <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: item.category.color }} />
                     <span className="text-sm font-medium flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
-                    <span className="text-sm amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>¥{formatCurrencyShort(item.total)}</span>
+                    <span className="text-sm amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{formatCurrencyShort(item.total)}</span>
                     <span className="text-xs w-10 text-right flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{monthExpense > 0 ? `${(item.total / monthExpense * 100).toFixed(0)}%` : '0%'}</span>
                   </button>
                 ))}
@@ -190,6 +191,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                       outerRadius={85}
                       paddingAngle={3}
                       dataKey="value"
+                      activeShape={false}
                       onClick={(_entry, index) => setIncomeSelected((prev) => (prev === index ? null : index))}
                     >
                       {incomeData.map((item, index) => (
@@ -209,7 +211,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                     <>
                       <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{incomeData[incomeSelected].category.name}</span>
                       <span className="text-lg font-bold amount-num mt-0.5" style={{ color: 'var(--ink)' }}>
-                        ¥{formatCurrencyShort(incomeData[incomeSelected].total)}
+                        {formatCurrencyShort(incomeData[incomeSelected].total)}
                       </span>
                       <span className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
                         {monthIncome > 0 ? `${(incomeData[incomeSelected].total / monthIncome * 100).toFixed(1)}%` : '0%'}
@@ -231,7 +233,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                   >
                     <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: item.category.color }} />
                     <span className="text-sm font-medium flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
-                    <span className="text-sm amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>¥{formatCurrencyShort(item.total)}</span>
+                    <span className="text-sm amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{formatCurrencyShort(item.total)}</span>
                     <span className="text-xs w-10 text-right flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{monthIncome > 0 ? `${(item.total / monthIncome * 100).toFixed(0)}%` : '0%'}</span>
                   </button>
                 ))}
