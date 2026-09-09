@@ -119,8 +119,9 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                       outerRadius={85}
                       paddingAngle={3}
                       dataKey="value"
-                      activeShape={false}
-                      onClick={(_entry, index) => setExpenseSelected((prev) => (prev === index ? null : index))}
+                      isAnimationActive={false}
+                      activeShape={null}
+                      onMouseDown={(_entry, index) => setExpenseSelected((prev) => (prev === index ? null : index))}
                     >
                       {expenseData.map((item, index) => (
                         <Cell
@@ -152,17 +153,15 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                   )}
                 </div>
               </div>
-              <div className="w-full mt-2 space-y-1.5">
-                {expenseData.slice(0, 6).map((item, index) => (
+              <div className="w-full mt-2 flex flex-wrap gap-x-3 gap-y-1.5 justify-center">
+                {expenseData.slice(0, 8).map((item, index) => (
                   <button
                     key={`legend-${index}`}
                     onClick={() => setExpenseSelected((prev) => (prev === index ? null : index))}
-                    className={`w-full flex items-center gap-2.5 py-1 rounded-button transition-colors ${expenseSelected === index ? 'bg-[var(--paper-deep)]' : ''}`}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-colors ${expenseSelected === index ? 'bg-[var(--paper-deep)]' : ''}`}
                   >
-                    <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: item.category.color }} />
-                    <span className="text-sm font-medium flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
-                    <span className="text-sm amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{formatCurrencyShort(item.total)}</span>
-                    <span className="text-xs w-10 text-right flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{monthExpense > 0 ? `${(item.total / monthExpense * 100).toFixed(0)}%` : '0%'}</span>
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.category.color }} />
+                    <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
                   </button>
                 ))}
               </div>
@@ -191,8 +190,9 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                       outerRadius={85}
                       paddingAngle={3}
                       dataKey="value"
-                      activeShape={false}
-                      onClick={(_entry, index) => setIncomeSelected((prev) => (prev === index ? null : index))}
+                      isAnimationActive={false}
+                      activeShape={null}
+                      onMouseDown={(_entry, index) => setIncomeSelected((prev) => (prev === index ? null : index))}
                     >
                       {incomeData.map((item, index) => (
                         <Cell
@@ -224,17 +224,15 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                   )}
                 </div>
               </div>
-              <div className="w-full mt-2 space-y-1.5">
-                {incomeData.slice(0, 6).map((item, index) => (
+              <div className="w-full mt-2 flex flex-wrap gap-x-3 gap-y-1.5 justify-center">
+                {incomeData.slice(0, 8).map((item, index) => (
                   <button
                     key={`legend-${index}`}
                     onClick={() => setIncomeSelected((prev) => (prev === index ? null : index))}
-                    className={`w-full flex items-center gap-2.5 py-1 rounded-button transition-colors ${incomeSelected === index ? 'bg-[var(--paper-deep)]' : ''}`}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-colors ${incomeSelected === index ? 'bg-[var(--paper-deep)]' : ''}`}
                   >
-                    <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: item.category.color }} />
-                    <span className="text-sm font-medium flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
-                    <span className="text-sm amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{formatCurrencyShort(item.total)}</span>
-                    <span className="text-xs w-10 text-right flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{monthIncome > 0 ? `${(item.total / monthIncome * 100).toFixed(0)}%` : '0%'}</span>
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.category.color }} />
+                    <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
                   </button>
                 ))}
               </div>
