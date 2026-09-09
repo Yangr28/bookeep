@@ -84,7 +84,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
           </div>
         </div>
 
-        <div className="card mt-4" style={{ background: 'var(--primary-soft)' }}>
+        <div className="card mt-4 p-4" style={{ background: 'var(--primary-soft)' }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm" style={{ color: 'var(--primary-ink)' }}>总预算使用</span>
             <span className="text-sm font-medium amount-num" style={{ color: 'var(--primary-ink)' }}>
@@ -251,7 +251,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
           </div>
         )}
 
-        <div className="card mt-4" style={{ background: 'var(--primary-soft)' }}>
+        <div className="card mt-4 p-4" style={{ background: 'var(--primary-soft)' }}>
           <div className="flex items-start gap-3">
             <Clock size={20} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--primary-ink)' }} />
             <div>

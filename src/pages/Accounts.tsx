@@ -1,8 +1,10 @@
 import { useState, useRef, TouchEvent, DragEvent, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Building2, Wallet, MessageCircle, Banknote, CreditCard, Plus, X, ChevronRight, Trash2, Edit3, Calendar, Clock, Percent, Palette, ArrowUpDown, Landmark, ArrowRight, ArrowRightLeft, AlertCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Account, AccountIcons, AccountTypeNames } from '../types';
 import { formatCurrencyShort } from '../utils/format';
+import { CalendarPicker } from '../components/CalendarPicker';
 
 import { VersionInfo } from '../components/VersionInfo';
 
@@ -85,6 +87,8 @@ export const Accounts = ({
   const [transferAmount, setTransferAmount] = useState('');
   const [transferNote, setTransferNote] = useState('');
   const [showLoanModal, setShowLoanModal] = useState(false);
+  const [showDepositDatePicker, setShowDepositDatePicker] = useState(false);
+  const [showLoanDatePicker, setShowLoanDatePicker] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [displayOrder, setDisplayOrder] = useState<string[]>([]);
@@ -1204,12 +1208,14 @@ export const Accounts = ({
 
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>起存日期</label>
-                <input
-                  type="date"
-                  value={depositFormData.startDate}
-                  onChange={(e) => setDepositFormData({ ...depositFormData, startDate: e.target.value })}
-                  className="input-field w-full"
-                />
+                <button
+                  onClick={() => setShowDepositDatePicker(true)}
+                  className="input-field w-full py-2.5 px-3 text-left text-sm flex items-center"
+                >
+                  <span className="amount-num" style={{ color: 'var(--ink)' }}>
+                    {depositFormData.startDate || '选择日期'}
+                  </span>
+                </button>
               </div>
 
               {depositFormData.principal && depositFormData.rate && (
@@ -1366,12 +1372,14 @@ export const Accounts = ({
 
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>开始日期</label>
-                <input
-                  type="date"
-                  value={loanFormData.startDate}
-                  onChange={(e) => setLoanFormData({ ...loanFormData, startDate: e.target.value })}
-                  className="input-field w-full"
-                />
+                <button
+                  onClick={() => setShowLoanDatePicker(true)}
+                  className="input-field w-full py-2.5 px-3 text-left text-sm flex items-center"
+                >
+                  <span className="amount-num" style={{ color: 'var(--ink)' }}>
+                    {loanFormData.startDate || '选择日期'}
+                  </span>
+                </button>
               </div>
 
               {loanFormData.principal && loanFormData.rate && (
@@ -1449,6 +1457,38 @@ export const Accounts = ({
       )}
 
       <VersionInfo />
+
+      {showDepositDatePicker && createPortal(
+        <CalendarPicker
+          selectedDate={(() => {
+            const [y, m, d] = (depositFormData.startDate || new Date().toISOString().split('T')[0]).split('-').map(Number);
+            return new Date(y, m - 1, d);
+          })()}
+          onDateChange={(date) => {
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            setDepositFormData({ ...depositFormData, startDate: dateStr });
+            setShowDepositDatePicker(false);
+          }}
+          onClose={() => setShowDepositDatePicker(false)}
+        />,
+        document.body
+      )}
+
+      {showLoanDatePicker && createPortal(
+        <CalendarPicker
+          selectedDate={(() => {
+            const [y, m, d] = (loanFormData.startDate || new Date().toISOString().split('T')[0]).split('-').map(Number);
+            return new Date(y, m - 1, d);
+          })()}
+          onDateChange={(date) => {
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            setLoanFormData({ ...loanFormData, startDate: dateStr });
+            setShowLoanDatePicker(false);
+          }}
+          onClose={() => setShowLoanDatePicker(false)}
+        />,
+        document.body
+      )}
     </div>
   );
 };

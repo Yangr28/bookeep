@@ -34,8 +34,8 @@ android {
         applicationId "io.github.trae.bookeep"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion 36
-        versionCode 88
-        versionName "4.7.3"
+        versionCode 89
+        versionName "4.7.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'

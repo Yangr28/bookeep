@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
 import { formatCurrencyShort } from '../utils/format';
 import { ArrowLeft, Wallet, TrendingUp, TrendingDown, Calendar, CheckSquare, Square, Trash2 } from 'lucide-react';
 import { Transaction } from '../types';
+import { CalendarPicker } from '../components/CalendarPicker';
 
 import Empty from '../components/Empty';
 
@@ -19,6 +21,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
   const [endDate, setEndDate] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isMultiSelect, setIsMultiSelect] = useState(false);
+  const [showPicker, setShowPicker] = useState<'start' | 'end' | null>(null);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -277,21 +280,25 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
           <div className="flex gap-2">
             <div className="flex-1">
               <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>开始日期</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="input-field py-2 text-sm"
-              />
+              <button
+                onClick={() => setShowPicker('start')}
+                className="input-field py-2 px-3 text-left text-sm w-full"
+              >
+                <span className="amount-num" style={{ color: startDate ? 'var(--ink)' : 'var(--ink-2)' }}>
+                  {startDate || '选择日期'}
+                </span>
+              </button>
             </div>
             <div className="flex-1">
               <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>结束日期</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="input-field py-2 text-sm"
-              />
+              <button
+                onClick={() => setShowPicker('end')}
+                className="input-field py-2 px-3 text-left text-sm w-full"
+              >
+                <span className="amount-num" style={{ color: endDate ? 'var(--ink)' : 'var(--ink-2)' }}>
+                  {endDate || '选择日期'}
+                </span>
+              </button>
             </div>
           </div>
 
@@ -433,6 +440,27 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
             </button>
           </div>
         </div>
+      )}
+
+      {showPicker && createPortal(
+        <CalendarPicker
+          selectedDate={(() => {
+            const raw = showPicker === 'start' ? startDate : endDate;
+            if (raw) {
+              const [y, m, d] = raw.split('-').map(Number);
+              return new Date(y, m - 1, d);
+            }
+            return new Date();
+          })()}
+          onDateChange={(date) => {
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            if (showPicker === 'start') setStartDate(dateStr);
+            else setEndDate(dateStr);
+            setShowPicker(null);
+          }}
+          onClose={() => setShowPicker(null)}
+        />,
+        document.body
       )}
     </div>
   );

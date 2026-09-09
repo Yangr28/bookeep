@@ -358,12 +358,27 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <p className="text-xs flex-shrink-0" style={{ color: 'var(--ink-2)' }}>日期时间</p>
+                      <p className="text-xs flex-shrink-0" style={{ color: 'var(--ink-2)' }}>日期</p>
                       <input
-                        type="datetime-local"
-                        value={transaction.date.toISOString().slice(0, 16)}
-                        onChange={(e) => handleEditTransaction(index, 'date', new Date(e.target.value))}
+                        type="date"
+                        value={transaction.date.toISOString().slice(0, 10)}
+                        onChange={(e) => {
+                          const newDate = new Date(e.target.value);
+                          newDate.setHours(transaction.date.getHours(), transaction.date.getMinutes(), 0, 0);
+                          handleEditTransaction(index, 'date', newDate);
+                        }}
                         className="input-field flex-1 py-2 text-xs"
+                      />
+                      <input
+                        type="time"
+                        value={`${String(transaction.date.getHours()).padStart(2, '0')}:${String(transaction.date.getMinutes()).padStart(2, '0')}`}
+                        onChange={(e) => {
+                          const [h, m] = e.target.value.split(':').map(Number);
+                          const newDate = new Date(transaction.date);
+                          newDate.setHours(h, m, 0, 0);
+                          handleEditTransaction(index, 'date', newDate);
+                        }}
+                        className="input-field w-24 py-2 text-xs"
                       />
                     </div>
                   </div>
