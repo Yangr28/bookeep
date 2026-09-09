@@ -260,26 +260,43 @@ export interface RecognizeOptions {
 export const recognizeImage = async (imageDataUrl: string, options?: RecognizeOptions): Promise<string> => {
   const { createWorker } = await import('tesseract.js');
 
-  // public/ocr/ 目录下的资源会被 Vite 打包进产物，URL 即本地路径
-  // 构建时 vite 会把 import.meta.env.BASE_URL 设置好，Android WebView 直接加载
   const bundledWorkerPath = '/ocr/worker.min.js';
-  const bundledCorePath = '/ocr';                     // corePath 是目录，tesseract.js 会自动拼接 wasm.js
-  const bundledLangPath = '/ocr';                     // langPath 是目录，tesseract.js 会自动拼接 chi_sim.traineddata.gz
+  const bundledCorePath = '/ocr';
+  const bundledLangPath = '/ocr';
 
-  // 确认本地资源可用（fetch HEAD 检测）；不可用时（如热更新未同步、文件缺失）回退到 CDN
   let workerPath = bundledWorkerPath;
   let corePath = bundledCorePath;
   let langPath = bundledLangPath;
-  let useFallback = false;
+  let blobUrl: string | null = null;
 
+  // 检测本地内置资源是否可用
+  let useBundled = false;
   try {
     const resp = await fetch(bundledWorkerPath, { method: 'HEAD' });
-    if (!resp.ok) useFallback = true;
+    useBundled = resp.ok;
   } catch {
-    useFallback = true;
+    useBundled = false;
   }
 
-  if (useFallback) {
+  if (useBundled) {
+    // Android WebView 不支持从本地路径直接 new Worker()
+    // 解决方案：fetch worker 脚本内容 → 创建 Blob URL → 用 blob URL 当 workerPath
+    try {
+      const resp = await fetch(bundledWorkerPath);
+      const workerText = await resp.text();
+      const blob = new Blob([workerText], { type: 'application/javascript' });
+      blobUrl = URL.createObjectURL(blob);
+      workerPath = blobUrl;
+      // corePath 和 langPath 用本地路径，worker 内部会 fetch 这些资源
+      corePath = bundledCorePath;
+      langPath = bundledLangPath;
+    } catch {
+      useBundled = false;
+    }
+  }
+
+  if (!useBundled) {
+    // 本地资源不可用，回退到 CDN
     options?.onProgress?.({
       langDownloaded: false,
       workerDownloaded: false,
@@ -301,7 +318,6 @@ export const recognizeImage = async (imageDataUrl: string, options?: RecognizeOp
         corePath = local.corePath;
         langPath = local.langPath;
       } catch {
-        // 本地 CDN 缓存也失败，完全退回到远端 CDN
         workerPath = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js';
         corePath = 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5';
         langPath = 'https://tessdata.project.files.com/4.0.0';
@@ -313,16 +329,26 @@ export const recognizeImage = async (imageDataUrl: string, options?: RecognizeOp
     }
   }
 
-  const worker = await createWorker('chi_sim', 1, {
-    workerPath,
-    corePath,
-    langPath,
+  // 超时保护：60 秒未完成则报错，防止永远转圈
+  const timeoutMs = 60000;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error('OCR 识别超时，请重试')), timeoutMs);
   });
 
   try {
-    const { data: { text } } = await worker.recognize(imageDataUrl);
+    const workerPromise = createWorker('chi_sim', 1, {
+      workerPath,
+      corePath,
+      langPath,
+    });
+    const worker = await Promise.race([workerPromise, timeoutPromise]);
+
+    const recognizePromise = worker.recognize(imageDataUrl);
+    const { data: { text } } = await Promise.race([recognizePromise, timeoutPromise]);
+
     return text;
   } finally {
-    await worker.terminate();
+    // 清理 blob URL
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
   }
 };

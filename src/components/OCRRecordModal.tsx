@@ -38,33 +38,34 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
     setDownloadStatus(null);
 
     try {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const dataUrl = event.target?.result as string;
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target?.result as string);
+        reader.onerror = () => reject(new Error('读取图片失败'));
+        reader.readAsDataURL(file);
+      });
 
-        const text = await recognizeImage(dataUrl, {
-          onProgress: (status) => {
-            setDownloadStatus(status);
-          },
-        });
+      const text = await recognizeImage(dataUrl, {
+        onProgress: (status) => {
+          setDownloadStatus(status);
+        },
+      });
 
-        setDownloadStatus(null);
+      setDownloadStatus(null);
 
-        const transactions = extractTransactionsFromText(text, categories);
-        setParsedTransactions(transactions);
+      const transactions = extractTransactionsFromText(text, categories);
+      setParsedTransactions(transactions);
 
-        if (transactions.length === 0) {
-          setError('未能识别到交易记录，请尝试清晰的截图');
-          setStep('upload');
-        } else {
-          setStep('preview');
-        }
-
-        setIsLoading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch {
-      setError('图片识别失败，请重试');
+      if (transactions.length === 0) {
+        setError('未能识别到交易记录，请尝试清晰的截图');
+        setStep('upload');
+      } else {
+        setStep('preview');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '图片识别失败，请重试');
+      setStep('upload');
+    } finally {
       setIsLoading(false);
       setDownloadStatus(null);
     }
