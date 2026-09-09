@@ -224,10 +224,10 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
   const renderRateSourceBadge = (code: string) => {
     const source = getRateSource(code);
     if (source === 'custom') {
-      return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#f5e8d0', color: '#a9782c' }}>自定义</span>;
+      return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}>自定义</span>;
     }
     if (source === 'live') {
-      return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#e0f0e4', color: '#2f7a45' }}>实时</span>;
+      return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>实时</span>;
     }
     return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}>默认</span>;
   };

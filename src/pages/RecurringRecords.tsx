@@ -158,7 +158,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                   <div className="flex items-start gap-3">
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${category?.color || '#2e85de'}20`, color: category?.color || '#2e85de' }}
+                      style={{ backgroundColor: category?.color ? `${category.color}20` : 'var(--primary-soft)', color: category?.color || 'var(--primary)' }}
                     >
                       <IconComponent size={20} />
                     </div>

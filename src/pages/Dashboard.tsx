@@ -203,9 +203,9 @@ const DashboardComponent = ({
 
   const quickTools = [
     { icon: ArrowLeftRight, label: '转账', onClick: onGoToTransfer, color: 'var(--primary)', bg: 'var(--primary-soft)' },
-    { icon: Repeat, label: '周期记账', onClick: onGoToRecurring, color: '#7c6ef0', bg: '#eeecfd' },
-    { icon: Bookmark, label: '模板', onClick: onGoToTemplates, color: '#e0684f', bg: 'var(--expense-soft)' },
-    { icon: PiggyBank, label: '预算', onClick: onGoToBudgets, color: '#d9930f', bg: '#faf1dc' },
+    { icon: Repeat, label: '周期记账', onClick: onGoToRecurring, color: 'var(--primary-ink)', bg: 'var(--primary-soft)' },
+    { icon: Bookmark, label: '模板', onClick: onGoToTemplates, color: 'var(--expense-ink)', bg: 'var(--expense-soft)' },
+    { icon: PiggyBank, label: '预算', onClick: onGoToBudgets, color: 'var(--primary-ink)', bg: 'var(--primary-soft)' },
   ];
 
   return (
@@ -267,7 +267,7 @@ const DashboardComponent = ({
             className="flex items-center rounded-button px-3 py-2.5 border-2 transition-colors mb-3"
             style={{ background: 'var(--paper)', borderColor: 'transparent' }}
           >
-            <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: '#d9930f' }} />
+            <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: 'var(--primary-ink)' }} />
             <input
               ref={smartInputRef}
               type="text"

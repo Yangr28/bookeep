@@ -651,8 +651,8 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             <div
               className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0"
               style={isDark
-                ? { background: '#1e2c42', color: 'var(--primary)' }
-                : { background: '#faf1dc', color: '#d9930f' }}
+                ? { background: 'var(--primary-soft)', color: 'var(--primary)' }
+                : { background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}
             >
               {isDark ? <Moon size={21} /> : <Sun size={21} />}
             </div>
@@ -1267,7 +1267,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               <div className="flex items-center gap-3">
                 <div
                   className="w-12 h-12 rounded-card flex items-center justify-center flex-shrink-0"
-                  style={{ background: '#fff', color: 'var(--expense)' }}
+                  style={{ background: 'var(--card)', color: 'var(--expense)' }}
                 >
                   <RotateCcw size={26} />
                 </div>
@@ -1388,7 +1388,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               <div className="flex items-center gap-3">
                 <div
                   className="w-12 h-12 rounded-card flex items-center justify-center flex-shrink-0"
-                  style={{ background: '#fff', color: 'var(--expense)' }}
+                  style={{ background: 'var(--card)', color: 'var(--expense)' }}
                 >
                   <AlertCircle size={26} />
                 </div>

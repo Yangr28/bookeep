@@ -108,7 +108,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
         {!isEditMode && (
           <div className="card p-3">
             <div className="flex items-center rounded-button px-3 py-2.5" style={{ background: 'var(--paper)' }}>
-              <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: '#d9930f' }} />
+              <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: 'var(--primary-ink)' }} />
               <input
                 type="text"
                 value={smartInput}

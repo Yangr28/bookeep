@@ -11,10 +11,10 @@ interface StatisticsProps {
 }
 
 const CHART_COLORS = {
-  income: '#2e85de',
-  expense: '#e0684f',
-  axis: '#8c8577',
-  cursor: 'rgba(168, 142, 110, 0.12)',
+  income: 'var(--primary)',
+  expense: 'var(--expense)',
+  axis: 'var(--ink-2)',
+  cursor: 'var(--shadow-card)',
 };
 
 const TOOLTIP_STYLE = {
@@ -277,7 +277,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     tickFormatter={(value: string) => value.replace(/^\d+年/, '')}
                     interval={0}
                     tickLine={false}
-                    axisLine={{ stroke: '#e9e3d6' }}
+                    axisLine={{ stroke: 'var(--line)' }}
                   />
                   <YAxis tick={{ fontSize: 10, fill: CHART_COLORS.axis }} tickLine={false} axisLine={false} />
                   <Tooltip
