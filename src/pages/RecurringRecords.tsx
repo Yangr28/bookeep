@@ -158,7 +158,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                   <div className="flex items-start gap-3">
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: category?.color ? `${category.color}20` : 'var(--primary-soft)', color: category?.color || 'var(--primary)' }}
+                      style={{ backgroundColor: category?.color ? `${category.color}30` : 'var(--primary-soft)', color: category?.color || 'var(--primary)' }}
                     >
                       <IconComponent size={20} />
                     </div>
@@ -284,7 +284,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
                           ? { background: 'var(--primary-soft)', border: '1.5px solid var(--primary)' }
                           : { background: 'var(--paper-deep)', border: '1.5px solid transparent' }}
                       >
-                        <div className="p-1.5 rounded-full" style={{ backgroundColor: `${cat.color}20`, color: cat.color }}>
+                        <div className="p-1.5 rounded-full" style={{ backgroundColor: `${cat.color}30`, color: cat.color }}>
                           <IconComponent size={16} />
                         </div>
                         <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{cat.name}</span>

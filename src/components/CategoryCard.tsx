@@ -22,7 +22,7 @@ const CategoryCardComponent = ({ category, isSelected = false, onClick }: Catego
     >
       <div
         className={`p-2 rounded-full transition-all duration-200 ${isSelected ? 'scale-110' : ''}`}
-        style={{ backgroundColor: `${category.color}20` }}
+        style={{ backgroundColor: `${category.color}30` }}
       >
         <IconComponent size={22} style={{ color: category.color }} />
       </div>

@@ -134,7 +134,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                 <div className="flex items-center gap-3 mb-3">
                   <div
                     className="p-2.5 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: `${category.color}20` }}
+                    style={{ backgroundColor: `${category.color}30` }}
                   >
                     <IconComponent size={20} style={{ color: category.color }} />
                   </div>

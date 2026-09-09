@@ -727,7 +727,7 @@ export default function App() {
                     >
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${account.color}20`, color: account.color }}
+                        style={{ backgroundColor: `${account.color}30`, color: account.color }}
                       >
                         <IconComponent size={20} />
                       </div>

@@ -131,7 +131,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
         </button>
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${currentAccount.color}20`, color: currentAccount.color }}
+          style={{ backgroundColor: `${currentAccount.color}30`, color: currentAccount.color }}
         >
           <Wallet size={20} />
         </div>

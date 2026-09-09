@@ -84,7 +84,7 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled }: T
         onTouchEnd={handleTouchEnd}
       >
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: category ? `${category.color}20` : 'var(--paper-deep)' }}>
+          <div className="p-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: category ? `${category.color}30` : 'var(--paper-deep)' }}>
             <IconComponent size={20} style={{ color: category?.color || 'var(--ink-2)' }} />
           </div>
           <div className="flex-1 min-w-0">

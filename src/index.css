@@ -30,6 +30,15 @@
   --expense: #e0684f;      /* 陶土橙红（支出/危险） */
   --expense-soft: #fce9e4;
   --expense-ink: #a93f2c;
+  /* 快捷工具专属色（每个工具独立辨识度） */
+  --accent-transfer: #2e85de;     /* 转账：晴蓝 */
+  --accent-transfer-soft: #e7f0fc;
+  --accent-recurring: #8b5cf6;    /* 周期记账：紫罗兰 */
+  --accent-recurring-soft: #ede9fe;
+  --accent-template: #e0684f;     /* 模板：陶土橙 */
+  --accent-template-soft: #fce9e4;
+  --accent-budget: #d9930f;       /* 预算：暖金 */
+  --accent-budget-soft: #faf1dc;
   --radius-card: 1.25rem;   /* 20px 卡片 */
   --radius-button: 0.875rem;/* 14px 按钮 */
   --radius-sheet: 1.5rem;   /* 24px 底部弹层 */
@@ -53,6 +62,15 @@
   --expense: #e8806b;
   --expense-soft: #3a2420;
   --expense-ink: #f0a48f;
+  /* 快捷工具专属色（深色模式：饱和度更高，背景更深） */
+  --accent-transfer: #5ba0f0;
+  --accent-transfer-soft: #1c2d44;
+  --accent-recurring: #a78bfa;
+  --accent-recurring-soft: #2a2340;
+  --accent-template: #e8806b;
+  --accent-template-soft: #3a2420;
+  --accent-budget: #e8b84a;
+  --accent-budget-soft: #3d3518;
   --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.55);
   --shadow-fab: 0 10px 24px rgba(91, 160, 240, 0.32);

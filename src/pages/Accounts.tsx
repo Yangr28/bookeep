@@ -419,7 +419,7 @@ export const Accounts = ({
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${account.color}20`, color: account.color }}
+                      style={{ backgroundColor: `${account.color}30`, color: account.color }}
                     >
                       {iconMap[account.icon]}
                     </div>
@@ -513,7 +513,7 @@ export const Accounts = ({
                     >
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${account.color}20`, color: account.color }}
+                        style={{ backgroundColor: `${account.color}30`, color: account.color }}
                       >
                         {iconMap[account.icon]}
                       </div>
@@ -548,7 +548,7 @@ export const Accounts = ({
                     >
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${account.color}20`, color: account.color }}
+                        style={{ backgroundColor: `${account.color}30`, color: account.color }}
                       >
                         {iconMap[account.icon]}
                       </div>

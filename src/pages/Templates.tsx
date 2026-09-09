@@ -145,7 +145,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
                     <div className="flex items-start justify-between mb-3">
                       <div
                         className="w-12 h-12 rounded-card flex items-center justify-center"
-                        style={{ backgroundColor: `${template.color}20`, color: template.color }}
+                        style={{ backgroundColor: `${template.color}30`, color: template.color }}
                       >
                         <TemplateIcon size={24} />
                       </div>
@@ -296,7 +296,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
                           ? { background: 'var(--primary-soft)', border: '1.5px solid var(--primary)' }
                           : { background: 'var(--paper-deep)', border: '1.5px solid transparent' }}
                       >
-                        <div className="p-1.5 rounded-full" style={{ backgroundColor: `${cat.color}20`, color: cat.color }}>
+                        <div className="p-1.5 rounded-full" style={{ backgroundColor: `${cat.color}30`, color: cat.color }}>
                           <IconComponent size={16} />
                         </div>
                         <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{cat.name}</span>

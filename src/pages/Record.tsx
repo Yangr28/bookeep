@@ -219,7 +219,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
             <div
               className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
               style={selectedAccount
-                ? { backgroundColor: `${selectedAccount.color}20`, color: selectedAccount.color }
+                ? { backgroundColor: `${selectedAccount.color}30`, color: selectedAccount.color }
                 : { background: hasAccountError ? 'var(--expense-soft)' : 'var(--primary-soft)', color: hasAccountError ? 'var(--expense)' : 'var(--primary)' }}
             >
               <AccountIcon size={19} />

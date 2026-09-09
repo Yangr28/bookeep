@@ -259,7 +259,7 @@ export const Stats = ({ onBack }: StatsProps) => {
                   >
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2"
-                      style={{ backgroundColor: `${achievement.color}20` }}
+                      style={{ backgroundColor: `${achievement.color}30` }}
                     >
                       <IconComponent
                         size={24}
@@ -290,7 +290,7 @@ export const Stats = ({ onBack }: StatsProps) => {
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center opacity-50 flex-shrink-0"
-                        style={{ backgroundColor: `${achievement.color}20` }}
+                        style={{ backgroundColor: `${achievement.color}30` }}
                       >
                         <IconComponent
                           size={20}

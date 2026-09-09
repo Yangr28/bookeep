@@ -202,10 +202,10 @@ const DashboardComponent = ({
   const canSubmit = !!(quickRecordAmount && quickRecordCategoryId && quickRecordAccountId);
 
   const quickTools = [
-    { icon: ArrowLeftRight, label: '转账', onClick: onGoToTransfer, color: 'var(--primary)', bg: 'var(--primary-soft)' },
-    { icon: Repeat, label: '周期记账', onClick: onGoToRecurring, color: 'var(--primary-ink)', bg: 'var(--primary-soft)' },
-    { icon: Bookmark, label: '模板', onClick: onGoToTemplates, color: 'var(--expense-ink)', bg: 'var(--expense-soft)' },
-    { icon: PiggyBank, label: '预算', onClick: onGoToBudgets, color: 'var(--primary-ink)', bg: 'var(--primary-soft)' },
+    { icon: ArrowLeftRight, label: '转账', onClick: onGoToTransfer, color: 'var(--accent-transfer)', bg: 'var(--accent-transfer-soft)' },
+    { icon: Repeat, label: '周期记账', onClick: onGoToRecurring, color: 'var(--accent-recurring)', bg: 'var(--accent-recurring-soft)' },
+    { icon: Bookmark, label: '模板', onClick: onGoToTemplates, color: 'var(--accent-template)', bg: 'var(--accent-template-soft)' },
+    { icon: PiggyBank, label: '预算', onClick: onGoToBudgets, color: 'var(--accent-budget)', bg: 'var(--accent-budget-soft)' },
   ];
 
   return (

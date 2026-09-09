@@ -1,4 +1,4 @@
-import { useEffect, useMemo, memo } from 'react';
+import { useEffect, useMemo, memo, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -37,6 +37,10 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
 
   const selectedMonth = selectedDate.getMonth();
   const selectedYear = selectedDate.getFullYear();
+
+  // 饼图选中状态（点击切片时高亮中心区域）
+  const [expenseSelected, setExpenseSelected] = useState<number | null>(null);
+  const [incomeSelected, setIncomeSelected] = useState<number | null>(null);
 
   const transactions = useStore((state) => state.transactions);
   const monthIncome = useStore((state) => state.getMonthIncome(selectedMonth, selectedYear));
@@ -104,22 +108,61 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
           </div>
           {expenseData.length > 0 ? (
             <div className="flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={expenseData.map((item) => ({ name: item.category.name, value: item.total, color: item.category.color }))} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3} dataKey="value">
-                    {expenseData.map((item, index) => (<Cell key={`cell-${index}`} fill={item.category.color} />))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => [`¥${formatCurrency(value)}`, '金额']} contentStyle={TOOLTIP_STYLE} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="relative w-full" style={{ height: 200 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={expenseData.map((item) => ({ name: item.category.name, value: item.total, color: item.category.color }))}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={85}
+                      paddingAngle={3}
+                      dataKey="value"
+                      onClick={(_entry, index) => setExpenseSelected((prev) => (prev === index ? null : index))}
+                    >
+                      {expenseData.map((item, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={item.category.color}
+                          opacity={expenseSelected === null || expenseSelected === index ? 1 : 0.35}
+                          style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* 中心显示区 */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  {expenseSelected !== null && expenseData[expenseSelected] ? (
+                    <>
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{expenseData[expenseSelected].category.name}</span>
+                      <span className="text-lg font-bold amount-num mt-0.5" style={{ color: 'var(--ink)' }}>
+                        ¥{formatCurrencyShort(expenseData[expenseSelected].total)}
+                      </span>
+                      <span className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                        {monthExpense > 0 ? `${(expenseData[expenseSelected].total / monthExpense * 100).toFixed(1)}%` : '0%'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>点击分类查看</span>
+                    </>
+                  )}
+                </div>
+              </div>
               <div className="w-full mt-2 space-y-1.5">
                 {expenseData.slice(0, 6).map((item, index) => (
-                  <div key={`legend-${index}`} className="flex items-center gap-2.5 py-1">
+                  <button
+                    key={`legend-${index}`}
+                    onClick={() => setExpenseSelected((prev) => (prev === index ? null : index))}
+                    className={`w-full flex items-center gap-2.5 py-1 rounded-button transition-colors ${expenseSelected === index ? 'bg-[var(--paper-deep)]' : ''}`}
+                  >
                     <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: item.category.color }} />
                     <span className="text-sm font-medium flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
                     <span className="text-sm amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>¥{formatCurrencyShort(item.total)}</span>
                     <span className="text-xs w-10 text-right flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{monthExpense > 0 ? `${(item.total / monthExpense * 100).toFixed(0)}%` : '0%'}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -136,22 +179,61 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
               <span className="text-sm font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(monthIncome)}</span>
             </div>
             <div className="flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={incomeData.map((item) => ({ name: item.category.name, value: item.total, color: item.category.color }))} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3} dataKey="value">
-                    {incomeData.map((item, index) => (<Cell key={`cell-${index}`} fill={item.category.color} />))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => [`¥${formatCurrency(value)}`, '金额']} contentStyle={TOOLTIP_STYLE} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="relative w-full" style={{ height: 200 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={incomeData.map((item) => ({ name: item.category.name, value: item.total, color: item.category.color }))}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={85}
+                      paddingAngle={3}
+                      dataKey="value"
+                      onClick={(_entry, index) => setIncomeSelected((prev) => (prev === index ? null : index))}
+                    >
+                      {incomeData.map((item, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={item.category.color}
+                          opacity={incomeSelected === null || incomeSelected === index ? 1 : 0.35}
+                          style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* 中心显示区 */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  {incomeSelected !== null && incomeData[incomeSelected] ? (
+                    <>
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{incomeData[incomeSelected].category.name}</span>
+                      <span className="text-lg font-bold amount-num mt-0.5" style={{ color: 'var(--ink)' }}>
+                        ¥{formatCurrencyShort(incomeData[incomeSelected].total)}
+                      </span>
+                      <span className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                        {monthIncome > 0 ? `${(incomeData[incomeSelected].total / monthIncome * 100).toFixed(1)}%` : '0%'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>点击分类查看</span>
+                    </>
+                  )}
+                </div>
+              </div>
               <div className="w-full mt-2 space-y-1.5">
                 {incomeData.slice(0, 6).map((item, index) => (
-                  <div key={`legend-${index}`} className="flex items-center gap-2.5 py-1">
+                  <button
+                    key={`legend-${index}`}
+                    onClick={() => setIncomeSelected((prev) => (prev === index ? null : index))}
+                    className={`w-full flex items-center gap-2.5 py-1 rounded-button transition-colors ${incomeSelected === index ? 'bg-[var(--paper-deep)]' : ''}`}
+                  >
                     <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: item.category.color }} />
                     <span className="text-sm font-medium flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
                     <span className="text-sm amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>¥{formatCurrencyShort(item.total)}</span>
                     <span className="text-xs w-10 text-right flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{monthIncome > 0 ? `${(item.total / monthIncome * 100).toFixed(0)}%` : '0%'}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
