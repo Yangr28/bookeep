@@ -260,26 +260,63 @@ export interface RecognizeOptions {
 export const recognizeImage = async (imageDataUrl: string, options?: RecognizeOptions): Promise<string> => {
   const { createWorker } = await import('tesseract.js');
 
-  let endpoints: { workerPath: string; langPath: string; corePath: string };
+  // public/ocr/ 目录下的资源会被 Vite 打包进产物，URL 即本地路径
+  // 构建时 vite 会把 import.meta.env.BASE_URL 设置好，Android WebView 直接加载
+  const bundledWorkerPath = '/ocr/worker.min.js';
+  const bundledCorePath = '/ocr';                     // corePath 是目录，tesseract.js 会自动拼接 wasm.js
+  const bundledLangPath = '/ocr';                     // langPath 是目录，tesseract.js 会自动拼接 chi_sim.traineddata.gz
 
-  if (Capacitor.isNativePlatform()) {
-    const ready = await isOCRReady();
-    if (!ready) {
-      await downloadOCRData(options?.onProgress);
+  // 确认本地资源可用（fetch HEAD 检测）；不可用时（如热更新未同步、文件缺失）回退到 CDN
+  let workerPath = bundledWorkerPath;
+  let corePath = bundledCorePath;
+  let langPath = bundledLangPath;
+  let useFallback = false;
+
+  try {
+    const resp = await fetch(bundledWorkerPath, { method: 'HEAD' });
+    if (!resp.ok) useFallback = true;
+  } catch {
+    useFallback = true;
+  }
+
+  if (useFallback) {
+    options?.onProgress?.({
+      langDownloaded: false,
+      workerDownloaded: false,
+      coreDownloaded: false,
+      totalSizeMB: 0,
+      isDownloading: true,
+      downloadProgress: 10,
+      currentFile: '识别引擎',
+    });
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const ready = await isOCRReady();
+        if (!ready) {
+          await downloadOCRData(options?.onProgress);
+        }
+        const local = await getOCREndpoints();
+        workerPath = local.workerPath;
+        corePath = local.corePath;
+        langPath = local.langPath;
+      } catch {
+        // 本地 CDN 缓存也失败，完全退回到远端 CDN
+        workerPath = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js';
+        corePath = 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5';
+        langPath = 'https://tessdata.project.files.com/4.0.0';
+      }
+    } else {
+      workerPath = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js';
+      corePath = 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5';
+      langPath = 'https://tessdata.project.files.com/4.0.0';
     }
-    endpoints = await getOCREndpoints();
-  } else {
-    endpoints = {
-      workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
-      corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5',
-      langPath: 'https://tessdata.project.files.com/4.0.0',
-    };
   }
 
   const worker = await createWorker('chi_sim', 1, {
-    workerPath: endpoints.workerPath,
-    corePath: endpoints.corePath,
-    langPath: endpoints.langPath,
+    workerPath,
+    corePath,
+    langPath,
   });
 
   try {
