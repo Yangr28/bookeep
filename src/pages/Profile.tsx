@@ -118,44 +118,44 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-          {/* 月度明细 */}
+          {/* 月度明细 + 月份胶囊 */}
           <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
             {trendSelected !== null && monthlyChartData[trendSelected] ? (
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{monthlyChartData[trendSelected].fullMonth}</span>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="flex items-center gap-1.5 text-sm">
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--primary)' }} />
-                      <span className="amount-num font-semibold" style={{ color: 'var(--primary)' }}>+{formatCurrencyShort(monthlyChartData[trendSelected].income)}</span>
-                    </span>
-                    <span className="flex items-center gap-1.5 text-sm">
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--expense)' }} />
-                      <span className="amount-num font-semibold" style={{ color: 'var(--expense)' }}>-{formatCurrencyShort(monthlyChartData[trendSelected].expense)}</span>
-                    </span>
-                  </div>
+              <div className="flex flex-col items-center text-center">
+                <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{monthlyChartData[trendSelected].fullMonth}</span>
+                <div className="flex items-center gap-4 mt-1">
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--primary)' }} />
+                    <span className="amount-num font-semibold" style={{ color: 'var(--primary)' }}>+{formatCurrencyShort(monthlyChartData[trendSelected].income)}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--expense)' }} />
+                    <span className="amount-num font-semibold" style={{ color: 'var(--expense)' }}>-{formatCurrencyShort(monthlyChartData[trendSelected].expense)}</span>
+                  </span>
                 </div>
-                <div className="text-right">
-                  <span className="text-xs" style={{ color: 'var(--ink-2)' }}>结余</span>
-                  <p className="amount-num font-bold mt-0.5" style={{
-                    color: (monthlyChartData[trendSelected].income - monthlyChartData[trendSelected].expense) >= 0 ? 'var(--primary)' : 'var(--expense)'
-                  }}>
-                    {(monthlyChartData[trendSelected].income - monthlyChartData[trendSelected].expense) >= 0 ? '+' : ''}
-                    {formatCurrencyShort(monthlyChartData[trendSelected].income - monthlyChartData[trendSelected].expense)}
-                  </p>
-                </div>
+                <span className="text-xs mt-1" style={{
+                  color: (monthlyChartData[trendSelected].income - monthlyChartData[trendSelected].expense) >= 0 ? 'var(--primary)' : 'var(--expense)'
+                }}>
+                  结余 {(monthlyChartData[trendSelected].income - monthlyChartData[trendSelected].expense) >= 0 ? '+' : ''}
+                  {formatCurrencyShort(monthlyChartData[trendSelected].income - monthlyChartData[trendSelected].expense)}
+                </span>
               </div>
             ) : (
-              <div className="flex items-center justify-center gap-4 text-xs" style={{ color: 'var(--ink-2)' }}>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--primary)' }} />收入
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--expense)' }} />支出
-                </span>
-                <span>· 点击柱体查看月度明细</span>
-              </div>
+              <p className="text-center text-xs" style={{ color: 'var(--ink-2)' }}>点击柱体或下方月份查看月度明细</p>
             )}
+            {/* 月份胶囊 */}
+            <div className="flex flex-wrap gap-x-2 gap-y-1 justify-center mt-2">
+              {monthlyChartData.map((item, index) => (
+                <button
+                  key={`month-${index}`}
+                  onClick={() => setTrendSelected((prev) => (prev === index ? null : index))}
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${trendSelected === index ? 'bg-[var(--paper-deep)]' : ''}`}
+                  style={{ color: 'var(--ink)' }}
+                >
+                  {item.month}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
