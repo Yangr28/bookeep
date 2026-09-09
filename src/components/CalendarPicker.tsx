@@ -137,7 +137,7 @@ export const CalendarPicker = ({ selectedDate, onDateChange, onClose }: Calendar
                   <ChevronLeft size={14} />
                 </button>
                 <span
-                  className="text-lg font-bold w-14 text-center amount-num"
+                  className="text-base font-bold w-20 text-center amount-num whitespace-nowrap"
                   style={{ color: 'var(--ink)' }}
                 >
                   {currentYear}年
