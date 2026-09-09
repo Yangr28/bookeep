@@ -1,5 +1,5 @@
 import { useState, useRef, TouchEvent, DragEvent, useEffect } from 'react';
-import { Building2, Wallet, MessageCircle, Banknote, CreditCard, Plus, X, ChevronRight, Trash2, Edit3, Calendar, Clock, Percent, Palette, ArrowUpDown, Landmark, ArrowRight, ArrowRightLeft, AlertCircle, Repeat, Bookmark, PiggyBank, Globe } from 'lucide-react';
+import { Building2, Wallet, MessageCircle, Banknote, CreditCard, Plus, X, ChevronRight, Trash2, Edit3, Calendar, Clock, Percent, Palette, ArrowUpDown, Landmark, ArrowRight, ArrowRightLeft, AlertCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Account, AccountIcons, AccountTypeNames } from '../types';
 import { formatCurrencyShort } from '../utils/format';
@@ -188,14 +188,6 @@ export const Accounts = ({
   const totalLoansValue = getTotalLoans();
   const liquidAssets = accounts.reduce((sum, a) => sum + a.balance, 0);
 
-  const quickTools = [
-    { icon: Repeat, label: '周期记账', onClick: onGoToRecurring, color: '#7c6ef0', bg: '#eeecfd' },
-    { icon: Bookmark, label: '模板', onClick: onGoToTemplates, color: 'var(--expense)', bg: 'var(--expense-soft)' },
-    { icon: PiggyBank, label: '预算', onClick: onGoToBudgets, color: '#d9930f', bg: '#faf1dc' },
-    { icon: Globe, label: '汇率', onClick: onGoToCurrencyConverter, color: '#0ea5a4', bg: '#e0f4f3' },
-  ];
-  const hasQuickTools = quickTools.some((tool) => tool.onClick);
-
   const calculateMaturityAmount = (principal: number, rate: number, term: number): number => {
     return Math.round(principal * (1 + rate / 100 * (term / 12)));
   };
@@ -371,29 +363,6 @@ export const Accounts = ({
           </div>
         </div>
       </div>
-
-      {/* 快捷工具 */}
-      {hasQuickTools && (
-        <div className="px-4 mt-4">
-          <div className="card p-3 grid grid-cols-4 gap-1">
-            {quickTools.filter((tool) => tool.onClick).map((tool) => {
-              const Icon = tool.icon;
-              return (
-                <button
-                  key={tool.label}
-                  onClick={tool.onClick}
-                  className="flex flex-col items-center gap-1.5 py-2 rounded-button transition-colors active:scale-95"
-                >
-                  <div className="w-10 h-10 rounded-button flex items-center justify-center" style={{ background: tool.bg }}>
-                    <Icon size={19} style={{ color: tool.color }} />
-                  </div>
-                  <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>{tool.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Tab 切换 */}
       <div className="px-4 mt-4">
