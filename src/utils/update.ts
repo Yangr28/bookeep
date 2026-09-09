@@ -31,6 +31,8 @@ export interface UpdateCheckResult {
   apkUrl?: string;
   /** 热更新包要求的最低原生版本 */
   minNativeVersion?: string;
+  /** 该版本必须整包更新（包含原生改动），热更新无法覆盖 */
+  requireApk?: boolean;
 }
 
 /**
@@ -70,6 +72,8 @@ interface GithubRelease {
 interface UpdateMeta {
   minNativeVersion?: string;
   mandatory?: boolean;
+  /** 该版本必须整包更新（包含原生改动：图标、权限、插件等），热更新无法覆盖 */
+  requireApk?: boolean;
 }
 
 /** 获取本地版本信息（原生环境取插件数据，Web 环境降级到构建版本号） */
@@ -160,9 +164,17 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
     version: remoteVersion,
     changelog: (release.body || '').trim(),
     mandatory: !!meta.mandatory,
+    requireApk: !!meta.requireApk,
   };
 
-  // 1. 热更新优先（Web 版本落后，且满足最低原生版本要求）
+  // 1. 如果该版本标记了 requireApk（包含原生改动：图标/权限/插件等），必须整包更新
+  if (meta.requireApk && apkAsset && compareVersions(remoteVersion, local.nativeVersion) > 0) {
+    result.type = 'apk';
+    result.apkUrl = apkAsset.browser_download_url;
+    return result;
+  }
+
+  // 2. 热更新优先（Web 版本落后，且满足最低原生版本要求）
   //    热更新优先于整包更新，确保旧基座用户也能通过热更新获取最新 Web 资源
   if (zipAsset && compareVersions(remoteVersion, local.webVersion) > 0) {
     const minNative = (meta.minNativeVersion || '').replace(/^v/, '').trim();
@@ -179,7 +191,7 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
     }
   }
 
-  // 2. 整包更新（热更新不可用或原生版本不满足要求，但原生版本落后）
+  // 3. 整包更新（热更新不可用或原生版本不满足要求，但原生版本落后）
   if (apkAsset && compareVersions(remoteVersion, local.nativeVersion) > 0) {
     result.type = 'apk';
     result.apkUrl = apkAsset.browser_download_url;

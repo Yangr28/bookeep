@@ -178,7 +178,9 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
               <p className="text-xs mt-3 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
                 {isHot
                   ? '热更新仅更新界面资源，下载后自动生效，不影响您的数据。'
-                  : '整包更新会下载完整安装包，需在系统安装器中确认安装，记账数据不会丢失。'}
+                  : result.requireApk
+                    ? '本版本包含原生功能更新（如应用图标、权限等），必须通过整包安装完成更新，记账数据不会丢失。'
+                    : '整包更新会下载完整安装包，需在系统安装器中确认安装，记账数据不会丢失。'}
               </p>
             </>
           )}

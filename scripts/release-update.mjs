@@ -9,7 +9,8 @@
  *  4. 产物输出到 release-assets/，并打印 GitHub Release 发布命令
  *
  * 用法：
- *  node scripts/release-update.mjs
+ *  node scripts/release-update.mjs              # 普通热更新
+ *  node scripts/release-update.mjs --require-apk # 标记必须整包更新（含原生改动：图标/权限/插件等）
  *
  * 发布约定（与 src/utils/update.ts 对应）：
  *  - Release tag：v<版本号>
@@ -86,14 +87,23 @@ if (existsSync(gradlePath)) {
   if (m) minNativeVersion = m[1];
 }
 
+// --require-apk 参数：标记该版本必须整包更新（包含原生改动：图标、权限、插件等）
+const requireApk = process.argv.includes('--require-apk');
+
 const meta = {
   // 热更新包要求的最低原生版本：当前 APK 原生版本。
   // 若本次 Web 更新依赖新的原生插件/能力，发布前请手动调高该值。
   minNativeVersion,
   // 强制更新：true 时用户无法跳过
   mandatory: false,
+  // 必须整包更新：true 时即使有热更新包也强制走 APK 安装
+  // 用于包含原生改动的版本（图标更换、权限变化、插件更新等）
+  requireApk,
 };
 writeFileSync(join(outDir, 'update.json'), JSON.stringify(meta, null, 2), 'utf-8');
+if (requireApk) {
+  console.log('  ⚠ 本版本标记为 requireApk=true，用户将强制走整包更新');
+}
 
 // 5. 输出发布指引
 console.log('\n[4/4] 完成，产物：');
