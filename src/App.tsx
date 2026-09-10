@@ -64,6 +64,7 @@ export default function App() {
   const [showQuickRecordDatePicker, setShowQuickRecordDatePicker] = useState(false);
   const [showQuickRecordTimePicker, setShowQuickRecordTimePicker] = useState(false);
   const [showOCRModal, setShowOCRModal] = useState(false);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [widgetQuickInput, setWidgetQuickInput] = useState('');
   const [appUnlocked, setAppUnlocked] = useState(!isAppLocked());
@@ -254,7 +255,7 @@ export default function App() {
     handleBack();
   }, [canGoBack, handleBack, setShowExitConfirm]);
 
-  const hasModalOpen = showCalendar || showRecordDatePicker || showRecordTimePicker || showAccountPicker || showKeypad || showQuickRecordDatePicker || showQuickRecordTimePicker;
+  const hasModalOpen = showCalendar || showRecordDatePicker || showRecordTimePicker || showAccountPicker || showKeypad || showQuickRecordDatePicker || showQuickRecordTimePicker || colorPickerOpen;
 
   const { swipeProgress, isSwiping, showLeftIndicator, showRightIndicator } = useSwipeBack({
     onSwipeBack: handleSwipeBack,
@@ -556,7 +557,7 @@ export default function App() {
           />
         );
       case '/categories':
-        return <Categories onViewCategoryDetail={handleViewCategoryDetail} />;
+        return <Categories onViewCategoryDetail={handleViewCategoryDetail} onColorPickerOpenChange={setColorPickerOpen} />;
       case '/statistics':
         return (
           <Statistics 

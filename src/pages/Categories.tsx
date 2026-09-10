@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { TransactionType, Category } from '../types';
 import { Plus, X, Palette } from 'lucide-react';
@@ -41,15 +41,36 @@ const hexToHsv = (hex: string): { h: number; s: number; v: number } => {
 
 interface CategoriesProps {
   onViewCategoryDetail: (categoryId: string) => void;
+  onColorPickerOpenChange?: (open: boolean) => void;
 }
 
-export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
+export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: CategoriesProps) => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const colorPickerRef = useRef<HTMLDivElement>(null);
+
+  // 调色板开关时通知 App.tsx 禁用侧滑返回（拖动调色板不应误触返回）
+  useEffect(() => {
+    onColorPickerOpenChange?.(showColorPicker);
+  }, [showColorPicker, onColorPickerOpenChange]);
+
+  // 在调色板容器上阻止触摸事件冒泡到 document 的 useSwipeBack 监听器，
+  // 防止调色时手指滑动被误判为侧滑返回（原生监听器，冒泡阶段 stopPropagation）
+  useEffect(() => {
+    const el = colorPickerRef.current;
+    if (!el) return;
+    const stop = (e: TouchEvent) => e.stopPropagation();
+    el.addEventListener('touchstart', stop, { passive: true });
+    el.addEventListener('touchmove', stop, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', stop);
+      el.removeEventListener('touchmove', stop);
+    };
+  }, [showColorPicker]);
   const [iconGroup, setIconGroup] = useState<string>('全部');
   const [newCategory, setNewCategory] = useState({
     name: '',
@@ -367,7 +388,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
 
                 {/* HSV 无极调色板 */}
                 {showColorPicker && (
-                  <div className="mt-4 p-4 rounded-button animate-fade-in" style={{ background: 'var(--paper)' }}>
+                  <div ref={colorPickerRef} className="mt-4 p-4 rounded-button animate-fade-in" style={{ background: 'var(--paper)' }}>
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>无极调色板</p>
                       <div

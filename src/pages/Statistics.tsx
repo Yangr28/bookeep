@@ -244,8 +244,11 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                       ? `${reportData.incomeChange >= 0 ? '+' : ''}${reportData.incomeChange.toFixed(1)}%`
                       : '新建月'}
                   </p>
+                  <p className="text-xs mt-1 amount-num" style={{ color: 'var(--ink)' }}>
+                    本月 {formatCurrencyShort(monthIncome)}
+                  </p>
                   <p className="text-xs mt-0.5 amount-num" style={{ color: 'var(--ink-2)' }}>
-                    上月 ¥{formatCurrencyShort(reportData.prevIncome)}
+                    上月 {formatCurrencyShort(reportData.prevIncome)}
                   </p>
                 </div>
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
@@ -258,8 +261,11 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                       ? `${reportData.expenseChange >= 0 ? '+' : ''}${reportData.expenseChange.toFixed(1)}%`
                       : '新建月'}
                   </p>
+                  <p className="text-xs mt-1 amount-num" style={{ color: 'var(--ink)' }}>
+                    本月 {formatCurrencyShort(monthExpense)}
+                  </p>
                   <p className="text-xs mt-0.5 amount-num" style={{ color: 'var(--ink-2)' }}>
-                    上月 ¥{formatCurrencyShort(reportData.prevExpense)}
+                    上月 {formatCurrencyShort(reportData.prevExpense)}
                   </p>
                 </div>
               </div>
@@ -271,7 +277,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
                   <p className="text-xs" style={{ color: 'var(--ink-2)' }}>日均支出</p>
                   <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--ink)' }}>
-                    ¥{formatCurrencyShort(reportData.avgDailyExpense)}
+                    {formatCurrencyShort(reportData.avgDailyExpense)}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
                     {reportData.elapsedDays}/{reportData.daysInMonth}天
@@ -280,7 +286,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
                   <p className="text-xs" style={{ color: 'var(--ink-2)' }}>最大单笔</p>
                   <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
-                    ¥{formatCurrencyShort(reportData.maxExpense)}
+                    {formatCurrencyShort(reportData.maxExpense)}
                   </p>
                 </div>
               </div>
@@ -299,7 +305,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                         <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.category.color }} />
                         <span className="text-sm flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
                         <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink)' }}>
-                          ¥{formatCurrencyShort(item.total)}
+                          {formatCurrencyShort(item.total)}
                         </span>
                         <span className="text-xs amount-num w-12 text-right" style={{ color: 'var(--ink-2)' }}>
                           {monthExpense > 0 ? `${((item.total / monthExpense) * 100).toFixed(0)}%` : ''}
@@ -316,7 +322,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>预算执行</span>
                     <span className="text-xs amount-num" style={{ color: 'var(--ink-2)' }}>
-                      ¥{formatCurrencyShort(reportData.totalBudgetSpent)} / ¥{formatCurrencyShort(reportData.totalBudget)}
+                      {formatCurrencyShort(reportData.totalBudgetSpent)} / {formatCurrencyShort(reportData.totalBudget)}
                     </span>
                   </div>
                   <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>

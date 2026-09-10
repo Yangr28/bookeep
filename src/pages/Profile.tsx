@@ -1,7 +1,7 @@
 import { useEffect, useMemo, memo, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
-import { PieChart, Pie, Cell, Sector, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Sector, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import { Settings as SettingsIcon, ChevronDown, TrendingUp, TrendingDown, Award, Target } from 'lucide-react';
 
 interface ProfileProps {
@@ -126,6 +126,33 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
     });
     const budgetPercentage = totalBudget ? Math.min((totalBudgetSpent / totalBudget) * 100, 100) : 0;
 
+    // 每日支出曲线（本月 + 上月对比）
+    const dailyData: { day: string; 本月: number; 上月: number }[] = [];
+    const prevDaysInMonth = new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 0).getDate();
+    const maxDays = Math.max(daysInMonth, prevDaysInMonth);
+    for (let d = 1; d <= maxDays; d++) {
+      let thisMonth = 0;
+      let prevMonth = 0;
+      monthTx.forEach((t) => {
+        if (t.type === 'expense' && new Date(t.createdAt).getDate() === d) thisMonth += t.amount;
+      });
+      if (d <= prevDaysInMonth) {
+        transactions.forEach((t) => {
+          const td = new Date(t.createdAt);
+          if (t.type === 'expense' && td.getMonth() === prevDate.getMonth() && td.getFullYear() === prevDate.getFullYear() && td.getDate() === d) {
+            prevMonth += t.amount;
+          }
+        });
+      }
+      // 当月未到的天数不显示本月数据（设为 null 占位但 recharts 需要数字，用 0 但只显示到 elapsedDays）
+      const showThisMonth = d <= elapsedDays;
+      dailyData.push({
+        day: `${d}`,
+        本月: showThisMonth ? thisMonth : 0,
+        上月: prevMonth,
+      });
+    }
+
     return {
       prevIncome, prevExpense,
       incomeChange: prevIncome ? ((monthIncome - prevIncome) / prevIncome) * 100 : 0,
@@ -134,7 +161,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
       expenseChangeColor: (prevExpense ? (monthExpense - prevExpense) : 0) > 0 ? 'var(--expense)' : 'var(--primary)',
       avgDailyExpense, maxExpense, top3Expense,
       totalBudget, totalBudgetSpent, budgetPercentage,
-      daysInMonth, elapsedDays,
+      daysInMonth, elapsedDays, dailyData,
     };
   }, [transactions, selectedMonth, selectedYear, monthIncome, monthExpense, expenseData, categories, budgets, calculateBudgetUsage]);
 
@@ -176,44 +203,87 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
 
           {showReport && (
             <div className="mt-4 space-y-3 animate-stagger-in">
-              {/* 环比变化 */}
+              {/* 环比变化：本月 vs 上月 直接对比 */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
-                  <div className="flex items-center gap-1.5 mb-1">
+                  <div className="flex items-center gap-1.5 mb-1.5">
                     <TrendingUp size={14} style={{ color: 'var(--primary)' }} />
-                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>收入环比</span>
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>收入对比</span>
                   </div>
-                  <p className="text-lg font-bold amount-num" style={{ color: reportData.incomeChangeColor }}>
-                    {reportData.prevIncome > 0
-                      ? `${reportData.incomeChange >= 0 ? '+' : ''}${reportData.incomeChange.toFixed(1)}%`
-                      : '新建月'}
+                  <p className="text-base font-bold amount-num" style={{ color: 'var(--primary)' }}>
+                    {formatCurrencyShort(monthIncome)}
                   </p>
-                  <p className="text-xs mt-0.5 amount-num" style={{ color: 'var(--ink-2)' }}>
-                    上月 ¥{formatCurrencyShort(reportData.prevIncome)}
-                  </p>
+                  <div className="flex items-center justify-between mt-1.5 pt-1.5" style={{ borderTop: '1px solid var(--line)' }}>
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</span>
+                    <span className="text-xs amount-num" style={{ color: 'var(--ink-2)' }}>
+                      {formatCurrencyShort(reportData.prevIncome)}
+                    </span>
+                  </div>
+                  {reportData.prevIncome > 0 && (
+                    <p className="text-xs font-semibold mt-1 amount-num" style={{ color: reportData.incomeChangeColor }}>
+                      {reportData.incomeChange >= 0 ? '+' : ''}{reportData.incomeChange.toFixed(1)}%
+                    </p>
+                  )}
                 </div>
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
-                  <div className="flex items-center gap-1.5 mb-1">
+                  <div className="flex items-center gap-1.5 mb-1.5">
                     <TrendingDown size={14} style={{ color: 'var(--expense)' }} />
-                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>支出环比</span>
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>支出对比</span>
                   </div>
-                  <p className="text-lg font-bold amount-num" style={{ color: reportData.expenseChangeColor }}>
-                    {reportData.prevExpense > 0
-                      ? `${reportData.expenseChange >= 0 ? '+' : ''}${reportData.expenseChange.toFixed(1)}%`
-                      : '新建月'}
+                  <p className="text-base font-bold amount-num" style={{ color: 'var(--expense)' }}>
+                    {formatCurrencyShort(monthExpense)}
                   </p>
-                  <p className="text-xs mt-0.5 amount-num" style={{ color: 'var(--ink-2)' }}>
-                    上月 ¥{formatCurrencyShort(reportData.prevExpense)}
-                  </p>
+                  <div className="flex items-center justify-between mt-1.5 pt-1.5" style={{ borderTop: '1px solid var(--line)' }}>
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</span>
+                    <span className="text-xs amount-num" style={{ color: 'var(--ink-2)' }}>
+                      {formatCurrencyShort(reportData.prevExpense)}
+                    </span>
+                  </div>
+                  {reportData.prevExpense > 0 && (
+                    <p className="text-xs font-semibold mt-1 amount-num" style={{ color: reportData.expenseChangeColor }}>
+                      {reportData.expenseChange >= 0 ? '+' : ''}{reportData.expenseChange.toFixed(1)}%
+                    </p>
+                  )}
                 </div>
+              </div>
+
+              {/* 每日支出曲线（本月 vs 上月） */}
+              <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>每日支出趋势</span>
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1 text-xs">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--expense)' }} />
+                      <span style={{ color: 'var(--ink-2)' }}>本月</span>
+                    </span>
+                    <span className="flex items-center gap-1 text-xs">
+                      <span className="w-2.5 h-0.5 rounded-full" style={{ background: 'var(--ink-2)' }} />
+                      <span style={{ color: 'var(--ink-2)' }}>上月</span>
+                    </span>
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={140}>
+                  <LineChart data={reportData.dailyData} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+                    <XAxis dataKey="day" tick={{ fontSize: 9, fill: 'var(--ink-2)' }} tickLine={false} axisLine={false} interval={4} />
+                    <YAxis tick={{ fontSize: 9, fill: 'var(--ink-2)' }} tickLine={false} axisLine={false} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`} />
+                    <Tooltip
+                      contentStyle={TOOLTIP_STYLE}
+                      labelStyle={{ fontSize: 11 }}
+                      formatter={(value: number) => [formatCurrencyShort(value), '']}
+                      labelFormatter={(label) => `${selectedMonth + 1}月${label}日`}
+                    />
+                    <Line type="monotone" dataKey="上月" stroke="var(--ink-2)" strokeWidth={1.5} strokeDasharray="3 3" dot={false} connectNulls />
+                    <Line type="monotone" dataKey="本月" stroke="var(--expense)" strokeWidth={2} dot={false} connectNulls />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
 
               {/* 日均支出 + 最大单笔 */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
                   <p className="text-xs" style={{ color: 'var(--ink-2)' }}>日均支出</p>
-                  <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--ink)' }}>
-                    ¥{formatCurrencyShort(reportData.avgDailyExpense)}
+                  <p className="text-base font-bold amount-num mt-1" style={{ color: 'var(--ink)' }}>
+                    {formatCurrencyShort(reportData.avgDailyExpense)}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
                     {reportData.elapsedDays}/{reportData.daysInMonth}天
@@ -221,8 +291,8 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                 </div>
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
                   <p className="text-xs" style={{ color: 'var(--ink-2)' }}>最大单笔</p>
-                  <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
-                    ¥{formatCurrencyShort(reportData.maxExpense)}
+                  <p className="text-base font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
+                    {formatCurrencyShort(reportData.maxExpense)}
                   </p>
                 </div>
               </div>
@@ -241,7 +311,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                         <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.category.color }} />
                         <span className="text-sm flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
                         <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink)' }}>
-                          ¥{formatCurrencyShort(item.total)}
+                          {formatCurrencyShort(item.total)}
                         </span>
                         <span className="text-xs amount-num w-12 text-right" style={{ color: 'var(--ink-2)' }}>
                           {monthExpense > 0 ? `${((item.total / monthExpense) * 100).toFixed(0)}%` : ''}
@@ -258,7 +328,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>预算执行</span>
                     <span className="text-xs amount-num" style={{ color: 'var(--ink-2)' }}>
-                      ¥{formatCurrencyShort(reportData.totalBudgetSpent)} / ¥{formatCurrencyShort(reportData.totalBudget)}
+                      {formatCurrencyShort(reportData.totalBudgetSpent)} / {formatCurrencyShort(reportData.totalBudget)}
                     </span>
                   </div>
                   <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
