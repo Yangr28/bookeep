@@ -551,6 +551,7 @@ export default function App() {
             type={recordType}
             onCategoryChange={setRecordCategoryId}
             onTypeChange={setRecordType}
+            onAccountChange={setRecordAccountId}
             onSubmit={handleRecordSubmit}
           />
         );

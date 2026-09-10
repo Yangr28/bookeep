@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import { CategoryCard } from '../components/CategoryCard';
 import { TransactionType, Transaction } from '../types';
 import { formatDateTime } from '../utils/format';
-import { parseSmartInput, findCategoryByIdentifier } from '../utils/smartParser';
+import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
 import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
 
@@ -23,10 +23,11 @@ interface RecordProps {
   type: TransactionType;
   onCategoryChange: (categoryId: string | null) => void;
   onTypeChange: (type: TransactionType) => void;
+  onAccountChange: (accountId: string | null) => void;
   onSubmit: () => void;
 }
 
-const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onSubmit }: RecordProps) => {
+const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, onSubmit }: RecordProps) => {
   const [smartInput, setSmartInput] = useState('');
   const [showSmartResult, setShowSmartResult] = useState(false);
 
@@ -61,11 +62,18 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
   const handleSmartSubmit = useCallback(() => {
     if (!smartInput.trim()) return;
 
-    const result = parseSmartInput(smartInput);
+    // ★ 必须传入用户账户和分类，否则 parseSmartInput 无法精确匹配用户自定义账户名/分类名
+    const result = parseSmartInput(smartInput, accounts, categories);
     let autoCategoryId: string | null = null;
 
     if (result.categoryKeyword) {
       autoCategoryId = findCategoryByIdentifier(categories, result.type, result.categoryKeyword);
+    }
+
+    // ★ 账户识别：之前完全缺失，导致记账页智能输入永远识别不到账户
+    let autoAccountId: string | null = null;
+    if (result.accountKeyword) {
+      autoAccountId = findAccountByKeyword(accounts, result.accountKeyword);
     }
 
     onTypeChange(result.type);
@@ -78,6 +86,10 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
       onCategoryChange(autoCategoryId);
     }
 
+    if (autoAccountId) {
+      onAccountChange(autoAccountId);
+    }
+
     if (result.note) {
       onNoteChange(result.note);
     }
@@ -85,7 +97,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
     setShowSmartResult(true);
     setTimeout(() => setShowSmartResult(false), 2000);
     setSmartInput('');
-  }, [smartInput, categories, onTypeChange, onAmountChange, onCategoryChange, onNoteChange]);
+  }, [smartInput, accounts, categories, onTypeChange, onAmountChange, onCategoryChange, onAccountChange, onNoteChange]);
 
   const AccountIcon = selectedAccount ? getIcon(selectedAccount.icon) : Wallet;
 
