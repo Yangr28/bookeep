@@ -157,7 +157,9 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     paddingAngle={4}
                     dataKey="value"
                     activeShape={(props) => <Sector {...props} stroke="none" strokeWidth={0} />}
-                    isAnimationActive={false}
+                    isAnimationActive={true}
+                    animationDuration={700}
+                    animationEasing="ease-out"
                   >
                     {expenseData.map((item, index) => (
                       <Cell key={`cell-${index}`} fill={item.category.color} />
@@ -208,7 +210,9 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     paddingAngle={4}
                     dataKey="value"
                     activeShape={(props) => <Sector {...props} stroke="none" strokeWidth={0} />}
-                    isAnimationActive={false}
+                    isAnimationActive={true}
+                    animationDuration={700}
+                    animationEasing="ease-out"
                   >
                     {incomeData.map((item, index) => (
                       <Cell key={`cell-${index}`} fill={item.category.color} />

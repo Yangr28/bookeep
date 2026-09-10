@@ -106,7 +106,9 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                       outerRadius={85}
                       paddingAngle={3}
                       dataKey="value"
-                      isAnimationActive={false}
+                      isAnimationActive={true}
+                      animationDuration={700}
+                      animationEasing="ease-out"
                       activeShape={(props) => <Sector {...props} stroke="none" strokeWidth={0} />}
                       onMouseDown={(_entry, index) => setExpenseSelected((prev) => (prev === index ? null : index))}
                     >
@@ -177,7 +179,9 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                       outerRadius={85}
                       paddingAngle={3}
                       dataKey="value"
-                      isAnimationActive={false}
+                      isAnimationActive={true}
+                      animationDuration={700}
+                      animationEasing="ease-out"
                       activeShape={(props) => <Sector {...props} stroke="none" strokeWidth={0} />}
                       onMouseDown={(_entry, index) => setIncomeSelected((prev) => (prev === index ? null : index))}
                     >

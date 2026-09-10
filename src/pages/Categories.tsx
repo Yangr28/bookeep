@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { TransactionType, Category } from '../types';
 import { Plus, X, Palette } from 'lucide-react';
-import { getIcon } from '../utils/iconMap';
+import { HsvStringColorPicker, HexColorInput } from 'react-colorful';
+import { getIcon, CATEGORY_ICONS } from '../utils/iconMap';
 
 interface CategoriesProps {
   onViewCategoryDetail: (categoryId: string) => void;
@@ -15,6 +16,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [iconGroup, setIconGroup] = useState<string>('全部');
   const [newCategory, setNewCategory] = useState({
     name: '',
     type: 'expense' as TransactionType,
@@ -59,14 +61,24 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
   const incomeCategories = categories.filter((c) => c.type === 'income');
   const expenseCategories = categories.filter((c) => c.type === 'expense');
 
-  const iconList = [
-    'Wallet', 'Gift', 'TrendingUp', 'Plus', 'Briefcase', 'Award',
-    'UtensilsCrossed', 'Car', 'ShoppingBag', 'Gamepad2', 'Heart',
-    'GraduationCap', 'Home', 'MoreHorizontal', 'Coffee', 'Plane',
-    'Shirt', 'Music', 'BookOpen', 'Phone', 'Laptop', 'Camera',
-  ];
+  // 图标分组展示
+  const iconGroups: { [key: string]: string[] } = {
+    全部: CATEGORY_ICONS,
+    收入: ['Wallet', 'TrendingUp', 'Briefcase', 'Gift', 'Award', 'Banknote', 'CreditCard', 'Landmark', 'PiggyBank', 'Coins', 'Receipt', 'FileText'],
+    餐饮: ['UtensilsCrossed', 'Utensils', 'Coffee', 'Cake', 'Wine', 'IceCream'],
+    交通: ['Car', 'Plane', 'Train', 'Bus', 'Bike', 'CarTaxiFront', 'Fuel', 'ParkingCircle'],
+    购物: ['ShoppingBag', 'ShoppingCart', 'Shirt', 'Watch', 'Gem', 'Package'],
+    居住: ['Home', 'Key', 'Paintbrush', 'Wrench', 'Lightbulb', 'Flame', 'Wifi'],
+    生活: ['Baby', 'HeartPulse', 'Pill', 'Dumbbell', 'Scissors', 'PawPrint'],
+    娱乐: ['Gamepad2', 'Film', 'Music', 'Headphones', 'Tv', 'Camera', 'Image', 'Palette', 'Brush'],
+    教育: ['GraduationCap', 'BookOpen'],
+    通讯: ['Phone', 'Laptop', 'MessageCircle'],
+    其他: ['Heart', 'Star', 'Bell', 'Calendar', 'Globe', 'Users', 'Flag', 'Circle', 'MoreHorizontal'],
+  };
+  const currentIconList = iconGroups[iconGroup] || CATEGORY_ICONS;
 
-  const colorList = [
+  // 预设推荐色（常用 17 色）
+  const presetColors = [
     '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#22C55E',
     '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1',
     '#8B5CF6', '#A855F7', '#D946EF', '#EC4899', '#F43F5E',
@@ -76,6 +88,8 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
     if (!newCategory.name.trim()) return;
     addCategory(newCategory);
     setShowAddModal(false);
+    setIconGroup('全部');
+    setShowColorPicker(false);
     setNewCategory({
       name: '',
       type: 'expense',
@@ -114,14 +128,14 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
             </button>
           </div>
           <div className="grid grid-cols-4 gap-2">
-            {expenseCategories.map((category) => {
+            {expenseCategories.map((category, i) => {
               const IconComponent = getIcon(category.icon);
               return (
                 <button
                   key={category.id}
                   onClick={() => onViewCategoryDetail(category.id)}
-                  className="flex flex-col items-center p-3 rounded-button relative group min-h-[80px] transition-colors active:scale-95"
-                  style={{ background: 'var(--paper)' }}
+                  className="flex flex-col items-center p-3 rounded-button relative group min-h-[80px] transition-colors active:scale-95 animate-stagger-in"
+                  style={{ background: 'var(--paper)', animationDelay: `${Math.min(i * 40, 400)}ms` }}
                 >
                   <button
                     onClick={(e) => {
@@ -168,14 +182,14 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
             </button>
           </div>
           <div className="grid grid-cols-4 gap-2">
-            {incomeCategories.map((category) => {
+            {incomeCategories.map((category, i) => {
               const IconComponent = getIcon(category.icon);
               return (
                 <button
                   key={category.id}
                   onClick={() => onViewCategoryDetail(category.id)}
-                  className="flex flex-col items-center p-3 rounded-button relative group min-h-[80px] transition-colors active:scale-95"
-                  style={{ background: 'var(--paper)' }}
+                  className="flex flex-col items-center p-3 rounded-button relative group min-h-[80px] transition-colors active:scale-95 animate-stagger-in"
+                  style={{ background: 'var(--paper)', animationDelay: `${Math.min(i * 40, 400)}ms` }}
                 >
                   <button
                     onClick={(e) => {
@@ -242,10 +256,27 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                 />
               </div>
 
+              {/* 图标选择 - 带分组标签 */}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>选择图标</label>
+                <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+                  {Object.keys(iconGroups).map((group) => (
+                    <button
+                      key={group}
+                      onClick={() => setIconGroup(group)}
+                      className="px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors"
+                      style={
+                        iconGroup === group
+                          ? { background: 'var(--primary)', color: '#fff' }
+                          : { background: 'var(--paper)', color: 'var(--ink-2)' }
+                      }
+                    >
+                      {group}
+                    </button>
+                  ))}
+                </div>
                 <div className="grid grid-cols-6 gap-2">
-                  {iconList.map((icon) => {
+                  {currentIconList.map((icon) => {
                     const IconComponent = getIcon(icon);
                     const selected = newCategory.icon === icon;
                     return (
@@ -255,7 +286,7 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                         className="p-2.5 rounded-button transition-all flex items-center justify-center border-2"
                         style={
                           selected
-                            ? { background: 'var(--primary-soft)', borderColor: 'var(--primary)', color: 'var(--primary)' }
+                            ? { background: 'var(--primary-soft)', borderColor: 'var(--primary)', color: 'var(--primary)', transform: 'scale(1.05)' }
                             : { background: 'var(--paper)', borderColor: 'transparent', color: 'var(--ink-2)' }
                         }
                       >
@@ -266,19 +297,20 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                 </div>
               </div>
 
+              {/* 颜色选择 - 推荐色 + 无极调色板 */}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>选择颜色</label>
                 <div className="flex flex-wrap gap-2">
-                  {colorList.map((color) => {
+                  {presetColors.map((color) => {
                     const selected = newCategory.color === color;
                     return (
                       <button
                         key={color}
                         onClick={() => setNewCategory((prev) => ({ ...prev, color }))}
-                        className="w-10 h-10 rounded-full transition-transform hover:scale-110"
+                        className="w-10 h-10 rounded-full transition-transform active:scale-95"
                         style={{
                           backgroundColor: color,
-                          outline: selected ? '2px solid var(--ink-2)' : 'none',
+                          outline: selected ? '2px solid var(--ink)' : 'none',
                           outlineOffset: 2,
                           transform: selected ? 'scale(1.1)' : undefined,
                         }}
@@ -288,72 +320,46 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                   })}
                   <button
                     onClick={() => setShowColorPicker(!showColorPicker)}
-                    className="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-transform active:scale-95 relative"
                     style={{
-                      borderColor: !colorList.includes(newCategory.color) ? 'var(--primary)' : 'var(--line)',
-                      backgroundColor: !colorList.includes(newCategory.color) ? newCategory.color : 'transparent',
-                      color: 'var(--ink-2)',
+                      borderColor: showColorPicker ? 'var(--primary)' : 'var(--line)',
+                      background: showColorPicker ? 'var(--primary-soft)' : 'transparent',
                     }}
                     aria-label="自定义颜色"
                   >
-                    <Palette size={18} />
+                    <Palette size={16} style={{ color: showColorPicker ? 'var(--primary)' : 'var(--ink-2)' }} />
                   </button>
                 </div>
 
+                {/* HSV 无极调色板 */}
                 {showColorPicker && (
-                  <div className="mt-4 p-4 rounded-button" style={{ background: 'var(--paper)' }}>
-                    <p className="text-sm mb-3" style={{ color: 'var(--ink-2)' }}>自定义颜色</p>
-                    <div className="grid grid-cols-6 gap-2 mb-3">
-                      {['#FF0000', '#FF6B00', '#FFCC00', '#00CC00', '#0066FF', '#9933FF', '#FF0099', '#00CCCC',
-                        '#FF3366', '#FF9933', '#FFFF00', '#33CC66', '#3399FF', '#CC33FF', '#FF66CC', '#66CCCC'].map((color) => (
-                        <button
-                          key={color}
-                          onClick={() => {
-                            setNewCategory((prev) => ({ ...prev, color }));
-                            setShowColorPicker(false);
-                          }}
-                          className="w-8 h-8 rounded-full transition-all hover:scale-110"
-                          style={{
-                            backgroundColor: color,
-                            outline: newCategory.color === color ? '2px solid var(--ink-2)' : 'none',
-                            outlineOffset: 2,
-                            transform: newCategory.color === color ? 'scale(1.1)' : undefined,
-                          }}
-                          aria-label={`颜色 ${color}`}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={newCategory.color}
-                        onChange={(e) => setNewCategory((prev) => ({ ...prev, color: e.target.value }))}
-                        className="w-16 h-16 rounded-lg cursor-pointer border-0 flex-shrink-0"
-                        style={{ background: 'var(--card)' }}
+                  <div className="mt-4 p-4 rounded-button animate-fade-in" style={{ background: 'var(--paper)' }}>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>无极调色板</p>
+                      <div
+                        className="w-8 h-8 rounded-full border-2 border-white shadow"
+                        style={{ backgroundColor: newCategory.color }}
                       />
-                      <input
-                        type="text"
-                        value={newCategory.color}
-                        onChange={(e) => {
-                          const color = e.target.value.toUpperCase();
-                          const cleanColor = color.replace(/[^#0-9A-F]/g, '');
-                          if (cleanColor.startsWith('#')) {
-                            if (cleanColor.length <= 7) {
-                              setNewCategory((prev) => ({ ...prev, color: cleanColor }));
-                            }
-                          } else if (cleanColor.length <= 6) {
-                            setNewCategory((prev) => ({ ...prev, color: '#' + cleanColor }));
+                    </div>
+                    {/* 主调色板（HSV 无极） */}
+                    <HsvStringColorPicker
+                      color={newCategory.color}
+                      onChange={(color) => setNewCategory((prev) => ({ ...prev, color: color.toUpperCase() }))}
+                      className="w-full h-40 rounded-lg overflow-hidden cursor-pointer"
+                    />
+                    {/* HEX 输入 */}
+                    <div className="flex items-center gap-2 mt-3">
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>HEX</span>
+                      <HexColorInput
+                        color={newCategory.color}
+                        onChange={(color) => {
+                          const clean = color.startsWith('#') ? color : '#' + color;
+                          if (/^#[0-9A-Fa-f]{0,6}$/.test(clean)) {
+                            setNewCategory((prev) => ({ ...prev, color: clean.toUpperCase() }));
                           }
                         }}
-                        onBlur={(e) => {
-                          const color = e.target.value;
-                          if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
-                            setNewCategory((prev) => ({ ...prev, color: '#EF4444' }));
-                          }
-                        }}
-                        className="input-field flex-1 uppercase"
+                        className="input-field flex-1 uppercase font-mono"
                         placeholder="#RRGGBB"
-                        maxLength={7}
                       />
                     </div>
                   </div>
