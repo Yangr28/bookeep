@@ -1,8 +1,8 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { useStore } from '../store/useStore';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
 import { PieChart, Pie, Cell, Sector, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Calendar, ChevronDown, CircleDot } from 'lucide-react';
+import { Calendar, ChevronDown, CircleDot, TrendingUp, TrendingDown, Award, Target } from 'lucide-react';
 interface StatisticsProps {
   onBack?: () => void;
   selectedDate: Date;
@@ -83,6 +83,76 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
 
   const monthBalance = monthIncome - monthExpense;
 
+  // === 月度报表数据 ===
+  const transactions = useStore((state) => state.transactions);
+  const budgets = useStore((state) => state.budgets);
+  const calculateBudgetUsage = useStore((state) => state.calculateBudgetUsage);
+  const categories = useStore((state) => state.categories);
+
+  const reportData = useMemo(() => {
+    // 上月数据（环比）
+    const prevDate = new Date(selectedYear, selectedMonth - 1, 1);
+    const prevMonth = prevDate.getMonth();
+    const prevYear = prevDate.getFullYear();
+    let prevIncome = 0;
+    let prevExpense = 0;
+    transactions.forEach((t) => {
+      const td = new Date(t.createdAt);
+      if (td.getMonth() === prevMonth && td.getFullYear() === prevYear) {
+        if (t.type === 'income') prevIncome += t.amount;
+        else prevExpense += t.amount;
+      }
+    });
+
+    // 本月交易明细
+    const monthTx = transactions.filter((t) => {
+      const td = new Date(t.createdAt);
+      return td.getMonth() === selectedMonth && td.getFullYear() === selectedYear;
+    });
+
+    // 日均支出
+    const now = new Date();
+    const isCurrentMonth = now.getMonth() === selectedMonth && now.getFullYear() === selectedYear;
+    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+    const elapsedDays = isCurrentMonth ? now.getDate() : daysInMonth;
+    const avgDailyExpense = elapsedDays > 0 ? monthExpense / elapsedDays : 0;
+
+    // 最大单笔支出
+    const maxExpense = monthTx
+      .filter((t) => t.type === 'expense')
+      .reduce((max, t) => (t.amount > max ? t.amount : max), 0);
+
+    // Top3 支出分类
+    const top3Expense = [...expenseData].sort((a, b) => b.total - a.total).slice(0, 3);
+
+    // 预算汇总
+    const currentMonthStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+    let totalBudget = 0;
+    let totalBudgetSpent = 0;
+    categories.filter(c => c.type === 'expense').forEach(c => {
+      const u = calculateBudgetUsage(c.id, currentMonthStr, transactions);
+      if (u.budget > 0) {
+        totalBudget += u.budget;
+        totalBudgetSpent += u.spent;
+      }
+    });
+    const budgetPercentage = totalBudget ? Math.min((totalBudgetSpent / totalBudget) * 100, 100) : 0;
+
+    return {
+      prevIncome, prevExpense,
+      incomeChange: prevIncome ? ((monthIncome - prevIncome) / prevIncome) * 100 : 0,
+      expenseChange: prevExpense ? ((monthExpense - prevExpense) / prevExpense) * 100 : 0,
+      avgDailyExpense, maxExpense, top3Expense,
+      totalBudget, totalBudgetSpent, budgetPercentage,
+      daysInMonth, elapsedDays,
+    };
+  }, [transactions, selectedMonth, selectedYear, monthIncome, monthExpense, expenseData, categories, budgets, calculateBudgetUsage]);
+
+  const [showReport, setShowReport] = useState(false);
+
+  const getBudgetColor = (pct: number) =>
+    pct >= 100 ? 'var(--expense)' : pct >= 80 ? 'var(--expense-ink)' : pct >= 50 ? 'var(--primary-ink)' : 'var(--primary)';
+
   return (
     <div className="page-root pb-nav">
       {/* 页头 */}
@@ -135,6 +205,136 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
               {formatCurrencyShort(monthBalance)}
             </p>
           </div>
+        </div>
+
+        {/* 月度报表（可展开/收起） */}
+        <div className="card p-4 mt-3">
+          <button
+            onClick={() => setShowReport(!showReport)}
+            className="flex items-center justify-between w-full"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-button" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+                <Target size={18} />
+              </div>
+              <span className="section-title mb-0">月度报表</span>
+            </div>
+            <ChevronDown
+              size={20}
+              className={`transition-transform ${showReport ? 'rotate-180' : ''}`}
+              style={{ color: 'var(--ink-2)' }}
+            />
+          </button>
+
+          {showReport && (
+            <div className="mt-4 space-y-3 animate-stagger-in">
+              {/* 环比变化 */}
+              {(() => {
+                const incomeColor = reportData.incomeChange >= 0 ? 'var(--primary)' : 'var(--expense)';
+                const expenseColor = reportData.expenseChange > 0 ? 'var(--expense)' : 'var(--primary)';
+                return (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <TrendingUp size={14} style={{ color: 'var(--primary)' }} />
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>收入环比</span>
+                  </div>
+                  <p className="text-lg font-bold amount-num" style={{ color: incomeColor }}>
+                    {reportData.prevIncome > 0
+                      ? `${reportData.incomeChange >= 0 ? '+' : ''}${reportData.incomeChange.toFixed(1)}%`
+                      : '新建月'}
+                  </p>
+                  <p className="text-xs mt-0.5 amount-num" style={{ color: 'var(--ink-2)' }}>
+                    上月 ¥{formatCurrencyShort(reportData.prevIncome)}
+                  </p>
+                </div>
+                <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <TrendingDown size={14} style={{ color: 'var(--expense)' }} />
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>支出环比</span>
+                  </div>
+                  <p className="text-lg font-bold amount-num" style={{ color: expenseColor }}>
+                    {reportData.prevExpense > 0
+                      ? `${reportData.expenseChange >= 0 ? '+' : ''}${reportData.expenseChange.toFixed(1)}%`
+                      : '新建月'}
+                  </p>
+                  <p className="text-xs mt-0.5 amount-num" style={{ color: 'var(--ink-2)' }}>
+                    上月 ¥{formatCurrencyShort(reportData.prevExpense)}
+                  </p>
+                </div>
+              </div>
+                );
+              })()}
+
+              {/* 日均支出 + 最大单笔 */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
+                  <p className="text-xs" style={{ color: 'var(--ink-2)' }}>日均支出</p>
+                  <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--ink)' }}>
+                    ¥{formatCurrencyShort(reportData.avgDailyExpense)}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                    {reportData.elapsedDays}/{reportData.daysInMonth}天
+                  </p>
+                </div>
+                <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
+                  <p className="text-xs" style={{ color: 'var(--ink-2)' }}>最大单笔</p>
+                  <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
+                    ¥{formatCurrencyShort(reportData.maxExpense)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Top3 支出分类 */}
+              {reportData.top3Expense.length > 0 && (
+                <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Award size={14} style={{ color: 'var(--expense)' }} />
+                    <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>支出 Top3</span>
+                  </div>
+                  <div className="space-y-2">
+                    {reportData.top3Expense.map((item, idx) => (
+                      <div key={item.category.id} className="flex items-center gap-2">
+                        <span className="text-xs font-bold w-4" style={{ color: 'var(--ink-2)' }}>{idx + 1}</span>
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.category.color }} />
+                        <span className="text-sm flex-1 truncate" style={{ color: 'var(--ink)' }}>{item.category.name}</span>
+                        <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink)' }}>
+                          ¥{formatCurrencyShort(item.total)}
+                        </span>
+                        <span className="text-xs amount-num w-12 text-right" style={{ color: 'var(--ink-2)' }}>
+                          {monthExpense > 0 ? `${((item.total / monthExpense) * 100).toFixed(0)}%` : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 预算执行进度 */}
+              {reportData.totalBudget > 0 && (
+                <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>预算执行</span>
+                    <span className="text-xs amount-num" style={{ color: 'var(--ink-2)' }}>
+                      ¥{formatCurrencyShort(reportData.totalBudgetSpent)} / ¥{formatCurrencyShort(reportData.totalBudget)}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
+                    <div
+                      className="h-full transition-all duration-500"
+                      style={{ width: `${reportData.budgetPercentage}%`, background: getBudgetColor(reportData.budgetPercentage) }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>已用 {reportData.budgetPercentage.toFixed(0)}%</span>
+                    <span className="text-xs font-medium" style={{ color: getBudgetColor(reportData.budgetPercentage) }}>
+                      {reportData.budgetPercentage >= 100 ? '已超支' : reportData.budgetPercentage >= 80 ? '接近上限' : '正常'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 支出分布 */}

@@ -4,7 +4,7 @@ import { StatCard } from '../components/StatCard';
 import { TransactionCard } from '../components/TransactionCard';
 import { formatCurrencyShort } from '../utils/format';
 import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon } from 'lucide-react';
+import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle } from 'lucide-react';
 import Empty from '../components/Empty';
 import { TransactionType, Transaction } from '../types';
 
@@ -116,6 +116,8 @@ const DashboardComponent = ({
   const getTotalAssets = useStore((state) => state.getTotalAssets);
   const categories = useStore((state) => state.categories);
   const accounts = useStore((state) => state.accounts);
+  const budgets = useStore((state) => state.budgets);
+  const calculateBudgetUsage = useStore((state) => state.calculateBudgetUsage);
 
   // 计算函数缓存：仅 transactions/accounts 变化时重算
   const todayIncome = useMemo(() => getTodayIncome(), [getTodayIncome, transactions]);
@@ -125,6 +127,28 @@ const DashboardComponent = ({
   const totalIncome = useMemo(() => getTotalIncome(), [getTotalIncome, transactions]);
   const totalExpense = useMemo(() => getTotalExpense(), [getTotalExpense, transactions]);
   const totalAssets = useMemo(() => getTotalAssets(), [getTotalAssets, accounts, transactions]);
+
+  // 当月预算汇总（总预算/已用/超支项数），仅 budgets 或 transactions 变化时重算
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const budgetSummary = useMemo(() => {
+    const expenseCategoryIds = categories.filter(c => c.type === 'expense').map(c => c.id);
+    let totalBudget = 0;
+    let totalSpent = 0;
+    let overCount = 0;
+    for (const cid of expenseCategoryIds) {
+      const u = calculateBudgetUsage(cid, currentMonth, transactions);
+      if (u.budget > 0) {
+        totalBudget += u.budget;
+        totalSpent += u.spent;
+        if (u.spent >= u.budget) overCount++;
+      }
+    }
+    const percentage = totalBudget ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
+    return { totalBudget, totalSpent, percentage, overCount };
+  }, [categories, budgets, transactions, calculateBudgetUsage, currentMonth]);
+
+  const getBudgetColor = (pct: number) =>
+    pct >= 100 ? 'var(--expense)' : pct >= 80 ? 'var(--expense-ink)' : pct >= 50 ? 'var(--primary-ink)' : 'var(--primary)';
 
   const [smartInput, setSmartInput] = useState('');
   const smartInputRef = useRef<HTMLInputElement>(null);
@@ -321,6 +345,41 @@ const DashboardComponent = ({
             </div>
           </div>
         </button>
+        {/* 预算进度小条：仅当本月有设置预算时显示 */}
+        {budgetSummary.totalBudget > 0 && (
+          <button
+            onClick={() => onGoToBudgets?.()}
+            className="card card-hover w-full p-4 mt-2 text-left block animate-stagger-in"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>本月预算</span>
+              {budgetSummary.overCount > 0 ? (
+                <span className="text-xs flex items-center gap-1 font-semibold" style={{ color: 'var(--expense)' }}>
+                  <AlertCircle size={12} />
+                  {budgetSummary.overCount} 项超支
+                </span>
+              ) : (
+                <span className="text-xs amount-num" style={{ color: 'var(--ink-2)' }}>
+                  {formatCurrencyShort(budgetSummary.totalSpent)} / {formatCurrencyShort(budgetSummary.totalBudget)}
+                </span>
+              )}
+            </div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
+              <div
+                className="h-full transition-all duration-500"
+                style={{ width: `${budgetSummary.percentage}%`, background: getBudgetColor(budgetSummary.percentage) }}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-1.5">
+              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>
+                已用 {budgetSummary.percentage.toFixed(0)}%
+              </span>
+              <span className="text-xs font-medium" style={{ color: getBudgetColor(budgetSummary.percentage) }}>
+                {budgetSummary.percentage >= 100 ? '已超支' : budgetSummary.percentage >= 80 ? '接近上限' : '正常'}
+              </span>
+            </div>
+          </button>
+        )}
       </div>
 
       {/* 记账区域（快捷入口，完整记账在独立页面） */}
