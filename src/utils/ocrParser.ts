@@ -2,6 +2,8 @@ import { Category, TransactionType } from '../types';
 import { Capacitor } from '@capacitor/core';
 import { getOCREndpoints, isOCRReady, downloadOCRData, type OCRCacheStatus } from './ocrCache';
 import AppUpdate from '../plugins/appUpdate';
+import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from './smartParser';
+import type { Account } from '../types';
 
 export interface OCRParseResult {
   amount: string;
@@ -131,20 +133,8 @@ export const parseOCRText = (text: string): OCRParseResult => {
 };
 
 export const findCategoryByIdentifierOCR = (categories: Category[], type: TransactionType, note: string): string | null => {
-  const filteredCategories = categories.filter(c => c.type === type);
-  
-  for (const [categoryId, keywords] of Object.entries(categoryKeywords)) {
-    for (const keyword of keywords) {
-      if (note.includes(keyword)) {
-        const category = filteredCategories.find(c => c.id === categoryId);
-        if (category) {
-          return category.id;
-        }
-      }
-    }
-  }
-
-  return null;
+  // 复用 smartParser 的统一分类识别（通用关键词 + 用户分类名 + 别名 + 模糊匹配）
+  return findCategoryByIdentifier(categories, type, note);
 };
 
 export const processOCRResult = (result: OCRParseResult, categories: Category[]): ParsedTransaction => {

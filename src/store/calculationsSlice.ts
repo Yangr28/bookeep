@@ -229,7 +229,8 @@ export const createCalculationsSlice: StateCreator<
 
     return Object.entries(grouped)
       .map(([categoryId, total]) => ({
-        category: get().getCategoryById(categoryId)!,
+        // 分类可能已删除或 categoryId 为空，兜底为「未分类」灰色切片，避免下游访问 .name/.color 崩溃白屏
+        category: get().getCategoryById(categoryId) ?? { id: categoryId || 'uncategorized', name: '未分类', type, icon: 'HelpCircle', color: '#9ca3af' },
         total,
       }))
       .sort((a, b) => b.total - a.total);

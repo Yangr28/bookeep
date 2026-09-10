@@ -3,8 +3,8 @@ import { useStore } from '../store/useStore';
 import { StatCard } from '../components/StatCard';
 import { TransactionCard } from '../components/TransactionCard';
 import { formatCurrencyShort } from '../utils/format';
-import { parseSmartInputWithHistory, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe } from 'lucide-react';
+import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
+import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon } from 'lucide-react';
 import Empty from '../components/Empty';
 import { TransactionType, Transaction } from '../types';
 
@@ -47,6 +47,15 @@ interface DashboardProps {
   onQuickRecordAccountChange: (accountId: string | null) => void;
   onQuickRecordCurrencyChange: (currency: string) => void;
   onQuickRecordSubmit: () => void;
+  onSmartQuickSave: (parsed: {
+    type: TransactionType;
+    amount: string;
+    categoryId: string;
+    accountId: string;
+    note: string;
+    currency?: string;
+    dateTime?: Date;
+  }) => void;
   onShowDatePicker: () => void;
   onShowTimePicker: () => void;
   widgetQuickInput?: string;
@@ -90,6 +99,7 @@ const DashboardComponent = ({
   onQuickRecordAccountChange,
   onQuickRecordCurrencyChange,
   onQuickRecordSubmit,
+  onSmartQuickSave,
   onShowDatePicker,
   onShowTimePicker,
   widgetQuickInput,
@@ -118,6 +128,43 @@ const DashboardComponent = ({
 
   const [smartInput, setSmartInput] = useState('');
   const smartInputRef = useRef<HTMLInputElement>(null);
+
+  // 实时解析预览（轻量 parseSmartInput + 账户/分类反查，不走历史匹配避免输入卡顿）
+  const [preview, setPreview] = useState<null | {
+    amount: string;
+    type: TransactionType;
+    categoryId: string | null;
+    categoryName: string | null;
+    accountId: string | null;
+    accountName: string | null;
+    note: string;
+    currency: string;
+  }>(null);
+
+  useEffect(() => {
+    const text = smartInput.trim();
+    if (!text) { setPreview(null); return; }
+    const timer = setTimeout(() => {
+      const r = parseSmartInput(text, accounts, categories);
+      let categoryId: string | null = null;
+      let accountId: string | null = null;
+      if (r.categoryKeyword) categoryId = findCategoryByIdentifier(categories, r.type, r.categoryKeyword);
+      if (r.accountKeyword) accountId = findAccountByKeyword(accounts, r.accountKeyword);
+      const category = categoryId ? categories.find(c => c.id === categoryId) : null;
+      const account = accountId ? accounts.find(a => a.id === accountId) : null;
+      setPreview({
+        amount: r.amount,
+        type: r.type,
+        categoryId,
+        categoryName: category?.name ?? null,
+        accountId,
+        accountName: account?.name ?? null,
+        note: r.note,
+        currency: r.currency,
+      });
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [smartInput, accounts, categories]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -167,7 +214,23 @@ const DashboardComponent = ({
       }
     }
 
-    // 跳转到记账页并预填解析结果
+    // ★ 快速识别：金额、分类、账户三者齐全且用户提供了金额，直接在首页保存，不跳页
+    if (result.amount && autoCategoryId && autoAccountId) {
+      onSmartQuickSave({
+        type: result.type,
+        amount: result.amount,
+        categoryId: autoCategoryId,
+        accountId: autoAccountId,
+        note: result.note,
+        currency: result.currency || undefined,
+        dateTime: parsedDateTime,
+      });
+      setSmartInput('');
+      setPreview(null);
+      return;
+    }
+
+    // 任一关键字段未识别：跳转到记账页并预填已解析结果，继续编辑
     onGoToRecord?.({
       type: result.type,
       amount: result.amount,
@@ -178,7 +241,8 @@ const DashboardComponent = ({
     });
 
     setSmartInput('');
-  }, [smartInput, categories, transactions, accounts, onGoToRecord, onFabRecord]);
+    setPreview(null);
+  }, [smartInput, categories, transactions, accounts, onGoToRecord, onFabRecord, onSmartQuickSave]);
 
   // 处理来自桌面小组件的快速输入
   useEffect(() => {
@@ -290,6 +354,91 @@ const DashboardComponent = ({
               <Plus size={16} />
             </button>
           </div>
+
+          {/* 智能解析预览：输入时实时显示识别到的金额/分类/账户，可直接保存 */}
+          {preview && (preview.amount || preview.categoryName || preview.accountName) && (
+            <div
+              className="rounded-button px-3 py-2.5 mb-3 animate-stagger-in"
+              style={{ background: 'var(--paper-deep)', border: '1px solid var(--line)' }}
+            >
+              <div className="flex items-center gap-2 flex-wrap text-xs">
+                {/* 金额 + 类型 */}
+                <span
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold"
+                  style={{
+                    background: preview.type === 'income' ? 'var(--primary-soft)' : 'var(--expense-soft)',
+                    color: preview.type === 'income' ? 'var(--primary)' : 'var(--expense)',
+                  }}
+                >
+                  {preview.type === 'income' ? '收入' : '支出'}
+                  {preview.amount && (
+                    <span className="amount-num">¥{preview.amount}</span>
+                  )}
+                  {preview.currency && preview.currency !== 'CNY' && (
+                    <span className="opacity-70">{preview.currency}</span>
+                  )}
+                </span>
+                {/* 分类 */}
+                {preview.categoryName ? (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
+                    style={{ background: 'var(--card)', color: 'var(--ink)' }}
+                  >
+                    <Tag size={11} style={{ color: 'var(--ink-2)' }} />
+                    {preview.categoryName}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full opacity-60" style={{ color: 'var(--ink-2)' }}>
+                    <Tag size={11} /> 分类未识别
+                  </span>
+                )}
+                {/* 账户 */}
+                {preview.accountName ? (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
+                    style={{ background: 'var(--card)', color: 'var(--ink)' }}
+                  >
+                    <CreditCardIcon size={11} style={{ color: 'var(--ink-2)' }} />
+                    {preview.accountName}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full opacity-60" style={{ color: 'var(--ink-2)' }}>
+                    <CreditCardIcon size={11} /> 账户未识别
+                  </span>
+                )}
+                {/* 备注 */}
+                {preview.note && (
+                  <span className="px-2 py-0.5 rounded-full truncate max-w-[10rem]" style={{ color: 'var(--ink-2)' }}>
+                    {preview.note}
+                  </span>
+                )}
+              </div>
+              {/* 操作按钮 */}
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => handleSmartSubmit()}
+                  disabled={!(preview.amount && preview.categoryId && preview.accountId)}
+                  className="flex-1 py-1.5 rounded-button text-xs font-semibold transition-all flex items-center justify-center gap-1"
+                  style={
+                    preview.amount && preview.categoryId && preview.accountId
+                      ? { background: 'var(--primary)', color: '#fff' }
+                      : { background: 'var(--paper)', color: 'var(--ink-2)' }
+                  }
+                >
+                  <Check size={13} />
+                  {preview.amount && preview.categoryId && preview.accountId ? '保存' : '信息不全'}
+                </button>
+                <button
+                  onClick={() => handleSmartSubmit()}
+                  className="flex-1 py-1.5 rounded-button text-xs font-medium transition-all flex items-center justify-center gap-1"
+                  style={{ background: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--line)' }}
+                >
+                  <Pencil size={13} />
+                  编辑
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* 操作行：拍票 + 记一笔 */}
           <div className="flex gap-2">

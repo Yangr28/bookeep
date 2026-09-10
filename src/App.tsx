@@ -446,6 +446,41 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 2000);
   }, [quickRecordAmount, quickRecordCategoryId, quickRecordAccountId, quickRecordType, quickRecordNote, quickRecordDateTime, quickRecordCurrency, addTransaction, setToastMessage]);
 
+  // 首页智能输入「快速保存」：绕过 quickRecord state，直接用解析结果完成记账
+  const handleSmartQuickSave = useCallback((parsed: {
+    type: TransactionType;
+    amount: string;
+    categoryId: string;
+    accountId: string;
+    note: string;
+    currency?: string;
+    dateTime?: Date;
+  }) => {
+    if (!parsed.amount || !parsed.categoryId || !parsed.accountId) return;
+    const originalAmount = parseFloat(parsed.amount);
+    const currency = parsed.currency || 'CNY';
+    const rate = getRate(currency);
+    const cnyAmount = currency === 'CNY' ? originalAmount : convertToCNY(originalAmount, currency);
+    const createdAt = (parsed.dateTime || new Date()).toISOString();
+
+    addTransaction({
+      type: parsed.type,
+      amount: cnyAmount,
+      categoryId: parsed.categoryId,
+      accountId: parsed.accountId,
+      note: parsed.note,
+      createdAt,
+      ...(currency !== 'CNY' && {
+        currency,
+        originalAmount,
+        exchangeRate: rate,
+      }),
+    });
+    window.scrollTo(0, 0);
+    setToastMessage('记账成功');
+    setTimeout(() => setToastMessage(null), 2000);
+  }, [addTransaction, setToastMessage]);
+
   const handleQuickRecordDateChange = useCallback((date: Date) => {
     const time = quickRecordDateTime;
     setQuickRecordDateTime(new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes()));
@@ -491,6 +526,7 @@ export default function App() {
             onQuickRecordAccountChange={setQuickRecordAccountId}
             onQuickRecordCurrencyChange={setQuickRecordCurrency}
             onQuickRecordSubmit={handleQuickRecordSubmit}
+            onSmartQuickSave={handleSmartQuickSave}
             onShowDatePicker={() => setShowQuickRecordDatePicker(true)}
             onShowTimePicker={() => setShowQuickRecordTimePicker(true)}
             widgetQuickInput={widgetQuickInput}

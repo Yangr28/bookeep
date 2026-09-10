@@ -238,7 +238,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
             <BarChart data={monthlyChartData} barSize={24}>
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: CHART_COLORS.axis }} tickLine={false} axisLine={{ stroke: 'var(--line)' }} />
               <YAxis tick={{ fontSize: 10, fill: CHART_COLORS.axis }} tickLine={false} axisLine={false} />
-              <Bar dataKey="income" name="收入" fill={CHART_COLORS.income} radius={[6, 6, 0, 0]}>
+              <Bar dataKey="income" name="收入" fill={CHART_COLORS.income} radius={[6, 6, 0, 0]} isAnimationActive={true} animationDuration={700} animationEasing="ease-out">
                 {monthlyChartData.map((_, index) => (
                   <Cell
                     key={`income-${index}`}
@@ -249,7 +249,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                   />
                 ))}
               </Bar>
-              <Bar dataKey="expense" name="支出" fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]}>
+              <Bar dataKey="expense" name="支出" fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]} isAnimationActive={true} animationDuration={700} animationEasing="ease-out">
                 {monthlyChartData.map((_, index) => (
                   <Cell
                     key={`expense-${index}`}
