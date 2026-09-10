@@ -215,18 +215,18 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                       ? `${reportData.incomeChange >= 0 ? '+' : ''}${reportData.incomeChange.toFixed(1)}%`
                       : '新建月'}
                   </p>
-                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2" style={{ borderTop: '1px solid var(--line)' }}>
-                    <div>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</p>
-                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink)' }}>
+                  <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--line)' }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</span>
+                      <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink)' }}>
                         {formatCurrencyShort(monthIncome)}
-                      </p>
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</p>
-                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</span>
+                      <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink-2)' }}>
                         {formatCurrencyShort(reportData.prevIncome)}
-                      </p>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -240,18 +240,18 @@ const ProfileComponent = ({ onGoToSettings, selectedDate }: ProfileProps) => {
                       ? `${reportData.expenseChange >= 0 ? '+' : ''}${reportData.expenseChange.toFixed(1)}%`
                       : '新建月'}
                   </p>
-                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2" style={{ borderTop: '1px solid var(--line)' }}>
-                    <div>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</p>
-                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink)' }}>
+                  <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--line)' }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</span>
+                      <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink)' }}>
                         {formatCurrencyShort(monthExpense)}
-                      </p>
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</p>
-                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</span>
+                      <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink-2)' }}>
                         {formatCurrencyShort(reportData.prevExpense)}
-                      </p>
+                      </span>
                     </div>
                   </div>
                 </div>

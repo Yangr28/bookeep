@@ -244,19 +244,19 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                       ? `${reportData.incomeChange >= 0 ? '+' : ''}${reportData.incomeChange.toFixed(1)}%`
                       : '新建月'}
                   </p>
-                  {/* 本月/上月下方左右对齐进行对比 */}
-                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t" style={{ borderColor: 'var(--line)' }}>
-                    <div>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</p>
-                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink)' }}>
+                  {/* 本月/上月上下排列对齐对比，避免长金额左右重叠 */}
+                  <div className="mt-2 pt-2" style={{ borderColor: 'var(--line)', borderTopWidth: '1px', borderTopStyle: 'solid' }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</span>
+                      <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink)' }}>
                         {formatCurrencyShort(monthIncome)}
-                      </p>
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</p>
-                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</span>
+                      <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink-2)' }}>
                         {formatCurrencyShort(reportData.prevIncome)}
-                      </p>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -270,18 +270,18 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                       ? `${reportData.expenseChange >= 0 ? '+' : ''}${reportData.expenseChange.toFixed(1)}%`
                       : '新建月'}
                   </p>
-                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t" style={{ borderColor: 'var(--line)' }}>
-                    <div>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</p>
-                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink)' }}>
+                  <div className="mt-2 pt-2" style={{ borderColor: 'var(--line)', borderTopWidth: '1px', borderTopStyle: 'solid' }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</span>
+                      <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink)' }}>
                         {formatCurrencyShort(monthExpense)}
-                      </p>
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</p>
-                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</span>
+                      <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink-2)' }}>
                         {formatCurrencyShort(reportData.prevExpense)}
-                      </p>
+                      </span>
                     </div>
                   </div>
                 </div>
