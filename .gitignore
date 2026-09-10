@@ -18,6 +18,10 @@ release-assets
 # APK 安装包不进仓库（发布走 GitHub Releases）
 *.apk
 build-outputs
+# APK 解包临时目录（仅本地排查用，勿提交）
+apk_temp/
+# 旧源码备份（git 历史已存档，勿重复提交）
+src_backup_*/
 
 # Editor directories and files
 .vscode/*
