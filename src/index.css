@@ -315,6 +315,25 @@ body {
 /* 页面切换过渡 */
 .page-enter { animation: fade-in 0.2s ease-out; }
 
+/* === react-colorful 无极调色板（分类管理弹窗） === */
+/* 容器：全宽 + 固定高度，不用 overflow-hidden 以免裁掉圆形拖动手柄 */
+.color-picker {
+  width: 100%;
+  height: 170px;
+}
+.color-picker .react-colorful__saturation {
+  border-radius: 12px;
+}
+.color-picker .react-colorful__hue {
+  height: 14px;
+  border-radius: 7px;
+}
+/* 拖动手柄放大，便于触摸 */
+.color-picker .react-colorful__pointer {
+  width: 18px;
+  height: 18px;
+}
+
 /* === 交互 === */
 button {
   touch-action: manipulation;

@@ -2,8 +2,42 @@ import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { TransactionType, Category } from '../types';
 import { Plus, X, Palette } from 'lucide-react';
-import { HsvStringColorPicker, HexColorInput } from 'react-colorful';
+import { HsvColorPicker, HexColorInput } from 'react-colorful';
 import { getIcon, CATEGORY_ICONS } from '../utils/iconMap';
+
+// react-colorful v5.8 未导出 hsvToHex/hexToHsv，本地实现（s/v 均为 0-100）
+const hsvToHex = ({ h, s, v }: { h: number; s: number; v: number }): string => {
+  const sN = s / 100, vN = v / 100;
+  const c = vN * sN;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = vN - c;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; }
+  else if (h < 120) { r = x; g = c; }
+  else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; }
+  else if (h < 300) { r = x; b = c; }
+  else { r = c; b = x; }
+  const toHex = (n: number) => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+};
+
+const hexToHsv = (hex: string): { h: number; s: number; v: number } => {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return { h, s: max === 0 ? 0 : (d / max) * 100, v: max * 100 };
+};
 
 interface CategoriesProps {
   onViewCategoryDetail: (categoryId: string) => void;
@@ -337,15 +371,15 @@ export const Categories = ({ onViewCategoryDetail }: CategoriesProps) => {
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>无极调色板</p>
                       <div
-                        className="w-8 h-8 rounded-full border-2 border-white shadow"
-                        style={{ backgroundColor: newCategory.color }}
+                        className="w-8 h-8 rounded-full border-2 shadow"
+                        style={{ backgroundColor: newCategory.color, borderColor: 'var(--card)' }}
                       />
                     </div>
-                    {/* 主调色板（HSV 无极） */}
-                    <HsvStringColorPicker
-                      color={newCategory.color}
-                      onChange={(color) => setNewCategory((prev) => ({ ...prev, color: color.toUpperCase() }))}
-                      className="w-full h-40 rounded-lg overflow-hidden cursor-pointer"
+                    {/* 主调色板（HSV 无极）：color 用 {h,s,v} 对象，onChange 转回 HEX 存储，保证实时预览 */}
+                    <HsvColorPicker
+                      color={/^#[0-9A-Fa-f]{6}$/.test(newCategory.color) ? hexToHsv(newCategory.color) : { h: 0, s: 80, v: 90 }}
+                      onChange={(hsv) => setNewCategory((prev) => ({ ...prev, color: hsvToHex(hsv).toUpperCase() }))}
+                      className="color-picker"
                     />
                     {/* HEX 输入 */}
                     <div className="flex items-center gap-2 mt-3">
