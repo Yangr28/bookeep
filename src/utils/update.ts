@@ -239,6 +239,28 @@ export async function resolveRollbackTarget(targetVersion: string): Promise<{ ur
 const LAST_CHECK_KEY = 'bookeep_update_last_check';
 const AUTO_CHECK_INTERVAL = 5 * 60 * 1000;
 
+/**
+ * GitHub 下载加速镜像（国内直连 github.com/releases/download 会跳转 objects.githubusercontent.com，
+ * 速度慢且经常断连）。镜像地址 = 前缀 + 完整 GitHub 文件 URL。
+ * 列表可随热更新调整；全部失败后自动降级到 GitHub 直链。
+ */
+const GITHUB_MIRROR_PREFIXES = [
+  'https://ghproxy.net/',
+  'https://gh-proxy.com/',
+  'https://ghfast.top/',
+  'https://gh.llkk.cc/',
+];
+
+/**
+ * 生成下载候选地址：加速镜像在前，GitHub 直链兜底。
+ * 原生下载器依次尝试，镜像快速失败切换（见 AppUpdatePlugin.downloadFile）。
+ */
+export function getDownloadCandidates(directUrl: string): string[] {
+  const candidates = GITHUB_MIRROR_PREFIXES.map((prefix) => prefix + directUrl);
+  candidates.push(directUrl);
+  return candidates;
+}
+
 export function shouldAutoCheck(): boolean {
   try {
     const last = Number(localStorage.getItem(LAST_CHECK_KEY) || '0');

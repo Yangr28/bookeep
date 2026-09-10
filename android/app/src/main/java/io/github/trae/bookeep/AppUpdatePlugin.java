@@ -173,9 +173,9 @@ public class AppUpdatePlugin extends Plugin {
      */
     @PluginMethod
     public void downloadHotUpdate(PluginCall call) {
-        String url = call.getString("url");
         String version = call.getString("version");
-        if (url == null || version == null) {
+        java.util.List<String> urls = resolveUrlCandidates(call);
+        if (urls.isEmpty() || version == null) {
             call.reject("url and version required");
             return;
         }
@@ -183,7 +183,7 @@ public class AppUpdatePlugin extends Plugin {
         new Thread(() -> {
             File zip = new File(downloadsDir(), "dist_" + version + ".zip");
             try {
-                downloadFile(url, zip, "hot");
+                downloadFile(urls, zip, "hot");
                 File target = hotVersionDir(version);
                 if (target.exists()) deleteRecursively(target);
                 target.mkdirs();
@@ -240,9 +240,9 @@ public class AppUpdatePlugin extends Plugin {
      */
     @PluginMethod
     public void downloadApk(PluginCall call) {
-        String url = call.getString("url");
         String version = call.getString("version");
-        if (url == null || version == null) {
+        java.util.List<String> urls = resolveUrlCandidates(call);
+        if (urls.isEmpty() || version == null) {
             call.reject("url and version required");
             return;
         }
@@ -250,7 +250,7 @@ public class AppUpdatePlugin extends Plugin {
         new Thread(() -> {
             File apk = new File(downloadsDir(), "bookeep_v" + version + ".apk");
             try {
-                downloadFile(url, apk, "apk");
+                downloadFile(urls, apk, "apk");
                 prefs().edit().putString(KEY_LAST_APK, apk.getAbsolutePath()).apply();
                 JSObject ret = new JSObject();
                 ret.put("path", apk.getAbsolutePath());
@@ -323,66 +323,152 @@ public class AppUpdatePlugin extends Plugin {
         }
     }
 
+    /**
+     * 从 APK 内置 assets(public/ocr/) 复制 OCR 识别资源到 filesDir/ocr_cache/。
+     * Java 可直接访问 AssetManager，不受 WebView setServerBasePath 切换影响，
+     * 因此热更新包无需携带 OCR 资源（热更新包体积从 ~27MB 降到 ~2MB）。
+     * 返回 { ready: true/false }：旧基座 APK（assets 中无 ocr 目录）返回 false，JS 降级 CDN。
+     */
+    @PluginMethod
+    public void prepareOcrAssets(PluginCall call) {
+        new Thread(() -> {
+            boolean ready = false;
+            try {
+                ready = copyOcrAssetsFromApk();
+            } catch (Exception e) {
+                Log.w(TAG, "prepareOcrAssets failed: " + e.getMessage());
+            }
+            JSObject ret = new JSObject();
+            ret.put("ready", ready);
+            call.resolve(ret);
+        }).start();
+    }
+
+    private boolean copyOcrAssetsFromApk() throws Exception {
+        File cacheDir = new File(getContext().getFilesDir(), "ocr_cache");
+        File coreDir = new File(cacheDir, "core");
+        coreDir.mkdirs();
+
+        String[] files = getContext().getAssets().list("public/ocr");
+        if (files == null || files.length == 0) {
+            Log.i(TAG, "APK assets 中无 public/ocr 目录（旧基座），OCR 资源走 CDN");
+            return false;
+        }
+        for (String name : files) {
+            // tesseract-core* 文件放 core/ 子目录，其余放 ocr_cache/ 根（与 ocrCache.ts 结构一致）
+            boolean isCore = name.startsWith("tesseract-core");
+            File dest = new File(isCore ? coreDir : cacheDir, name);
+            if (dest.exists() && dest.length() > 0) continue;
+            try (InputStream in = getContext().getAssets().open("public/ocr/" + name);
+                 FileOutputStream out = new FileOutputStream(dest)) {
+                byte[] buf = new byte[65536];
+                int n;
+                while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+            }
+            Log.i(TAG, "已复制 OCR 内置资源: " + name);
+        }
+        boolean ok = new File(cacheDir, "worker.min.js").exists()
+                && new File(cacheDir, "chi_sim.traineddata.gz").exists()
+                && coreDir.list() != null && coreDir.list().length > 0;
+        Log.i(TAG, "prepareOcrAssets ready=" + ok);
+        return ok;
+    }
+
     // ---------- helpers ----------
 
-    private void downloadFile(String urlStr, File target, String kind) throws Exception {
-        Exception lastError = null;
-        // 国内访问 GitHub 不稳定，最多重试 5 次，间隔递增（1.5s/3s/4.5s/6s）
-        for (int attempt = 0; attempt < 5; attempt++) {
-            if (attempt > 0) {
-                try {
-                    Thread.sleep(1500L * attempt);
-                } catch (InterruptedException ignored) {
-                    Thread.currentThread().interrupt();
+    /** 解析下载地址候选列表：优先 urls（JS 传入的镜像加速列表），url 兜底并去重 */
+    private java.util.List<String> resolveUrlCandidates(PluginCall call) {
+        java.util.List<String> urls = new java.util.ArrayList<>();
+        try {
+            org.json.JSONArray arr = call.getArray("urls");
+            if (arr != null) {
+                for (int i = 0; i < arr.length(); i++) {
+                    String u = arr.optString(i, null);
+                    if (u != null && !u.isEmpty() && !urls.contains(u)) urls.add(u);
                 }
             }
-            HttpURLConnection conn = null;
-            InputStream input = null;
-            OutputStream output = null;
-            try {
-                URL url = new URL(urlStr);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setInstanceFollowRedirects(true);
-                conn.setConnectTimeout(45000);
-                conn.setReadTimeout(180000);
-                // 模拟浏览器 User-Agent，避免 GitHub 拒绝默认 Java UA
-                conn.setRequestProperty("User-Agent",
-                        "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36");
-                conn.setRequestProperty("Accept-Encoding", "identity");
-                conn.connect();
-                int code = conn.getResponseCode();
-                if (code != HttpURLConnection.HTTP_OK) {
-                    throw new Exception("HTTP " + code);
-                }
-                input = conn.getInputStream();
-                output = new FileOutputStream(target);
-                long total = conn.getContentLengthLong();
-                long read = 0;
-                long lastNotify = 0;
-                byte[] buffer = new byte[8192];
-                int n;
-                while ((n = input.read(buffer)) != -1) {
-                    output.write(buffer, 0, n);
-                    read += n;
-                    long now = System.currentTimeMillis();
-                    if (now - lastNotify > 200) {
-                        lastNotify = now;
-                        notifyProgress(kind, read, total);
+        } catch (Exception ignored) {
+        }
+        String single = call.getString("url");
+        if (single != null && !single.isEmpty() && !urls.contains(single)) urls.add(single);
+        return urls;
+    }
+
+    /**
+     * 多源下载：依次尝试每个候选地址（国内 GitHub 加速镜像优先，直链兜底）。
+     * 镜像快速失败（连接超时 20s，每个源最多 2 次）；最后一个源（通常是直链）多试 4 次。
+     */
+    private void downloadFile(java.util.List<String> candidates, File target, String kind) throws Exception {
+        Exception lastError = null;
+        for (int ui = 0; ui < candidates.size(); ui++) {
+            String urlStr = candidates.get(ui);
+            boolean isLast = ui == candidates.size() - 1;
+            int attempts = isLast ? 4 : 2;
+            for (int attempt = 0; attempt < attempts; attempt++) {
+                if (ui > 0 || attempt > 0) {
+                    try {
+                        Thread.sleep(isLast ? 1500L * (attempt + 1) : 800L);
+                    } catch (InterruptedException ignored) {
+                        Thread.currentThread().interrupt();
                     }
                 }
-                output.flush();
-                notifyProgress(kind, read, total > 0 ? total : read);
-                return;
-            } catch (Exception e) {
-                lastError = e;
-                Log.w(TAG, "download attempt " + (attempt + 1) + " failed: " + e.getMessage());
-            } finally {
-                if (output != null) try { output.close(); } catch (Exception ignored) {}
-                if (input != null) try { input.close(); } catch (Exception ignored) {}
-                if (conn != null) conn.disconnect();
+                try {
+                    downloadOne(urlStr, target, kind, isLast);
+                    Log.i(TAG, "download success from: " + urlStr);
+                    return;
+                } catch (Exception e) {
+                    lastError = e;
+                    Log.w(TAG, "download failed [源 " + (ui + 1) + "/" + candidates.size()
+                            + " 第 " + (attempt + 1) + " 次] " + urlStr + " -> " + e.getMessage());
+                }
             }
         }
         throw lastError != null ? lastError : new Exception("下载失败");
+    }
+
+    private void downloadOne(String urlStr, File target, String kind, boolean isDirectSource) throws Exception {
+        HttpURLConnection conn = null;
+        InputStream input = null;
+        OutputStream output = null;
+        try {
+            URL url = new URL(urlStr);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setInstanceFollowRedirects(true);
+            // 镜像源快速失败切换；直链给更宽松的超时
+            conn.setConnectTimeout(isDirectSource ? 45000 : 20000);
+            conn.setReadTimeout(180000);
+            // 模拟浏览器 User-Agent，避免 GitHub / 镜像拒绝默认 Java UA
+            conn.setRequestProperty("User-Agent",
+                    "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36");
+            conn.setRequestProperty("Accept-Encoding", "identity");
+            conn.connect();
+            int code = conn.getResponseCode();
+            if (code != HttpURLConnection.HTTP_OK) {
+                throw new Exception("HTTP " + code);
+            }
+            input = conn.getInputStream();
+            output = new FileOutputStream(target);
+            long total = conn.getContentLengthLong();
+            long read = 0;
+            long lastNotify = 0;
+            byte[] buffer = new byte[8192];
+            int n;
+            while ((n = input.read(buffer)) != -1) {
+                output.write(buffer, 0, n);
+                read += n;
+                long now = System.currentTimeMillis();
+                if (now - lastNotify > 200) {
+                    lastNotify = now;
+                    notifyProgress(kind, read, total);
+                }
+            }
+            output.flush();
+            notifyProgress(kind, read, total > 0 ? total : read);
+        } finally {
+            if (output != null) try { output.close(); } catch (Exception ignored) {}
+            if (input != null) try { input.close(); } catch (Exception ignored) {}
+            if (conn != null) conn.disconnect();
+        }
     }
 
     private void notifyProgress(String kind, long loaded, long total) {

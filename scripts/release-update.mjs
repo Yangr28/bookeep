@@ -51,17 +51,21 @@ if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 
 // 3. 打包 zip（zip 内为 dist 内容，index.html 在根）
+// 注意：排除 ocr/ 目录（~25MB OCR 识别资源）。OCR 资源只随 APK 内置分发，
+// 运行时由原生 AppUpdatePlugin.prepareOcrAssets 从 APK assets 复制到 filesDir，
+// 热更新包因此保持在 ~2MB，下载快且不易失败。
 const zipName = `dist_v${version}.zip`;
 const zipPath = join(outDir, zipName);
-console.log(`\n[2/4] 打包热更新包 ${zipName}...`);
+console.log(`\n[2/4] 打包热更新包 ${zipName}（已排除 ocr/ 资源目录）...`);
 
 if (process.platform === 'win32') {
   // 注意：不要用 Compress-Archive！其打包的 zip 子目录条目使用反斜杠（assets\index.js），
   // 会导致 Android 端解压成带反斜杠的文件而非目录，WebView 加载 404 白屏。
   // Windows 10+ 自带 bsdtar，-a 按扩展名生成 zip，条目路径始终为正斜杠。
+  // --exclude 必须排除目录条目本身(./ocr)及其下所有内容(./ocr/*)，只排目录条目不会排除子文件。
   const tar = spawnSync(
     'tar',
-    ['-a', '-c', '-f', zipPath, '-C', distDir, '.'],
+    ['-a', '-c', '-f', zipPath, '-C', distDir, '--exclude=./ocr', '--exclude=./ocr/*', '.'],
     // 不要加 shell: true：项目路径含空格时参数会被错误拆分
     { stdio: 'inherit' },
   );
@@ -70,7 +74,7 @@ if (process.platform === 'win32') {
     process.exit(1);
   }
 } else {
-  const zip = spawnSync('zip', ['-r', zipPath, '.'], { cwd: distDir, stdio: 'inherit' });
+  const zip = spawnSync('zip', ['-r', zipPath, '.', '-x', './ocr/*'], { cwd: distDir, stdio: 'inherit' });
   if (zip.status !== 0) {
     console.error('zip 打包失败（需要系统 zip 命令）');
     process.exit(1);

@@ -1,6 +1,7 @@
 import { Category, TransactionType } from '../types';
 import { Capacitor } from '@capacitor/core';
 import { getOCREndpoints, isOCRReady, downloadOCRData, type OCRCacheStatus } from './ocrCache';
+import AppUpdate from '../plugins/appUpdate';
 
 export interface OCRParseResult {
   amount: string;
@@ -265,11 +266,22 @@ export const recognizeImage = async (imageDataUrl: string, options?: RecognizeOp
   let langPath: string;
 
   if (Capacitor.isNativePlatform()) {
-    // 原生平台：检查 Filesystem 是否已有 OCR 资源
-    const ready = await isOCRReady();
-    if (!ready) {
-      // 首次使用：从内置 /ocr/ 复制到 Filesystem（快），CDN 兜底
-      await downloadOCRData(options?.onProgress);
+    // 优先：从 APK 内置 assets 复制 OCR 资源（Java AssetManager，不受热更新 basePath 影响）
+    // 新基座 APK 内置了 ocr 资源，复制仅需 1-2 秒；旧基座返回 false 则走 CDN
+    try {
+      const result = await AppUpdate.prepareOcrAssets();
+      if (!result.ready) {
+        const ready = await isOCRReady();
+        if (!ready) {
+          await downloadOCRData(options?.onProgress);
+        }
+      }
+    } catch {
+      // 旧基座无 prepareOcrAssets 方法，降级到原流程
+      const ready = await isOCRReady();
+      if (!ready) {
+        await downloadOCRData(options?.onProgress);
+      }
     }
     // 用 Filesystem URL（Capacitor.convertFileSrc 转换）—— 已验证在 Android WebView 可创建 Worker
     const local = await getOCREndpoints();

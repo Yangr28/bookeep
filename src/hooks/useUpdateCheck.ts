@@ -8,6 +8,7 @@ import {
   shouldAutoCheck,
   markAutoChecked,
   resolveRollbackTarget,
+  getDownloadCandidates,
   type UpdateCheckResult,
 } from '../utils/update';
 
@@ -97,12 +98,14 @@ export function useUpdateCheck() {
       });
 
       if (kind === 'hot') {
-        await AppUpdate.downloadHotUpdate({ url: result.hotUrl!, version: result.version });
+        const hotCandidates = getDownloadCandidates(result.hotUrl!);
+        await AppUpdate.downloadHotUpdate({ url: result.hotUrl!, urls: hotCandidates, version: result.version });
         // 激活后原生端会让 WebView 重新加载新版本，本页面上下文随即销毁
         await AppUpdate.activateHotUpdate({ version: result.version });
         setFlow({ phase: 'done', kind, percent: 100, error: '' });
       } else {
-        await AppUpdate.downloadApk({ url: result.apkUrl!, version: result.version });
+        const apkCandidates = getDownloadCandidates(result.apkUrl!);
+        await AppUpdate.downloadApk({ url: result.apkUrl!, urls: apkCandidates, version: result.version });
         setFlow({ phase: 'installing', kind, percent: 100, error: '' });
         await AppUpdate.installApk();
         setFlow({ phase: 'done', kind, percent: 100, error: '' });
@@ -139,7 +142,8 @@ export function useUpdateCheck() {
           );
         }
       });
-      await AppUpdate.downloadApk({ url: available.apkUrl!, version });
+      const apkCandidates = getDownloadCandidates(available.apkUrl!);
+      await AppUpdate.downloadApk({ url: available.apkUrl!, urls: apkCandidates, version });
       setFlow({ phase: 'installing', kind: 'apk', percent: 100, error: '' });
       await AppUpdate.installApk();
       setFlow({ phase: 'done', kind: 'apk', percent: 100, error: '' });
@@ -169,7 +173,8 @@ export function useUpdateCheck() {
           );
         }
       });
-      await AppUpdate.downloadHotUpdate({ url: target.url, version: target.version });
+      const rollbackCandidates = getDownloadCandidates(target.url);
+      await AppUpdate.downloadHotUpdate({ url: target.url, urls: rollbackCandidates, version: target.version });
       await AppUpdate.activateHotUpdate({ version: target.version });
       setFlow({ phase: 'done', kind: 'hot', percent: 100, error: '' });
     } catch (e) {
