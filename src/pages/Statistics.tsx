@@ -234,39 +234,56 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                 const expenseColor = reportData.expenseChange > 0 ? 'var(--expense)' : 'var(--primary)';
                 return (
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
+                <div className="p-3 rounded-button flex flex-col" style={{ background: 'var(--paper)' }}>
                   <div className="flex items-center gap-1.5 mb-1">
                     <TrendingUp size={14} style={{ color: 'var(--primary)' }} />
                     <span className="text-xs" style={{ color: 'var(--ink-2)' }}>收入环比</span>
                   </div>
-                  <p className="text-lg font-bold amount-num" style={{ color: incomeColor }}>
+                  <p className="text-lg font-bold amount-num leading-tight" style={{ color: incomeColor }}>
                     {reportData.prevIncome > 0
                       ? `${reportData.incomeChange >= 0 ? '+' : ''}${reportData.incomeChange.toFixed(1)}%`
                       : '新建月'}
                   </p>
-                  <p className="text-xs mt-1 amount-num" style={{ color: 'var(--ink)' }}>
-                    本月 {formatCurrencyShort(monthIncome)}
-                  </p>
-                  <p className="text-xs mt-0.5 amount-num" style={{ color: 'var(--ink-2)' }}>
-                    上月 {formatCurrencyShort(reportData.prevIncome)}
-                  </p>
+                  {/* 本月/上月下方左右对齐进行对比 */}
+                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t" style={{ borderColor: 'var(--line)' }}>
+                    <div>
+                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</p>
+                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink)' }}>
+                        {formatCurrencyShort(monthIncome)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</p>
+                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                        {formatCurrencyShort(reportData.prevIncome)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
+                <div className="p-3 rounded-button flex flex-col" style={{ background: 'var(--paper)' }}>
                   <div className="flex items-center gap-1.5 mb-1">
                     <TrendingDown size={14} style={{ color: 'var(--expense)' }} />
                     <span className="text-xs" style={{ color: 'var(--ink-2)' }}>支出环比</span>
                   </div>
-                  <p className="text-lg font-bold amount-num" style={{ color: expenseColor }}>
+                  <p className="text-lg font-bold amount-num leading-tight" style={{ color: expenseColor }}>
                     {reportData.prevExpense > 0
                       ? `${reportData.expenseChange >= 0 ? '+' : ''}${reportData.expenseChange.toFixed(1)}%`
                       : '新建月'}
                   </p>
-                  <p className="text-xs mt-1 amount-num" style={{ color: 'var(--ink)' }}>
-                    本月 {formatCurrencyShort(monthExpense)}
-                  </p>
-                  <p className="text-xs mt-0.5 amount-num" style={{ color: 'var(--ink-2)' }}>
-                    上月 {formatCurrencyShort(reportData.prevExpense)}
-                  </p>
+                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t" style={{ borderColor: 'var(--line)' }}>
+                    <div>
+                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</p>
+                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink)' }}>
+                        {formatCurrencyShort(monthExpense)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</p>
+                      <p className="text-sm font-semibold amount-num mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                        {formatCurrencyShort(reportData.prevExpense)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
                 );

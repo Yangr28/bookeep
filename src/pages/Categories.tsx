@@ -53,24 +53,13 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
   const [showColorPicker, setShowColorPicker] = useState(false);
   const colorPickerRef = useRef<HTMLDivElement>(null);
 
-  // 调色板开关时通知 App.tsx 禁用侧滑返回（拖动调色板不应误触返回）
+  // 调色板开关时通知 App.tsx 禁用侧滑返回（拖动调色板不应误触返回）。
+  // App.tsx 收到 colorPickerOpen=true 后会让 useSwipeBack 的 enabled=false，
+  // 因此这里无需再在调色板容器上 stopPropagation —— 否则会反过来阻断
+  // react-colorful 在 window 上注册的 touchmove 监听器，导致只能点击不能滑动。
   useEffect(() => {
     onColorPickerOpenChange?.(showColorPicker);
   }, [showColorPicker, onColorPickerOpenChange]);
-
-  // 在调色板容器上阻止触摸事件冒泡到 document 的 useSwipeBack 监听器，
-  // 防止调色时手指滑动被误判为侧滑返回（原生监听器，冒泡阶段 stopPropagation）
-  useEffect(() => {
-    const el = colorPickerRef.current;
-    if (!el) return;
-    const stop = (e: TouchEvent) => e.stopPropagation();
-    el.addEventListener('touchstart', stop, { passive: true });
-    el.addEventListener('touchmove', stop, { passive: false });
-    return () => {
-      el.removeEventListener('touchstart', stop);
-      el.removeEventListener('touchmove', stop);
-    };
-  }, [showColorPicker]);
   const [iconGroup, setIconGroup] = useState<string>('全部');
   const [newCategory, setNewCategory] = useState({
     name: '',
