@@ -107,7 +107,10 @@ export const Stats = ({ onBack }: StatsProps) => {
     }
 
     const dates = new Set(
-      transactions.map((t) => new Date(t.createdAt).toISOString().slice(0, 10))
+       transactions.map((t) => {
+         const date = new Date(t.createdAt);
+         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+       })
     );
 
     const sortedDates = Array.from(dates).sort();
@@ -117,11 +120,11 @@ export const Stats = ({ onBack }: StatsProps) => {
     const currentDate = new Date();
 
     while (true) {
-      const dateStr = currentDate.toISOString().slice(0, 10);
-      if (dates.has(dateStr)) {
+       const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+       if (dates.has(dateStr)) {
         consecutiveDays++;
         currentDate.setDate(currentDate.getDate() - 1);
-      } else if (dateStr === new Date().toISOString().slice(0, 10)) {
+       } else if (dateStr === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`) {
         currentDate.setDate(currentDate.getDate() - 1);
       } else {
         break;

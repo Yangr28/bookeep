@@ -44,7 +44,7 @@ export function useUpdateCheck() {
       if (checkingRef.current) return;
       checkingRef.current = true;
       try {
-        // 自动检查：每次启动都检查（不再受节流限制），但跳过用户已跳过的版本
+        if (!manual && !shouldAutoCheck()) return 'unavailable';
         const result = await checkForUpdate();
         if (!manual) markAutoChecked();
 

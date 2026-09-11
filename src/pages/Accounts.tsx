@@ -50,12 +50,7 @@ interface AccountsProps {
 }
 
 export const Accounts = ({
-  isTab: _isTab,
   onViewAccountDetail,
-  onGoToBudgets,
-  onGoToRecurring,
-  onGoToTemplates,
-  onGoToCurrencyConverter,
 }: AccountsProps) => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -298,7 +293,9 @@ export const Accounts = ({
 
   const handleAccountDelete = (id: string) => {
     if (confirm('确定要删除这个账户吗？')) {
-      deleteAccount(id);
+      if (!deleteAccount(id)) {
+        alert('该账户仍有关联的交易、转账或周期任务，无法删除');
+      }
     }
   };
 

@@ -234,7 +234,7 @@ export const fetchLiveRates = async (): Promise<{ rates: Record<string, number>,
       return cached;
     }
     return null;
-  } catch (e) {
+  } catch {
     return null;
   }
 };

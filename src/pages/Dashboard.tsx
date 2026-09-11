@@ -14,9 +14,7 @@ let hasAutoFocusedOnLaunch = false;
 
 interface DashboardProps {
   onViewDetail: (filterType: 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance') => void;
-  onGoToAccounts?: () => void;
   onGoToBudgets?: () => void;
-  onGoToStats?: () => void;
   onGoToTransfer?: () => void;
   onGoToRecurring?: () => void;
   onGoToTemplates?: () => void;
@@ -34,20 +32,6 @@ interface DashboardProps {
     dateTime?: Date;
   }) => void;
   onFabRecord?: () => void;
-  quickRecordAmount: string;
-  quickRecordCategoryId: string | null;
-  quickRecordType: TransactionType;
-  quickRecordNote: string;
-  quickRecordAccountId: string | null;
-  quickRecordDateTime: Date;
-  quickRecordCurrency: string;
-  onQuickRecordAmountChange: (amount: string) => void;
-  onQuickRecordCategoryChange: (categoryId: string | null) => void;
-  onQuickRecordTypeChange: (type: TransactionType) => void;
-  onQuickRecordNoteChange: (note: string) => void;
-  onQuickRecordAccountChange: (accountId: string | null) => void;
-  onQuickRecordCurrencyChange: (currency: string) => void;
-  onQuickRecordSubmit: () => void;
   onSmartQuickSave: (parsed: {
     type: TransactionType;
     amount: string;
@@ -57,8 +41,6 @@ interface DashboardProps {
     currency?: string;
     dateTime?: Date;
   }) => void;
-  onShowDatePicker: () => void;
-  onShowTimePicker: () => void;
   widgetQuickInput?: string;
   onClearWidgetQuickInput?: () => void;
 }
@@ -73,9 +55,7 @@ const greeting = () => {
 
 const DashboardComponent = ({
   onViewDetail,
-  onGoToAccounts: _onGoToAccounts,
   onGoToBudgets,
-  onGoToStats: _onGoToStats,
   onGoToTransfer,
   onGoToRecurring,
   onGoToTemplates,
@@ -86,23 +66,7 @@ const DashboardComponent = ({
   onShowOCRModal,
   onGoToRecord,
   onFabRecord,
-  quickRecordAmount,
-  quickRecordCategoryId,
-  quickRecordType,
-  quickRecordNote,
-  quickRecordAccountId,
-  quickRecordDateTime,
-  quickRecordCurrency,
-  onQuickRecordAmountChange,
-  onQuickRecordCategoryChange,
-  onQuickRecordTypeChange,
-  onQuickRecordNoteChange,
-  onQuickRecordAccountChange,
-  onQuickRecordCurrencyChange,
-  onQuickRecordSubmit,
   onSmartQuickSave,
-  onShowDatePicker,
-  onShowTimePicker,
   widgetQuickInput,
   onClearWidgetQuickInput,
   }: DashboardProps) => {
@@ -292,8 +256,6 @@ const DashboardComponent = ({
   );
 
   const balance = monthIncome - monthExpense;
-  const canSubmit = !!(quickRecordAmount && quickRecordCategoryId && quickRecordAccountId);
-
   const quickTools = [
     { icon: ArrowLeftRight, label: '转账', onClick: onGoToTransfer, color: 'var(--accent-transfer)', bg: 'var(--accent-transfer-soft)' },
     { icon: Repeat, label: '周期记账', onClick: onGoToRecurring, color: 'var(--accent-recurring)', bg: 'var(--accent-recurring-soft)' },

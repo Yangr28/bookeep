@@ -199,8 +199,8 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
                     end = new Date(today.getFullYear(), today.getMonth(), 0);
                   }
 
-                  setStartDate(start.toISOString().split('T')[0]);
-                  setEndDate(end.toISOString().split('T')[0]);
+                   setStartDate(`${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`);
+                   setEndDate(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`);
                 }}
                 className="chip chip-inactive"
               >

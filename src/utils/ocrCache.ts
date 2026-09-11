@@ -59,7 +59,7 @@ const ensureCacheDir = async (): Promise<void> => {
       directory: Directory.Data,
       recursive: true,
     });
-  } catch (e) {
+  } catch {
     // directory may already exist
   }
 };

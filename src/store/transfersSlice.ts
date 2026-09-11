@@ -34,14 +34,19 @@ export const createTransfersSlice: StateCreator<
   },
 
   addTransfer: (transfer) => {
+    if (!Number.isFinite(transfer.amount) || transfer.amount <= 0 ||
+      transfer.fromAccountId === transfer.toAccountId) return;
     const newTransfer: Transfer = {
       ...transfer,
       id: generateId(),
     };
     set((state) => {
+      const fromAccount = state.accounts.find((account) => account.id === transfer.fromAccountId);
+      const toAccount = state.accounts.find((account) => account.id === transfer.toAccountId);
+      if (!fromAccount || !toAccount || fromAccount.balance < transfer.amount) return state;
+
       const updatedTransfers = [...state.transfers, newTransfer];
       saveTransfers(updatedTransfers);
-
       const updatedAccounts = state.accounts.map((account) => {
         if (account.id === transfer.fromAccountId) {
           return { ...account, balance: round2(account.balance - transfer.amount) };

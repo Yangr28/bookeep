@@ -1,5 +1,6 @@
 import { StateCreator } from 'zustand';
 import { Transaction, Category, Account, FixedDeposit, Loan, Transfer } from '../types';
+import { formatLocalDateKey } from '../utils/format';
 
 /** 单个账户对账结果 */
 export interface AccountReconciliation {
@@ -72,14 +73,14 @@ export const createCalculationsSlice: StateCreator<
   },
 
   getTodayIncome: () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDateKey(new Date());
     return round2(get().transactions
       .filter((t) => t.type === 'income' && t.createdAt.startsWith(today))
       .reduce((sum, t) => sum + t.amount, 0));
   },
 
   getTodayExpense: () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDateKey(new Date());
     return round2(get().transactions
       .filter((t) => t.type === 'expense' && t.createdAt.startsWith(today))
       .reduce((sum, t) => sum + t.amount, 0));

@@ -1,5 +1,7 @@
 import { StateCreator } from 'zustand';
 import { Transaction } from '../types';
+import { loadFromStorage, saveToStorage } from '../utils/storage';
+import { formatLocalDateKey } from '../utils/format';
 
 export interface Budget {
   id: string;
@@ -20,9 +22,10 @@ export interface BudgetsSlice {
 }
 
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const STORAGE_KEY = 'bookeep_budgets';
 
 export const createBudgetsSlice: StateCreator<BudgetsSlice> = (set, get) => ({
-  budgets: [],
+  budgets: loadFromStorage<Budget[]>(STORAGE_KEY, []),
 
   addBudget: (categoryId, amount, month) => {
     const existing = get().getBudgetByCategory(categoryId, month);
@@ -37,19 +40,29 @@ export const createBudgetsSlice: StateCreator<BudgetsSlice> = (set, get) => ({
       spent: 0,
       month,
     };
-    set((state) => ({ budgets: [...state.budgets, newBudget] }));
+    set((state) => {
+      const budgets = [...state.budgets, newBudget];
+      saveToStorage(STORAGE_KEY, budgets);
+      return { budgets };
+    });
   },
 
   updateBudget: (id, updates) => {
-    set((state) => ({
-      budgets: state.budgets.map((b) =>
+    set((state) => {
+      const budgets = state.budgets.map((b) =>
         b.id === id ? { ...b, ...updates } : b
-      ),
-    }));
+      );
+      saveToStorage(STORAGE_KEY, budgets);
+      return { budgets };
+    });
   },
 
   deleteBudget: (id) => {
-    set((state) => ({ budgets: state.budgets.filter((b) => b.id !== id) }));
+    set((state) => {
+      const budgets = state.budgets.filter((b) => b.id !== id);
+      saveToStorage(STORAGE_KEY, budgets);
+      return { budgets };
+    });
   },
 
   getBudgetByCategory: (categoryId, month) => {
@@ -63,7 +76,7 @@ export const createBudgetsSlice: StateCreator<BudgetsSlice> = (set, get) => ({
     
     const spent = transactions
       .filter((t) => {
-        const tMonth = new Date(t.createdAt).toISOString().slice(0, 7);
+        const tMonth = formatLocalDateKey(new Date(t.createdAt)).slice(0, 7);
         return t.categoryId === categoryId && t.type === 'expense' && tMonth === month;
       })
       .reduce((sum, t) => sum + t.amount, 0);
@@ -75,5 +88,8 @@ export const createBudgetsSlice: StateCreator<BudgetsSlice> = (set, get) => ({
     };
   },
 
-  setBudgets: (budgets) => set({ budgets }),
+  setBudgets: (budgets) => {
+    saveToStorage(STORAGE_KEY, budgets);
+    set({ budgets });
+  },
 });

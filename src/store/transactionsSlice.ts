@@ -30,6 +30,7 @@ export const createTransactionsSlice: StateCreator<
   transactions: loadTransactions(initialTransactions),
 
   addTransaction: (transaction) => {
+    if (!Number.isFinite(transaction.amount) || transaction.amount <= 0 || !transaction.accountId) return;
     const newTransaction: Transaction = {
       ...transaction,
       id: generateId(),
@@ -61,6 +62,8 @@ export const createTransactionsSlice: StateCreator<
   updateTransaction: (id, transaction) => {
     set((state) => {
       const oldTransaction = state.transactions.find((t) => t.id === id);
+      if (!oldTransaction) return state;
+      if (!Number.isFinite(transaction.amount) || transaction.amount <= 0 || !transaction.accountId) return state;
       const updatedTransactions = state.transactions.map((t) =>
         t.id === id ? { ...t, ...transaction } : t
       );

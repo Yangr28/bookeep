@@ -168,6 +168,32 @@ export const parseImportData = (jsonString: string): ExportData => {
     }
   }
 
+  const isValidId = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
+  const isValidAmount = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
+  const accountIds = new Set(raw.accounts.filter((a: unknown) => a && typeof a === 'object' && isValidId((a as Account).id)).map((a: Account) => a.id));
+  const categoryIds = new Set(raw.categories.filter((c: unknown) => c && typeof c === 'object' && isValidId((c as Category).id)).map((c: Category) => c.id));
+
+  if (raw.accounts.some((a: Account) => !isValidId(a?.id) || typeof a.name !== 'string' || !Number.isFinite(a.balance))) {
+    throw new Error('备份文件包含无效账户数据');
+  }
+  if (raw.categories.some((c: Category) => !isValidId(c?.id) || typeof c.name !== 'string' || !['income', 'expense'].includes(c.type))) {
+    throw new Error('备份文件包含无效分类数据');
+  }
+  if (raw.transactions.some((t: Transaction) =>
+    !isValidId(t?.id) || !['income', 'expense'].includes(t.type) || !isValidAmount(t.amount) ||
+    !isValidId(t.accountId) || !accountIds.has(t.accountId) || !isValidId(t.categoryId) || !categoryIds.has(t.categoryId) ||
+    typeof t.createdAt !== 'string' || Number.isNaN(new Date(t.createdAt).getTime()))) {
+    throw new Error('备份文件包含无效交易数据');
+  }
+
+  const transfers = Array.isArray(raw.transfers) ? raw.transfers : [];
+  if (transfers.some((t: Transfer) =>
+    !isValidId(t?.id) || !isValidId(t.fromAccountId) || !isValidId(t.toAccountId) ||
+    t.fromAccountId === t.toAccountId || !accountIds.has(t.fromAccountId) || !accountIds.has(t.toAccountId) ||
+    !isValidAmount(t.amount) || typeof t.createdAt !== 'string' || Number.isNaN(new Date(t.createdAt).getTime()))) {
+    throw new Error('备份文件包含无效转账数据');
+  }
+
   // 兼容旧版备份：缺少的字段补空数组
   return {
     version: raw.version || 'unknown',
