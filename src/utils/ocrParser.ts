@@ -2,7 +2,8 @@ import { Category, TransactionType } from '../types';
 import { Capacitor } from '@capacitor/core';
 import { getOCREndpoints, isOCRReady, downloadOCRData, type OCRCacheStatus } from './ocrCache';
 import AppUpdate from '../plugins/appUpdate';
-import { findCategoryByIdentifier } from './smartParser';
+import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from './smartParser';
+import type { Account } from '../types';
 
 export interface OCRParseResult {
   amount: string;
@@ -24,6 +25,20 @@ const currencyUnits = ['元', '块', '钱', '¥', '￥'];
 
 const expenseKeywords = ['支付', '消费', '支出', '扣款', '转账', '缴费', '购物', '外卖', '打车', '充值', '还款', '账单'];
 const incomeKeywords = ['收入', '收款', '转入', '到账', '红包', '退款', '转账收入'];
+
+const categoryKeywords: Record<string, string[]> = {
+  food: ['餐饮', '吃饭', '外卖', '午餐', '晚餐', '早餐', '零食', '奶茶', '咖啡', '饭店', '餐厅'],
+  transport: ['打车', '滴滴', '出行', '地铁', '公交', '加油', '停车', '租车'],
+  shopping: ['购物', '淘宝', '京东', '拼多多', '超市', '便利店', '商城'],
+  entertainment: ['电影', '游戏', 'KTV', '娱乐', '演出', '门票'],
+  daily: ['水电', '缴费', '话费', '网费', '快递', '理发', '洗浴'],
+  health: ['医院', '买药', '挂号', '体检', '健身'],
+  education: ['培训', '课程', '书籍', '学习', '学费'],
+  salary: ['工资', '薪资', '收入', '奖金'],
+  bonus: ['红包', '奖励', '补贴'],
+  investment: ['理财', '利息', '股票', '基金'],
+  transfer: ['转账', '还款', '借款'],
+};
 
 export const parseOCRText = (text: string): OCRParseResult => {
   const result: OCRParseResult = {
@@ -267,14 +282,13 @@ export const recognizeImage = async (imageDataUrl: string, options?: RecognizeOp
     // 浏览器：直接用 CDN
     workerPath = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js';
     corePath = 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5';
-     langPath = 'https://tessdata.projectnaptha.com/4.0.0';
+    langPath = 'https://tessdata.project.files.com/4.0.0';
   }
 
   // 超时保护：60 秒未完成则报错，防止永远转圈
   const timeoutMs = 60000;
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error('OCR 识别超时，请重试')), timeoutMs);
+    setTimeout(() => reject(new Error('OCR 识别超时，请重试')), timeoutMs);
   });
 
   const worker = await Promise.race([
@@ -289,7 +303,6 @@ export const recognizeImage = async (imageDataUrl: string, options?: RecognizeOp
     ]);
     return text;
   } finally {
-    if (timeoutId) clearTimeout(timeoutId);
     await worker.terminate();
   }
 };

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, memo, useState } from 'react';
 import { useStore } from '../store/useStore';
-import { formatCurrencyShort } from '../utils/format';
-import { PieChart, Pie, Cell, Sector, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatCurrency, formatCurrencyShort } from '../utils/format';
+import { PieChart, Pie, Cell, Sector, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import { Settings as SettingsIcon, ChevronDown, TrendingUp, TrendingDown, Award, Target } from 'lucide-react';
 
 interface ProfileProps {

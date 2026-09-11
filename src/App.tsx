@@ -27,7 +27,7 @@ import { X, Wallet, CheckCircle } from 'lucide-react';
 import { App as CapApp } from '@capacitor/app';
 import { useStore } from './store/useStore';
 import { setStorageErrorCallback } from './utils/storage';
-import { getIcon } from './utils/iconMap';
+import { iconMap, getIcon } from './utils/iconMap';
 import { AccountTypeNames } from './types';
 import { useHistory } from './hooks/useHistory';
 import { useModal } from './hooks/useModal';
@@ -54,6 +54,15 @@ export default function App() {
     rollback,
   } = useUpdateCheck();
 
+  const [quickRecordAmount, setQuickRecordAmount] = useState('');
+  const [quickRecordCategoryId, setQuickRecordCategoryId] = useState<string | null>(null);
+  const [quickRecordType, setQuickRecordType] = useState<TransactionType>('expense');
+  const [quickRecordNote, setQuickRecordNote] = useState('');
+  const [quickRecordAccountId, setQuickRecordAccountId] = useState<string | null>(null);
+  const [quickRecordDateTime, setQuickRecordDateTime] = useState(new Date());
+  const [quickRecordCurrency, setQuickRecordCurrency] = useState('CNY');
+  const [showQuickRecordDatePicker, setShowQuickRecordDatePicker] = useState(false);
+  const [showQuickRecordTimePicker, setShowQuickRecordTimePicker] = useState(false);
   const [showOCRModal, setShowOCRModal] = useState(false);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -246,7 +255,7 @@ export default function App() {
     handleBack();
   }, [canGoBack, handleBack, setShowExitConfirm]);
 
-  const hasModalOpen = showCalendar || showRecordDatePicker || showRecordTimePicker || showAccountPicker || showKeypad || colorPickerOpen;
+  const hasModalOpen = showCalendar || showRecordDatePicker || showRecordTimePicker || showAccountPicker || showKeypad || showQuickRecordDatePicker || showQuickRecordTimePicker || colorPickerOpen;
 
   const { swipeProgress, isSwiping, showLeftIndicator, showRightIndicator } = useSwipeBack({
     onSwipeBack: handleSwipeBack,
@@ -283,7 +292,7 @@ export default function App() {
         resetHistory('/');
         setWidgetQuickInput(quickInput);
       }
-    } catch {
+    } catch (e) {
       // 插件不可用（如 Web 环境），忽略
     }
   }, [resetHistory]);
@@ -295,11 +304,9 @@ export default function App() {
 
   // 对账迁移：老账户缺少 initialBalance 时按当前余额反推回填（方法内部幂等）
   const ensureInitialBalances = useStore((s) => s.ensureInitialBalances);
-  const generateRecurringTransactions = useStore((s) => s.generateRecurringTransactions);
   useEffect(() => {
     ensureInitialBalances();
-    generateRecurringTransactions();
-  }, [ensureInitialBalances, generateRecurringTransactions]);
+  }, [ensureInitialBalances]);
 
   // 启动解锁后延迟自动检查更新（5 分钟节流；api.github.com 国内不稳定，失败自动重试 3 次）
   useEffect(() => {
@@ -404,6 +411,42 @@ export default function App() {
     handleRecordSuccess();
   }, [recordAmount, recordCategoryId, recordAccountId, recordType, recordNote, recordDateTime, editTransaction, updateTransaction, addTransaction, handleRecordSuccess]);
 
+  const handleQuickRecordSubmit = useCallback(() => {
+    if (!quickRecordAmount || !quickRecordCategoryId || !quickRecordAccountId) return;
+
+    const originalAmount = parseFloat(quickRecordAmount);
+    const rate = getRate(quickRecordCurrency);
+    // 外币转人民币：记账金额统一以人民币存储
+    const cnyAmount = quickRecordCurrency === 'CNY' ? originalAmount : convertToCNY(originalAmount, quickRecordCurrency);
+
+    addTransaction({
+      type: quickRecordType,
+      amount: cnyAmount,
+      categoryId: quickRecordCategoryId,
+      accountId: quickRecordAccountId,
+      note: quickRecordNote,
+      createdAt: quickRecordDateTime.toISOString(),
+      ...(quickRecordCurrency !== 'CNY' && {
+        currency: quickRecordCurrency,
+        originalAmount,
+        exchangeRate: rate,
+      }),
+    });
+
+    setQuickRecordAmount('');
+    setQuickRecordCategoryId(null);
+    setQuickRecordType('expense');
+    setQuickRecordNote('');
+    setQuickRecordAccountId(null);
+    setQuickRecordDateTime(new Date());
+    setQuickRecordCurrency('CNY');
+    // 记账成功后回到页面顶部，确保余额卡片在可视区域内
+    window.scrollTo(0, 0);
+
+    setToastMessage('记账成功');
+    setTimeout(() => setToastMessage(null), 2000);
+  }, [quickRecordAmount, quickRecordCategoryId, quickRecordAccountId, quickRecordType, quickRecordNote, quickRecordDateTime, quickRecordCurrency, addTransaction, setToastMessage]);
+
   // 首页智能输入「快速保存」：绕过 quickRecord state，直接用解析结果完成记账
   const handleSmartQuickSave = useCallback((parsed: {
     type: TransactionType;
@@ -439,13 +482,27 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 2000);
   }, [addTransaction, setToastMessage]);
 
+  const handleQuickRecordDateChange = useCallback((date: Date) => {
+    const time = quickRecordDateTime;
+    setQuickRecordDateTime(new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes()));
+    setShowQuickRecordDatePicker(false);
+  }, [quickRecordDateTime]);
+
+  const handleQuickRecordTimeChange = useCallback((hours: number, minutes: number) => {
+    const date = quickRecordDateTime;
+    setQuickRecordDateTime(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes));
+    setShowQuickRecordTimePicker(false);
+  }, [quickRecordDateTime]);
+
   const renderPage = () => {
     switch (currentPage) {
       case '/':
         return (
           <Dashboard
             onViewDetail={handleViewDetail}
-             onGoToBudgets={() => handlePageChange('/budgets')}
+            onGoToAccounts={() => handlePageChange('/accounts')}
+            onGoToBudgets={() => handlePageChange('/budgets')}
+            onGoToStats={() => handlePageChange('/records')}
             onGoToTransfer={() => handlePageChange('/transfer')}
             onGoToRecurring={() => handlePageChange('/recurring')}
             onGoToTemplates={() => handlePageChange('/templates')}
@@ -456,7 +513,23 @@ export default function App() {
             onShowOCRModal={() => setShowOCRModal(true)}
             onGoToRecord={handleQuickRecordToPage}
             onFabRecord={handleFabRecord}
-             onSmartQuickSave={handleSmartQuickSave}
+            quickRecordAmount={quickRecordAmount}
+            quickRecordCategoryId={quickRecordCategoryId}
+            quickRecordType={quickRecordType}
+            quickRecordNote={quickRecordNote}
+            quickRecordAccountId={quickRecordAccountId}
+            quickRecordDateTime={quickRecordDateTime}
+            quickRecordCurrency={quickRecordCurrency}
+            onQuickRecordAmountChange={setQuickRecordAmount}
+            onQuickRecordCategoryChange={setQuickRecordCategoryId}
+            onQuickRecordTypeChange={setQuickRecordType}
+            onQuickRecordNoteChange={setQuickRecordNote}
+            onQuickRecordAccountChange={setQuickRecordAccountId}
+            onQuickRecordCurrencyChange={setQuickRecordCurrency}
+            onQuickRecordSubmit={handleQuickRecordSubmit}
+            onSmartQuickSave={handleSmartQuickSave}
+            onShowDatePicker={() => setShowQuickRecordDatePicker(true)}
+            onShowTimePicker={() => setShowQuickRecordTimePicker(true)}
             widgetQuickInput={widgetQuickInput}
             onClearWidgetQuickInput={() => setWidgetQuickInput('')}
           />
@@ -638,6 +711,22 @@ export default function App() {
           selectedTime={{ hours: recordDateTime.getHours(), minutes: recordDateTime.getMinutes() }}
           onTimeChange={handleRecordTimeChange}
           onClose={() => setShowRecordTimePicker(false)}
+        />
+      )}
+
+      {showQuickRecordDatePicker && (
+        <CalendarPicker
+          selectedDate={quickRecordDateTime}
+          onDateChange={handleQuickRecordDateChange}
+          onClose={() => setShowQuickRecordDatePicker(false)}
+        />
+      )}
+
+      {showQuickRecordTimePicker && (
+        <TimePicker
+          selectedTime={{ hours: quickRecordDateTime.getHours(), minutes: quickRecordDateTime.getMinutes() }}
+          onTimeChange={handleQuickRecordTimeChange}
+          onClose={() => setShowQuickRecordTimePicker(false)}
         />
       )}
 

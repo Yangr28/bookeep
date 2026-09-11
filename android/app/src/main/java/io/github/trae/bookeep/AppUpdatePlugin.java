@@ -447,9 +447,7 @@ public class AppUpdatePlugin extends Plugin {
                 throw new Exception("HTTP " + code);
             }
             input = conn.getInputStream();
-            File partial = new File(target.getAbsolutePath() + ".part");
-            if (partial.exists()) partial.delete();
-            output = new FileOutputStream(partial);
+            output = new FileOutputStream(target);
             long total = conn.getContentLengthLong();
             long read = 0;
             long lastNotify = 0;
@@ -465,15 +463,6 @@ public class AppUpdatePlugin extends Plugin {
                 }
             }
             output.flush();
-            output.close();
-            output = null;
-            if (target.exists() && !target.delete()) {
-                throw new Exception("无法替换旧下载文件");
-            }
-            if (!partial.renameTo(target)) {
-                partial.delete();
-                throw new Exception("无法完成下载文件写入");
-            }
             notifyProgress(kind, read, total > 0 ? total : read);
         } finally {
             if (output != null) try { output.close(); } catch (Exception ignored) {}

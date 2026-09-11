@@ -111,7 +111,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
         addTransaction({
           type: transaction.type,
           amount: parseFloat(transaction.amount),
-           categoryId: transaction.categoryId || categories.find((c) => c.type === transaction.type)?.id || '',
+          categoryId: transaction.categoryId || 'other',
           accountId: selectedAccountId,
           note: transaction.note,
           createdAt: transaction.date.toISOString(),

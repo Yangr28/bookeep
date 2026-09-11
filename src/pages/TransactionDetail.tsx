@@ -75,7 +75,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
   const filteredTransactions = [...transactions]
     .filter((t) => {
       const tDate = new Date(t.createdAt);
-       const dateStr = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}-${String(tDate.getDate()).padStart(2, '0')}`;
+      const dateStr = tDate.toISOString().split('T')[0];
       const isToday = tDate >= todayStart && tDate < todayEnd;
       const isThisMonth = tDate >= monthStart && tDate < monthEnd;
       const isIncome = t.type === 'income';

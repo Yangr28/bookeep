@@ -13,10 +13,6 @@ export interface RecurringSlice {
 
 const STORAGE_KEY = 'bookeep_recurring_records';
 
-type RecurringSliceDependencies = RecurringSlice & {
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
-};
-
 function loadFromStorage(): RecurringRecord[] {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
@@ -34,12 +30,7 @@ function saveToStorage(records: RecurringRecord[]) {
   }
 }
 
-export const createRecurringSlice: StateCreator<
-  RecurringSliceDependencies,
-  [],
-  [],
-  RecurringSlice
-> = (set, get) => ({
+export const createRecurringSlice: StateCreator<RecurringSlice> = (set, get) => ({
   recurringRecords: loadFromStorage(),
 
   setRecurringRecords: (records) => {
@@ -101,42 +92,34 @@ export const createRecurringSlice: StateCreator<
     const newTransactions: Transaction[] = [];
 
     records.forEach((record) => {
-      const startDate = parseLocalDate(record.startDate);
-      if (today < startDate) return;
-
       let shouldGenerate = false;
-      const lastGenerated = record.lastGenerated ? new Date(record.lastGenerated) : null;
-      const generatedToday = lastGenerated &&
-        lastGenerated.getFullYear() === today.getFullYear() &&
-        lastGenerated.getMonth() === today.getMonth() &&
-        lastGenerated.getDate() === today.getDate();
 
       switch (record.frequency) {
         case 'daily':
-          shouldGenerate = !generatedToday;
+          shouldGenerate = !record.lastGenerated || 
+            today.getTime() > new Date(record.lastGenerated).getTime();
           break;
         case 'weekly':
           shouldGenerate = record.dayOfWeek === today.getDay() &&
-            !generatedToday;
+            (!record.lastGenerated || today.getTime() > new Date(record.lastGenerated).getTime());
           break;
         case 'monthly':
           shouldGenerate = record.dayOfMonth === today.getDate() &&
-            !generatedToday;
+            (!record.lastGenerated || today.getTime() > new Date(record.lastGenerated).getTime());
           break;
         case 'yearly':
           shouldGenerate = record.dayOfMonth === today.getDate() &&
-            startDate.getMonth() === today.getMonth() &&
-            (!lastGenerated || lastGenerated.getFullYear() < today.getFullYear());
+            !record.lastGenerated;
           break;
       }
 
       if (record.endDate) {
-        const endDate = parseLocalDate(record.endDate);
+        const endDate = new Date(record.endDate);
         if (today > endDate) shouldGenerate = false;
       }
 
       if (shouldGenerate) {
-        const transaction: Transaction = {
+        newTransactions.push({
           id: `rec_${Date.now()}_${Math.random()}`,
           type: record.type,
           amount: record.amount,
@@ -144,15 +127,6 @@ export const createRecurringSlice: StateCreator<
           note: record.note,
           accountId: record.accountId,
           createdAt: new Date().toISOString(),
-        };
-        newTransactions.push(transaction);
-        get().addTransaction({
-          type: transaction.type,
-          amount: transaction.amount,
-          categoryId: transaction.categoryId,
-          note: transaction.note,
-          accountId: transaction.accountId,
-          createdAt: transaction.createdAt,
         });
 
         get().updateRecurringRecord(record.id, {
@@ -164,8 +138,3 @@ export const createRecurringSlice: StateCreator<
     return newTransactions;
   },
 });
-
-function parseLocalDate(dateString: string): Date {
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Plus, Repeat, Trash2, Edit3, Play, X } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, Repeat, Trash2, Edit3, Play, Check, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getIcon } from '../utils/iconMap';
 import { CalendarPicker } from '../components/CalendarPicker';
@@ -83,7 +83,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
       dayOfWeek: form.frequency === 'weekly' ? form.dayOfWeek : undefined,
       startDate: form.startDate,
       endDate: form.endDate || undefined,
-       enabled: editingRecord ? editingRecord.enabled : true,
+      enabled: true,
     };
 
     if (editingRecord) {

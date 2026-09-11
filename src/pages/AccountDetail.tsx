@@ -113,7 +113,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
 
   const filteredRecords = combinedRecords.filter((record) => {
     const date = new Date(record.createdAt);
-     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const dateStr = date.toISOString().split('T')[0];
 
     if (startDate && dateStr < startDate) return false;
     if (endDate && dateStr > endDate) return false;

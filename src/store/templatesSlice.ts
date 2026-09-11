@@ -28,7 +28,7 @@ function saveToStorage(templates: RecordTemplate[]) {
   }
 }
 
-export const createTemplatesSlice: StateCreator<TemplatesSlice> = (set) => ({
+export const createTemplatesSlice: StateCreator<TemplatesSlice> = (set, get) => ({
   templates: loadFromStorage(),
 
   setTemplates: (templates) => {

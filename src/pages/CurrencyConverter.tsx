@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { ArrowLeft, ArrowDownUp, Globe, RefreshCw, Search as SearchIcon, X as XIcon, Check as CheckIcon, Edit3 } from 'lucide-react';
 import {
   currencies, getRate, getCurrencySymbol, convertToCNY, convertFromCNY,
-  getCustomRates, saveCustomRates, fetchLiveRates, getLastUpdateTime, getRateSource, isZeroDecimalCurrency
+  getCustomRates, saveCustomRates, fetchLiveRates, getLastUpdateTime, getRateSource, isZeroDecimalCurrency, type Currency
 } from '../utils/currency';
 
 interface CurrencyConverterProps {

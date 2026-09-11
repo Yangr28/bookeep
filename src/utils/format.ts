@@ -53,22 +53,17 @@ export const formatTime = (dateString: string): string => {
 
 export const getTodayString = (): string => {
   const today = new Date();
-  return formatLocalDateKey(today);
+  return today.toISOString().split('T')[0];
 };
 
 export const isToday = (dateString: string): boolean => {
-  return formatLocalDateKey(new Date(dateString)) === getTodayString();
+  return dateString.startsWith(getTodayString());
 };
 
 export const isYesterday = (dateString: string): boolean => {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  return formatLocalDateKey(new Date(dateString)) === formatLocalDateKey(yesterday);
-};
-
-export const formatLocalDateKey = (date: Date): string => {
-  if (isNaN(date.getTime())) return '';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return dateString.startsWith(yesterday.toISOString().split('T')[0]);
 };
 
 export const getMonthStart = (date: Date = new Date()): Date => {
