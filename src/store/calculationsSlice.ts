@@ -35,6 +35,8 @@ export interface CalculationsSlice {
   /** 校正：按流水重算所有账户余额，返回有偏差的账户数 */
   recalculateAllBalances: () => number;
   getTransactionsGroupedByCategory: (type: 'income' | 'expense', month?: number, year?: number) => { category: Category; total: number }[];
+  /** 近 N 个月每月末总资产趋势（从当前资产反推，用于 sparkline） */
+  getMonthlyAssetsTrend: (months?: number) => { month: string; assets: number }[];
 }
 
 interface CalculationsSliceDependencies {
@@ -234,5 +236,51 @@ export const createCalculationsSlice: StateCreator<
         total,
       }))
       .sort((a, b) => b.total - a.total);
+  },
+
+  getMonthlyAssetsTrend: (months = 6) => {
+    const { transactions, accounts, fixedDeposits } = get();
+    // 当前总资产（实时值，作为反推锚点）
+    const currentAssets = round2(
+      accounts.reduce((sum, a) => sum + a.balance, 0) +
+      fixedDeposits.reduce((sum, d) => sum + d.principal, 0)
+    );
+
+    const now = new Date();
+    const monthKeys: { year: number; month: number; label: string }[] = [];
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      monthKeys.push({
+        year: d.getFullYear(),
+        month: d.getMonth(),
+        label: `${d.getMonth() + 1}月`,
+      });
+    }
+
+    // 按月聚合净流（income - expense，transfers 在账户间移动不影响总资产）
+    const monthlyNet: Record<string, number> = {};
+    for (const t of transactions) {
+      const d = new Date(t.createdAt);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      monthlyNet[key] = round2((monthlyNet[key] || 0) + (t.type === 'income' ? t.amount : -t.amount));
+    }
+
+    // 反推：T_{i-1} = T_i - net(month_i)
+    // 当前月（数组末项）取实时资产；更早月份依次减去后续月份的净流
+    const result: { month: string; assets: number }[] = new Array(monthKeys.length);
+    result[monthKeys.length - 1] = {
+      month: monthKeys[monthKeys.length - 1].label,
+      assets: currentAssets,
+    };
+    for (let i = monthKeys.length - 2; i >= 0; i--) {
+      const nextKey = `${monthKeys[i + 1].year}-${monthKeys[i + 1].month}`;
+      const nextNet = monthlyNet[nextKey] || 0;
+      result[i] = {
+        month: monthKeys[i].label,
+        assets: round2(result[i + 1].assets - nextNet),
+      };
+    }
+
+    return result;
   },
 });

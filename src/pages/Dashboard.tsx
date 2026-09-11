@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import { useStore } from '../store/useStore';
 import { StatCard } from '../components/StatCard';
 import { TransactionCard } from '../components/TransactionCard';
+import { Sparkline, StackedBar, ProgressRing } from '../components/MiniCharts';
 import { formatCurrencyShort } from '../utils/format';
 import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
 import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle } from 'lucide-react';
@@ -114,6 +115,7 @@ const DashboardComponent = ({
   const getTotalIncome = useStore((state) => state.getTotalIncome);
   const getTotalExpense = useStore((state) => state.getTotalExpense);
   const getTotalAssets = useStore((state) => state.getTotalAssets);
+  const getMonthlyAssetsTrend = useStore((state) => state.getMonthlyAssetsTrend);
   const categories = useStore((state) => state.categories);
   const accounts = useStore((state) => state.accounts);
   const budgets = useStore((state) => state.budgets);
@@ -149,6 +151,9 @@ const DashboardComponent = ({
 
   const getBudgetColor = (pct: number) =>
     pct >= 100 ? 'var(--expense)' : pct >= 80 ? 'var(--expense-ink)' : pct >= 50 ? 'var(--primary-ink)' : 'var(--primary)';
+
+  // 近 6 个月总资产趋势（用于 sparkline，仅 accounts/transactions 变化时重算）
+  const assetsTrend = useMemo(() => getMonthlyAssetsTrend(6), [getMonthlyAssetsTrend, accounts, transactions]);
 
   const [smartInput, setSmartInput] = useState('');
   const smartInputRef = useRef<HTMLInputElement>(null);
@@ -324,11 +329,20 @@ const DashboardComponent = ({
       {/* 本月概览卡 */}
       <div className="px-4 mt-3">
         <button onClick={() => onViewDetail('month-balance')} className="card card-hover w-full p-5 text-left block">
-          <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月余额</p>
-          <p className="text-3xl font-bold mt-1.5 amount-num" style={{ color: 'var(--ink)' }}>
-            {formatCurrencyShort(balance)}
-          </p>
-          <div className="flex items-center gap-5 mt-4">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月余额</p>
+              <p className="text-3xl font-bold mt-1.5 amount-num" style={{ color: 'var(--ink)' }}>
+                {formatCurrencyShort(balance)}
+              </p>
+            </div>
+            {/* 资产趋势 sparkline：近 6 个月总资产 mini 折线 */}
+            <div className="flex flex-col items-end flex-shrink-0 mt-1">
+              <Sparkline data={assetsTrend.map(d => d.assets)} width={72} height={24} />
+              <span className="text-[10px] mt-1" style={{ color: 'var(--ink-2)' }}>近 6 月趋势</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-5 mt-3">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full" style={{ background: 'var(--primary)' }} />
               <span className="text-xs" style={{ color: 'var(--ink-2)' }}>收入</span>
@@ -344,6 +358,10 @@ const DashboardComponent = ({
               </span>
             </div>
           </div>
+          {/* 收支对比堆叠条 + 结余率 */}
+          <div className="mt-3">
+            <StackedBar income={monthIncome} expense={monthExpense} height={6} />
+          </div>
         </button>
         {/* 预算进度小条：仅当本月有设置预算时显示 */}
         {budgetSummary.totalBudget > 0 && (
@@ -352,17 +370,27 @@ const DashboardComponent = ({
             className="card card-hover w-full p-4 mt-2 text-left block animate-stagger-in"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>本月预算</span>
-              {budgetSummary.overCount > 0 ? (
-                <span className="text-xs flex items-center gap-1 font-semibold" style={{ color: 'var(--expense)' }}>
-                  <AlertCircle size={12} />
-                  {budgetSummary.overCount} 项超支
-                </span>
-              ) : (
-                <span className="text-xs amount-num" style={{ color: 'var(--ink-2)' }}>
-                  {formatCurrencyShort(budgetSummary.totalSpent)} / {formatCurrencyShort(budgetSummary.totalBudget)}
-                </span>
-              )}
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>本月预算</span>
+                {budgetSummary.overCount > 0 && (
+                  <span className="text-[11px] flex items-center gap-1 font-semibold" style={{ color: 'var(--expense)' }}>
+                    <AlertCircle size={11} />
+                    {budgetSummary.overCount} 项超支
+                  </span>
+                )}
+                {budgetSummary.overCount === 0 && (
+                  <span className="text-[11px] amount-num" style={{ color: 'var(--ink-2)' }}>
+                    {formatCurrencyShort(budgetSummary.totalSpent)} / {formatCurrencyShort(budgetSummary.totalBudget)}
+                  </span>
+                )}
+              </div>
+              {/* 预算进度环：超支时脉冲警告 */}
+              <ProgressRing
+                percentage={budgetSummary.percentage}
+                size={36}
+                stroke={3.5}
+                pulse={budgetSummary.overCount > 0}
+              />
             </div>
             <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
               <div

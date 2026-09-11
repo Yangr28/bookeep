@@ -312,6 +312,13 @@ body {
 }
 .animate-chart-grow { animation: chart-grow 0.4s ease-out both; }
 
+/* 超支脉冲警告（预算环、超支数字） */
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(0.94); }
+}
+.animate-pulse-warning { animation: pulse-warning 1.6s ease-in-out infinite; }
+
 /* 页面切换过渡 */
 .page-enter { animation: fade-in 0.2s ease-out; }
 
