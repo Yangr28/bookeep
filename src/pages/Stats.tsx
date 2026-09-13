@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { ArrowLeft, Star, Trophy, Target, Zap, Award, TrendingUp, Wallet, Clock, Calendar } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
+import { toDateKey, todayKey, addDays, parseDateKey } from '../utils/date';
 import Empty from '../components/Empty';
 
 interface StatsProps {
@@ -107,22 +108,24 @@ export const Stats = ({ onBack }: StatsProps) => {
     }
 
     const dates = new Set(
-      transactions.map((t) => new Date(t.createdAt).toISOString().slice(0, 10))
+      transactions.map((t) => toDateKey(new Date(t.createdAt)))
     );
 
     const sortedDates = Array.from(dates).sort();
     const firstDate = sortedDates[0];
 
     let consecutiveDays = 0;
-    const currentDate = new Date();
+    // 连续记账天数:今天有账则从今天起算,否则允许从昨天起算(今天还没记不算断签)
+    const today = todayKey();
+    let cursor = new Date();
 
     while (true) {
-      const dateStr = currentDate.toISOString().slice(0, 10);
+      const dateStr = toDateKey(cursor);
       if (dates.has(dateStr)) {
         consecutiveDays++;
-        currentDate.setDate(currentDate.getDate() - 1);
-      } else if (dateStr === new Date().toISOString().slice(0, 10)) {
-        currentDate.setDate(currentDate.getDate() - 1);
+        cursor = addDays(cursor, -1);
+      } else if (dateStr === today) {
+        cursor = addDays(cursor, -1);
       } else {
         break;
       }
@@ -133,7 +136,7 @@ export const Stats = ({ onBack }: StatsProps) => {
     const categories = new Set(transactions.map((t) => t.categoryId));
 
     if (firstDate) {
-      const first = new Date(firstDate);
+      const first = parseDateKey(firstDate);
       const now = new Date();
       const months = (now.getFullYear() - first.getFullYear()) * 12 + now.getMonth() - first.getMonth();
       const monthlyAverage = months > 0 ? Math.round(totalAmount / months) : totalAmount;

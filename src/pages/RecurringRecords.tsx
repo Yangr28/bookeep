@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Plus, Calendar, Repeat, Trash2, Edit3, Play, Check, X } from 'lucide-react';
+import { todayKey } from '../utils/date';
+import { ArrowLeft, Plus, Repeat, Trash2, Edit3, Play, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getIcon } from '../utils/iconMap';
 import { CalendarPicker } from '../components/CalendarPicker';
@@ -27,7 +28,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
     frequency: 'monthly' as 'daily' | 'weekly' | 'monthly' | 'yearly',
     dayOfMonth: new Date().getDate(),
     dayOfWeek: 1,
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: todayKey(),
     endDate: '',
   });
 
@@ -46,7 +47,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
       frequency: 'monthly',
       dayOfMonth: new Date().getDate(),
       dayOfWeek: 1,
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: todayKey(),
       endDate: '',
     });
     setShowModal(true);

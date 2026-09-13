@@ -5,7 +5,6 @@ import {
   checkForUpdate,
   getSkippedVersion,
   setSkippedVersion,
-  shouldAutoCheck,
   markAutoChecked,
   resolveRollbackTarget,
   getDownloadCandidates,

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Upload, Check, AlertCircle, Loader2, ChevronRight, Download } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { CategoryCard } from './CategoryCard';
@@ -12,6 +13,7 @@ interface OCRRecordModalProps {
 }
 
 export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState<OCRCacheStatus | null>(null);
   const [parsedTransactions, setParsedTransactions] = useState<ParsedTransaction[]>([]);
@@ -29,7 +31,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setError('请选择图片文件');
+      setError(t('ocr.error.notImage'));
       return;
     }
 
@@ -41,7 +43,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (event) => resolve(event.target?.result as string);
-        reader.onerror = () => reject(new Error('读取图片失败'));
+        reader.onerror = () => reject(new Error(t('ocr.error.readFailed')));
         reader.readAsDataURL(file);
       });
 
@@ -57,19 +59,19 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
       setParsedTransactions(transactions);
 
       if (transactions.length === 0) {
-        setError('未能识别到交易记录，请尝试清晰的截图');
+        setError(t('ocr.error.noTransactions'));
         setStep('upload');
       } else {
         setStep('preview');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '图片识别失败，请重试');
+      setError(err instanceof Error ? err.message : t('ocr.error.recognizeFailed'));
       setStep('upload');
     } finally {
       setIsLoading(false);
       setDownloadStatus(null);
     }
-  }, [categories]);
+  }, [categories, t]);
 
   const handleEditTransaction = useCallback((index: number, field: keyof ParsedTransaction, value: string | Date | null) => {
     setParsedTransactions(prev => {
@@ -101,7 +103,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
 
   const handleSubmit = useCallback(() => {
     if (!selectedAccountId) {
-      setError('请选择账户');
+      setError(t('ocr.error.accountRequired'));
       return;
     }
 
@@ -125,7 +127,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
     setParsedTransactions([]);
     setSelectedAccountId(null);
     setError('');
-  }, [parsedTransactions, selectedAccountId, addTransaction]);
+  }, [parsedTransactions, selectedAccountId, addTransaction, t]);
 
   const handleReset = useCallback(() => {
     setStep('upload');
@@ -149,7 +151,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
           className="flex items-center justify-between p-4 flex-shrink-0"
           style={{ borderBottom: '1px solid var(--line)' }}
         >
-          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>批量记账</h3>
+          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('ocr.title')}</h3>
           <button onClick={onClose} className="icon-btn w-9 h-9">
             <X size={18} />
           </button>
@@ -161,7 +163,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
             style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
           >
             <Check size={18} className="flex-shrink-0" />
-            <span className="text-sm font-medium">成功添加 {successCount} 条记录</span>
+            <span className="text-sm font-medium">{t('ocr.successCount', { n: successCount })}</span>
           </div>
         )}
 
@@ -197,13 +199,13 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                 >
                   <Upload size={28} />
                 </div>
-                <p className="font-medium mb-2" style={{ color: 'var(--ink)' }}>上传支付记录截图</p>
-                <p className="text-sm" style={{ color: 'var(--ink-2)' }}>支持微信、支付宝等支付账单截图</p>
+                <p className="font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('ocr.upload.title')}</p>
+                <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('ocr.upload.subtitle')}</p>
               </div>
 
               <div className="mt-4 p-4 rounded-card" style={{ background: 'var(--paper-deep)' }}>
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-                  提示：请确保截图清晰，包含交易金额和描述信息。支持识别多条交易记录。
+                  {t('ocr.upload.hint')}
                 </p>
               </div>
             </div>
@@ -213,13 +215,13 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
             <div className="p-4 safe-bottom">
               <div className="mb-4">
                 <p className="text-sm mb-2" style={{ color: 'var(--ink-2)' }}>
-                  识别到 {parsedTransactions.length} 条记录
+                  {t('ocr.preview.foundCount', { n: parsedTransactions.length })}
                 </p>
                 <button
                   onClick={() => setStep('edit')}
                   className="btn-primary w-full"
                 >
-                  <span>确认并编辑</span>
+                  <span>{t('ocr.preview.confirmEdit')}</span>
                   <ChevronRight size={18} />
                 </button>
               </div>
@@ -236,7 +238,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                             : { background: 'var(--expense-soft)', color: 'var(--expense)' }
                         }
                       >
-                        {transaction.type === 'income' ? '收入' : '支出'}
+                        {transaction.type === 'income' ? t('common.income') : t('common.expense')}
                       </span>
                       <span className="text-lg font-bold amount-num" style={{ color: 'var(--ink)' }}>
                         {transaction.type === 'income' ? '+' : '-'}¥{transaction.amount}
@@ -254,7 +256,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                 onClick={handleReset}
                 className="btn-ghost w-full mt-4"
               >
-                重新上传
+                {t('ocr.preview.reupload')}
               </button>
             </div>
           )}
@@ -262,7 +264,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
           {step === 'edit' && (
             <div className="p-4 safe-bottom">
               <div className="card p-4 mb-4">
-                <p className="text-sm mb-3" style={{ color: 'var(--ink-2)' }}>选择账户</p>
+                <p className="text-sm mb-3" style={{ color: 'var(--ink-2)' }}>{t('ocr.edit.selectAccount')}</p>
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                   {accounts.map((account) => {
                     const selected = selectedAccountId === account.id;
@@ -284,7 +286,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                   <div key={index} className="card p-4">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>
-                        记录 {index + 1}
+                        {t('ocr.edit.recordNo', { n: index + 1 })}
                       </span>
                       <button
                         onClick={() => handleDeleteTransaction(index)}
@@ -305,7 +307,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                             : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }
                         }
                       >
-                        支出
+                        {t('common.expense')}
                       </button>
                       <button
                         onClick={() => handleTypeChange(index, 'income')}
@@ -316,12 +318,12 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                             : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }
                         }
                       >
-                        收入
+                        {t('common.income')}
                       </button>
                     </div>
 
                     <div className="mb-3">
-                      <p className="text-xs mb-1" style={{ color: 'var(--ink-2)' }}>金额</p>
+                      <p className="text-xs mb-1" style={{ color: 'var(--ink-2)' }}>{t('ocr.edit.amount')}</p>
                       <input
                         type="text"
                         value={transaction.amount}
@@ -331,7 +333,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                     </div>
 
                     <div className="mb-3">
-                      <p className="text-xs mb-2" style={{ color: 'var(--ink-2)' }}>分类</p>
+                      <p className="text-xs mb-2" style={{ color: 'var(--ink-2)' }}>{t('ocr.edit.category')}</p>
                       <div className="grid grid-cols-4 gap-2">
                         {categories
                           .filter(c => c.type === transaction.type)
@@ -348,7 +350,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                     </div>
 
                     <div className="mb-3">
-                      <p className="text-xs mb-1" style={{ color: 'var(--ink-2)' }}>备注</p>
+                      <p className="text-xs mb-1" style={{ color: 'var(--ink-2)' }}>{t('ocr.edit.note')}</p>
                       <input
                         type="text"
                         value={transaction.note}
@@ -358,7 +360,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <p className="text-xs flex-shrink-0" style={{ color: 'var(--ink-2)' }}>日期</p>
+                      <p className="text-xs flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{t('ocr.edit.date')}</p>
                       <input
                         type="date"
                         value={transaction.date.toISOString().slice(0, 10)}
@@ -393,14 +395,14 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                   onClick={() => setStep('preview')}
                   className="btn-ghost flex-1"
                 >
-                  返回
+                  {t('ocr.edit.back')}
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={!selectedAccountId}
                   className="btn-primary flex-1"
                 >
-                  确认记账 ({parsedTransactions.length})
+                  {t('ocr.edit.confirm', { n: parsedTransactions.length })}
                 </button>
               </div>
             </div>
@@ -418,7 +420,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                 <>
                   <Download size={32} className="animate-bounce mb-3" style={{ color: 'var(--primary)' }} />
                   <p className="text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>
-                    正在下载{downloadStatus.currentFile}...
+                    {t('ocr.progress.downloading', { file: downloadStatus.currentFile })}
                   </p>
                   <div
                     className="w-full h-2 rounded-full mb-2 overflow-hidden"
@@ -433,13 +435,13 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
                     {downloadStatus.downloadProgress}%
                   </p>
                   <p className="text-xs mt-2 text-center" style={{ color: 'var(--ink-2)' }}>
-                    首次使用需要下载识别引擎，之后可离线使用
+                    {t('ocr.progress.firstTimeHint')}
                   </p>
                 </>
               ) : (
                 <>
                   <Loader2 size={32} className="animate-spin mb-3" style={{ color: 'var(--primary)' }} />
-                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>正在识别图片...</p>
+                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('ocr.progress.recognizing')}</p>
                 </>
               )}
             </div>

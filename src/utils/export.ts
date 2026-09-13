@@ -2,6 +2,7 @@ import { Transaction, Account, Category, Transfer, RecurringRecord, RecordTempla
 import { Budget } from '../store/budgetsSlice';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { loadFromStorage, saveToStorage } from './storage';
+import { todayKey } from './date';
 
 export interface ExportData {
   version: string;
@@ -70,7 +71,7 @@ export const exportData = (params: ExportParams): ExportData => {
 
 export const downloadExportFile = async (data: ExportData): Promise<{ uri: string; fileName: string }> => {
   const json = JSON.stringify(data, null, 2);
-  const fileName = `bookeep_backup_${new Date().toISOString().split('T')[0]}_${Date.now()}.json`;
+  const fileName = `bookeep_backup_${todayKey()}_${Date.now()}.json`;
 
   try {
     const result = await Filesystem.writeFile({

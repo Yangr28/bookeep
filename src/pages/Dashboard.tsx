@@ -1,9 +1,12 @@
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { useStore } from '../store/useStore';
 import { StatCard } from '../components/StatCard';
 import { TransactionCard } from '../components/TransactionCard';
 import { Sparkline, StackedBar, ProgressRing } from '../components/MiniCharts';
 import { formatCurrencyShort } from '../utils/format';
+import { getMonthKey } from '../utils/date';
 import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
 import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle } from 'lucide-react';
 import Empty from '../components/Empty';
@@ -63,19 +66,18 @@ interface DashboardProps {
   onClearWidgetQuickInput?: () => void;
 }
 
-const greeting = () => {
+/** 按时段返回问候语 key（文案在 i18n 资源中） */
+const greetingKey = (): string => {
   const h = new Date().getHours();
-  if (h < 6) return '夜深了';
-  if (h < 12) return '早上好';
-  if (h < 18) return '下午好';
-  return '晚上好';
+  if (h < 6) return 'dashboard.greeting.night';
+  if (h < 12) return 'dashboard.greeting.morning';
+  if (h < 18) return 'dashboard.greeting.afternoon';
+  return 'dashboard.greeting.evening';
 };
 
 const DashboardComponent = ({
   onViewDetail,
-  onGoToAccounts: _onGoToAccounts,
   onGoToBudgets,
-  onGoToStats: _onGoToStats,
   onGoToTransfer,
   onGoToRecurring,
   onGoToTemplates,
@@ -86,26 +88,11 @@ const DashboardComponent = ({
   onShowOCRModal,
   onGoToRecord,
   onFabRecord,
-  quickRecordAmount,
-  quickRecordCategoryId,
-  quickRecordType,
-  quickRecordNote,
-  quickRecordAccountId,
-  quickRecordDateTime,
-  quickRecordCurrency,
-  onQuickRecordAmountChange,
-  onQuickRecordCategoryChange,
-  onQuickRecordTypeChange,
-  onQuickRecordNoteChange,
-  onQuickRecordAccountChange,
-  onQuickRecordCurrencyChange,
-  onQuickRecordSubmit,
   onSmartQuickSave,
-  onShowDatePicker,
-  onShowTimePicker,
   widgetQuickInput,
   onClearWidgetQuickInput,
   }: DashboardProps) => {
+  const { t } = useTranslation();
   const transactions = useStore((state) => state.transactions);
   const deleteTransaction = useStore((state) => state.deleteTransaction);
   const getTodayIncome = useStore((state) => state.getTodayIncome);
@@ -131,7 +118,7 @@ const DashboardComponent = ({
   const totalAssets = useMemo(() => getTotalAssets(), [getTotalAssets, accounts, transactions]);
 
   // 当月预算汇总（总预算/已用/超支项数），仅 budgets 或 transactions 变化时重算
-  const currentMonth = new Date().toISOString().slice(0, 7);
+  const currentMonth = getMonthKey(new Date());
   const budgetSummary = useMemo(() => {
     const expenseCategoryIds = categories.filter(c => c.type === 'expense').map(c => c.id);
     let totalBudget = 0;
@@ -292,13 +279,12 @@ const DashboardComponent = ({
   );
 
   const balance = monthIncome - monthExpense;
-  const canSubmit = !!(quickRecordAmount && quickRecordCategoryId && quickRecordAccountId);
 
   const quickTools = [
-    { icon: ArrowLeftRight, label: '转账', onClick: onGoToTransfer, color: 'var(--accent-transfer)', bg: 'var(--accent-transfer-soft)' },
-    { icon: Repeat, label: '周期记账', onClick: onGoToRecurring, color: 'var(--accent-recurring)', bg: 'var(--accent-recurring-soft)' },
-    { icon: Bookmark, label: '模板', onClick: onGoToTemplates, color: 'var(--accent-template)', bg: 'var(--accent-template-soft)' },
-    { icon: PiggyBank, label: '预算', onClick: onGoToBudgets, color: 'var(--accent-budget)', bg: 'var(--accent-budget-soft)' },
+    { icon: ArrowLeftRight, labelKey: 'dashboard.toolTransfer', onClick: onGoToTransfer, color: 'var(--accent-transfer)', bg: 'var(--accent-transfer-soft)' },
+    { icon: Repeat, labelKey: 'dashboard.toolRecurring', onClick: onGoToRecurring, color: 'var(--accent-recurring)', bg: 'var(--accent-recurring-soft)' },
+    { icon: Bookmark, labelKey: 'dashboard.toolTemplates', onClick: onGoToTemplates, color: 'var(--accent-template)', bg: 'var(--accent-template-soft)' },
+    { icon: PiggyBank, labelKey: 'dashboard.toolBudget', onClick: onGoToBudgets, color: 'var(--accent-budget)', bg: 'var(--accent-budget-soft)' },
   ];
 
   return (
@@ -307,20 +293,20 @@ const DashboardComponent = ({
       <div className="safe-top px-5 pt-2 pb-1 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--ink)' }}>
-            {greeting()}
+            {t(greetingKey())}
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>
-            {new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}
+            {new Date().toLocaleDateString(i18n.language.startsWith('en') ? 'en-US' : 'zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={onGoToSearch} className="icon-btn" aria-label="搜索">
+          <button onClick={onGoToSearch} className="icon-btn" aria-label={t('dashboard.search')}>
             <Search size={19} />
           </button>
-          <button onClick={() => onGoToCurrencyConverter?.()} className="icon-btn" aria-label="汇率转换">
+          <button onClick={() => onGoToCurrencyConverter?.()} className="icon-btn" aria-label={t('dashboard.currencyConverter')}>
             <Globe size={19} />
           </button>
-          <button onClick={onGoToSettings} className="icon-btn" aria-label="设置">
+          <button onClick={onGoToSettings} className="icon-btn" aria-label={t('dashboard.settings')}>
             <Settings size={19} />
           </button>
         </div>
@@ -331,7 +317,7 @@ const DashboardComponent = ({
         <button onClick={() => onViewDetail('month-balance')} className="card card-hover w-full p-5 text-left block">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月余额</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.monthBalance')}</p>
               <p className="text-3xl font-bold mt-1.5 amount-num" style={{ color: 'var(--ink)' }}>
                 {formatCurrencyShort(balance)}
               </p>
@@ -339,20 +325,20 @@ const DashboardComponent = ({
             {/* 资产趋势 sparkline：近 6 个月总资产 mini 折线 */}
             <div className="flex flex-col items-end flex-shrink-0 mt-1">
               <Sparkline data={assetsTrend.map(d => d.assets)} width={72} height={24} />
-              <span className="text-[10px] mt-1" style={{ color: 'var(--ink-2)' }}>近 6 月趋势</span>
+              <span className="text-[10px] mt-1" style={{ color: 'var(--ink-2)' }}>{t('dashboard.trend6m')}</span>
             </div>
           </div>
           <div className="flex items-center gap-5 mt-3">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full" style={{ background: 'var(--primary)' }} />
-              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>收入</span>
+              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('dashboard.income')}</span>
               <span className="text-sm font-semibold amount-num" style={{ color: 'var(--primary)' }}>
                 {formatCurrencyShort(monthIncome)}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full" style={{ background: 'var(--expense)' }} />
-              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>支出</span>
+              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('dashboard.expense')}</span>
               <span className="text-sm font-semibold amount-num" style={{ color: 'var(--expense)' }}>
                 {formatCurrencyShort(-monthExpense)}
               </span>
@@ -371,11 +357,11 @@ const DashboardComponent = ({
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>本月预算</span>
+                <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.monthBudget')}</span>
                 {budgetSummary.overCount > 0 && (
                   <span className="text-[11px] flex items-center gap-1 font-semibold" style={{ color: 'var(--expense)' }}>
                     <AlertCircle size={11} />
-                    {budgetSummary.overCount} 项超支
+                    {t('dashboard.overCount', { n: budgetSummary.overCount })}
                   </span>
                 )}
                 {budgetSummary.overCount === 0 && (
@@ -400,10 +386,10 @@ const DashboardComponent = ({
             </div>
             <div className="flex items-center justify-between mt-1.5">
               <span className="text-xs" style={{ color: 'var(--ink-2)' }}>
-                已用 {budgetSummary.percentage.toFixed(0)}%
+                {t('dashboard.used', { percent: budgetSummary.percentage.toFixed(0) })}
               </span>
               <span className="text-xs font-medium" style={{ color: getBudgetColor(budgetSummary.percentage) }}>
-                {budgetSummary.percentage >= 100 ? '已超支' : budgetSummary.percentage >= 80 ? '接近上限' : '正常'}
+                {budgetSummary.percentage >= 100 ? t('dashboard.statusOver') : budgetSummary.percentage >= 80 ? t('dashboard.statusNearLimit') : t('dashboard.statusNormal')}
               </span>
             </div>
           </button>
@@ -425,7 +411,7 @@ const DashboardComponent = ({
               value={smartInput}
               onChange={(e) => setSmartInput(e.target.value)}
               onKeyPress={(e) => { if (e.key === 'Enter') handleSmartSubmit(); }}
-              placeholder="记一笔？试试输入「午餐30」"
+              placeholder={t('dashboard.smartInputPlaceholder')}
               className="flex-1 bg-transparent outline-none text-sm"
               style={{ color: 'var(--ink)' }}
             />
@@ -457,7 +443,7 @@ const DashboardComponent = ({
                     color: preview.type === 'income' ? 'var(--primary)' : 'var(--expense)',
                   }}
                 >
-                  {preview.type === 'income' ? '收入' : '支出'}
+                  {preview.type === 'income' ? t('common.income') : t('common.expense')}
                   {preview.amount && (
                     <span className="amount-num">¥{preview.amount}</span>
                   )}
@@ -476,7 +462,7 @@ const DashboardComponent = ({
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full opacity-60" style={{ color: 'var(--ink-2)' }}>
-                    <Tag size={11} /> 分类未识别
+                    <Tag size={11} /> {t('dashboard.categoryNotFound')}
                   </span>
                 )}
                 {/* 账户 */}
@@ -490,7 +476,7 @@ const DashboardComponent = ({
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full opacity-60" style={{ color: 'var(--ink-2)' }}>
-                    <CreditCardIcon size={11} /> 账户未识别
+                    <CreditCardIcon size={11} /> {t('dashboard.accountNotFound')}
                   </span>
                 )}
                 {/* 备注 */}
@@ -513,7 +499,7 @@ const DashboardComponent = ({
                   }
                 >
                   <Check size={13} />
-                  {preview.amount && preview.categoryId && preview.accountId ? '保存' : '信息不全'}
+                  {preview.amount && preview.categoryId && preview.accountId ? t('dashboard.save') : t('dashboard.incomplete')}
                 </button>
                 <button
                   onClick={() => handleSmartSubmit()}
@@ -521,7 +507,7 @@ const DashboardComponent = ({
                   style={{ background: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--line)' }}
                 >
                   <Pencil size={13} />
-                  编辑
+                  {t('dashboard.edit')}
                 </button>
               </div>
             </div>
@@ -531,13 +517,13 @@ const DashboardComponent = ({
           <div className="flex gap-2">
             <button onClick={onShowOCRModal} className="btn-ghost px-4 py-2.5 text-sm flex-1">
               <Image size={16} />
-              <span>拍票</span>
+              <span>{t('dashboard.ocrShot')}</span>
             </button>
             <button
               onClick={onFabRecord}
               className="btn-primary flex-[2] py-2.5 text-sm"
             >
-              记一笔
+              {t('dashboard.record')}
             </button>
           </div>
         </div>
@@ -550,14 +536,14 @@ const DashboardComponent = ({
             const Icon = tool.icon;
             return (
               <button
-                key={tool.label}
+                key={tool.labelKey}
                 onClick={tool.onClick}
                 className="flex flex-col items-center gap-1.5 py-2 rounded-button transition-colors active:scale-95"
               >
                 <div className="w-10 h-10 rounded-button flex items-center justify-center" style={{ background: tool.bg }}>
                   <Icon size={19} style={{ color: tool.color }} />
                 </div>
-                <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>{tool.label}</span>
+                <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>{t(tool.labelKey)}</span>
               </button>
             );
           })}
@@ -567,22 +553,22 @@ const DashboardComponent = ({
       {/* 今日收支 + 总资产 */}
       <div className="px-4 mt-4 space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <StatCard type="income" title="今日收入" amount={todayIncome} onClick={() => onViewDetail('today-income')} />
-          <StatCard type="expense" title="今日支出" amount={todayExpense} onClick={() => onViewDetail('today-expense')} />
+          <StatCard type="income" title={t('dashboard.todayIncome')} amount={todayIncome} onClick={() => onViewDetail('today-income')} />
+          <StatCard type="expense" title={t('dashboard.todayExpense')} amount={todayExpense} onClick={() => onViewDetail('today-expense')} />
         </div>
 
         <button onClick={() => onViewDetail('total-balance')} className="card card-hover w-full p-4 text-left block">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>总资产</p>
+              <p className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.totalAssets')}</p>
               <p className="text-2xl font-bold mt-1 amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(totalAssets)}</p>
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
-                收入 <span className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(totalIncome)}</span>
+                {t('dashboard.income')} <span className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(totalIncome)}</span>
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--ink-2)' }}>
-                支出 <span className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(-totalExpense)}</span>
+                {t('dashboard.expense')} <span className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(-totalExpense)}</span>
               </p>
             </div>
           </div>
@@ -591,9 +577,9 @@ const DashboardComponent = ({
 
       {/* 最近记录 */}
       <div className="px-4 mt-6">
-        <h2 className="section-title">最近记录</h2>
+        <h2 className="section-title">{t('dashboard.recentRecords')}</h2>
         {recentTransactions.length === 0 ? (
-          <Empty icon={Wallet} title="暂无记录" description="使用上方智能记账添加第一笔吧" />
+          <Empty icon={Wallet} title={t('dashboard.noRecords')} description={t('dashboard.noRecordsHint')} />
         ) : (
           <div className="space-y-2">
             {recentTransactions.map((transaction) => (

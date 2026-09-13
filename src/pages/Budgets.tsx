@@ -4,6 +4,7 @@ import { useStore } from '../store/useStore';
 import { ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle, Clock, ChevronDown } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
+import { getMonthKey } from '../utils/date';
 import { MonthPicker } from '../components/MonthPicker';
 
 interface BudgetsProps {
@@ -12,7 +13,7 @@ interface BudgetsProps {
 }
 
 export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(getMonthKey(new Date()));
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState('');
   const [showMonthPicker, setShowMonthPicker] = useState(false);

@@ -1,3 +1,10 @@
+import i18n from '../i18n';
+import { todayKey, toDateKey, addDays } from './date';
+
+const EN_MONTHS_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const isEnglish = (): boolean => !!i18n.language && i18n.language.toLowerCase().startsWith('en');
+
 export const formatCurrency = (amount: number): string => {
   return amount.toLocaleString('zh-CN', {
     minimumFractionDigits: 2,
@@ -8,7 +15,7 @@ export const formatCurrency = (amount: number): string => {
 export const formatCurrencyShort = (amount: number): string => {
   const absAmount = Math.abs(amount);
   const sign = amount < 0 ? '-' : '';
-  
+
   return `${sign}¥${absAmount.toLocaleString('zh-CN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -17,7 +24,10 @@ export const formatCurrencyShort = (amount: number): string => {
 
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return dateString || '未知日期';
+  if (isNaN(date.getTime())) return dateString || (isEnglish() ? 'Unknown date' : '未知日期');
+  if (isEnglish()) {
+    return `${EN_MONTHS_ABBR[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  }
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -26,7 +36,7 @@ export const formatDate = (dateString: string): string => {
 
 export const formatDateTime = (dateString: string): string => {
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return dateString || '未知日期';
+  if (isNaN(date.getTime())) return dateString || (isEnglish() ? 'Unknown date' : '未知日期');
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');
@@ -37,7 +47,10 @@ export const formatDateTime = (dateString: string): string => {
 
 export const formatDateShort = (dateString: string): string => {
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return dateString || '未知';
+  if (isNaN(date.getTime())) return dateString || (isEnglish() ? 'Unknown' : '未知');
+  if (isEnglish()) {
+    return `${EN_MONTHS_ABBR[date.getMonth()]} ${date.getDate()}`;
+  }
   const month = date.getMonth() + 1;
   const day = date.getDate();
   return `${month}月${day}日`;
@@ -52,8 +65,7 @@ export const formatTime = (dateString: string): string => {
 };
 
 export const getTodayString = (): string => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
+  return todayKey();
 };
 
 export const isToday = (dateString: string): boolean => {
@@ -61,9 +73,7 @@ export const isToday = (dateString: string): boolean => {
 };
 
 export const isYesterday = (dateString: string): boolean => {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return dateString.startsWith(yesterday.toISOString().split('T')[0]);
+  return dateString.startsWith(toDateKey(addDays(new Date(), -1)));
 };
 
 export const getMonthStart = (date: Date = new Date()): Date => {

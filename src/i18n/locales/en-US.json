@@ -1,0 +1,186 @@
+{
+  "common": {
+    "confirm": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "income": "Income",
+    "expense": "Expense",
+    "amount": "Amount",
+    "category": "Category",
+    "account": "Account",
+    "date": "Date",
+    "time": "Time",
+    "note": "Note",
+    "unknownDate": "Unknown date",
+    "unknown": "Unknown"
+  },
+  "nav": {
+    "home": "Home",
+    "records": "Records",
+    "accounts": "Assets",
+    "profile": "Me",
+    "record": "Add transaction"
+  },
+  "app": {
+    "toast": {
+      "storageError": "Storage is full. Please export a backup soon",
+      "edited": "Changes saved",
+      "saved": "Transaction saved",
+      "latestVersion": "You're on the latest version",
+      "checkUpdateFailed": "Update check failed"
+    },
+    "accountPicker": {
+      "title": "Select Account",
+      "empty": "No accounts yet"
+    },
+    "exit": {
+      "title": "Exit Bookeep?",
+      "message": "Are you sure you want to exit Bookeep?",
+      "confirm": "Exit"
+    }
+  },
+  "dashboard": {
+    "greeting": {
+      "night": "Late night",
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "monthBalance": "Balance this month",
+    "trend6m": "6-month trend",
+    "income": "Income",
+    "expense": "Expense",
+    "monthBudget": "Monthly budget",
+    "overCount": "{{n}} over budget",
+    "used": "{{percent}}% used",
+    "statusOver": "Over budget",
+    "statusNearLimit": "Near limit",
+    "statusNormal": "On track",
+    "smartInputPlaceholder": "Try typing \"lunch 30\"",
+    "categoryNotFound": "Category not recognized",
+    "accountNotFound": "Account not recognized",
+    "save": "Save",
+    "incomplete": "Incomplete",
+    "edit": "Edit",
+    "ocrShot": "Scan receipt",
+    "record": "Add transaction",
+    "todayIncome": "Today's income",
+    "todayExpense": "Today's expense",
+    "totalAssets": "Total assets",
+    "recentRecords": "Recent transactions",
+    "noRecords": "No transactions yet",
+    "noRecordsHint": "Use smart input above to add your first one",
+    "search": "Search",
+    "currencyConverter": "Currency converter",
+    "settings": "Settings",
+    "toolTransfer": "Transfer",
+    "toolRecurring": "Recurring",
+    "toolTemplates": "Templates",
+    "toolBudget": "Budget"
+  },
+  "record": {
+    "titleEdit": "Edit Transaction",
+    "titleNew": "Add Transaction",
+    "smartPlaceholder": "Smart input, e.g. \"lunch 28\"",
+    "smartParsed": "Parsed. Confirm to save",
+    "expense": "Expense",
+    "income": "Income",
+    "selectCategory": "Select category",
+    "categoryRequired": "Please select a category",
+    "amountInvalid": "Amount must be greater than 0",
+    "account": "Account",
+    "selectAccount": "Select an account",
+    "date": "Date",
+    "today": "Today",
+    "time": "Time",
+    "notePlaceholder": "Add a note",
+    "saveEdit": "Save changes",
+    "confirm": "Save transaction",
+    "back": "Back"
+  },
+  "calendar": {
+    "title": "Select Date",
+    "year": "{{year}}",
+    "month1": "Jan",
+    "month2": "Feb",
+    "month3": "Mar",
+    "month4": "Apr",
+    "month5": "May",
+    "month6": "Jun",
+    "month7": "Jul",
+    "month8": "Aug",
+    "month9": "Sep",
+    "month10": "Oct",
+    "month11": "Nov",
+    "month12": "Dec",
+    "weekday0": "Sun",
+    "weekday1": "Mon",
+    "weekday2": "Tue",
+    "weekday3": "Wed",
+    "weekday4": "Thu",
+    "weekday5": "Fri",
+    "weekday6": "Sat",
+    "selected": "Selected {{m}}/{{d}}/{{y}}"
+  },
+  "timepicker": {
+    "title": "Select Time",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "quickSelect": "Quick select",
+    "confirm": "OK"
+  },
+  "monthpicker": {
+    "title": "Select Month",
+    "selected": "Selected {{m}}/{{y}}"
+  },
+  "ocr": {
+    "error": {
+      "notImage": "Please choose an image file",
+      "readFailed": "Failed to read image",
+      "noTransactions": "No transactions found. Try a clearer screenshot",
+      "recognizeFailed": "Recognition failed. Please try again",
+      "accountRequired": "Please select an account"
+    },
+    "title": "Batch Entry",
+    "file": {
+      "lang": "language data",
+      "worker": "recognition engine",
+      "core": "core runtime"
+    },
+    "successCount": "Added {{n}} transactions",
+    "upload": {
+      "title": "Upload payment screenshot",
+      "subtitle": "Supports WeChat, Alipay and other payment screenshots",
+      "hint": "Tip: make sure the screenshot is clear and includes amounts and descriptions. Multiple transactions are supported."
+    },
+    "preview": {
+      "foundCount": "Found {{n}} transactions",
+      "confirmEdit": "Confirm & edit",
+      "reupload": "Upload again"
+    },
+    "edit": {
+      "selectAccount": "Select account",
+      "recordNo": "Record {{n}}",
+      "amount": "Amount",
+      "category": "Category",
+      "note": "Note",
+      "date": "Date",
+      "back": "Back",
+      "confirm": "Save ({{n}})"
+    },
+    "progress": {
+      "downloading": "Downloading {{file}}...",
+      "firstTimeHint": "First use downloads the recognition engine. Offline ready afterwards",
+      "recognizing": "Recognizing image..."
+    }
+  },
+  "settings": {
+    "language": {
+      "title": "Language",
+      "system": "System",
+      "zh": "中文",
+      "en": "English"
+    }
+  }
+}

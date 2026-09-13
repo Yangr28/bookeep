@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface CalendarPickerProps {
@@ -8,19 +9,13 @@ interface CalendarPickerProps {
 }
 
 export const CalendarPicker = ({ selectedDate, onDateChange, onClose }: CalendarPickerProps) => {
+  const { t } = useTranslation();
   const [currentYear, setCurrentYear] = useState(selectedDate.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(selectedDate.getMonth());
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
   const today = new Date();
-
-  const months = [
-    '1月', '2月', '3月', '4月', '5月', '6月',
-    '7月', '8月', '9月', '10月', '11月', '12月'
-  ];
-
-  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
@@ -118,7 +113,7 @@ export const CalendarPicker = ({ selectedDate, onDateChange, onClose }: Calendar
           className="flex items-center justify-between p-4"
           style={{ borderBottom: '1px solid var(--line)' }}
         >
-          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>选择日期</h3>
+          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('calendar.title')}</h3>
           <button onClick={onClose} className="icon-btn w-9 h-9">
             <X size={18} />
           </button>
@@ -140,14 +135,14 @@ export const CalendarPicker = ({ selectedDate, onDateChange, onClose }: Calendar
                   className="text-base font-bold w-20 text-center amount-num whitespace-nowrap"
                   style={{ color: 'var(--ink)' }}
                 >
-                  {currentYear}年
+                  {t('calendar.year', { year: currentYear })}
                 </span>
                 <button onClick={() => handleYearChange('up')} className="icon-btn w-7 h-7">
                   <ChevronRight size={14} />
                 </button>
               </div>
               <span className="text-sm font-medium mt-0.5" style={{ color: 'var(--ink-2)' }}>
-                {months[currentMonth]}
+                {t(`calendar.month${currentMonth + 1}`)}
               </span>
             </div>
 
@@ -158,13 +153,13 @@ export const CalendarPicker = ({ selectedDate, onDateChange, onClose }: Calendar
 
           {/* 星期 */}
           <div className="grid grid-cols-7 justify-items-center mb-1">
-            {weekDays.map((day) => (
+            {Array.from({ length: 7 }, (_, i) => (
               <div
-                key={day}
+                key={i}
                 className="h-8 w-11 flex items-center justify-center text-xs font-medium"
                 style={{ color: 'var(--ink-2)' }}
               >
-                {day}
+                {t(`calendar.weekday${i}`)}
               </div>
             ))}
           </div>
@@ -175,7 +170,7 @@ export const CalendarPicker = ({ selectedDate, onDateChange, onClose }: Calendar
           </div>
 
           <p className="text-center text-xs mt-4" style={{ color: 'var(--ink-2)' }}>
-            已选 {selectedDate.getFullYear()}年{selectedDate.getMonth() + 1}月{selectedDate.getDate()}日
+            {t('calendar.selected', { y: selectedDate.getFullYear(), m: selectedDate.getMonth() + 1, d: selectedDate.getDate() })}
           </p>
         </div>
       </div>

@@ -4,6 +4,8 @@ const ACCOUNTS_KEY = 'bookeep_accounts';
 const FIXED_DEPOSITS_KEY = 'bookeep_fixed_deposits';
 const LOANS_KEY = 'bookeep_loans';
 const TRANSFERS_KEY = 'bookeep_transfers';
+const BUDGETS_KEY = 'bookeep_budgets';
+const PREFERENCES_KEY = 'bookeep_preferences';
 
 /** 存储写入失败时的全局回调（由 App 层设置，用于提示用户导出备份） */
 let onStorageError: ((key: string) => void) | null = null;
@@ -78,4 +80,20 @@ export const loadTransfers = <T>(defaultValue: T): T => {
 
 export const saveTransfers = <T>(value: T): void => {
   saveToStorage(TRANSFERS_KEY, value);
+};
+
+export const loadBudgets = <T>(defaultValue: T): T => {
+  return loadFromStorage(BUDGETS_KEY, defaultValue);
+};
+
+export const saveBudgets = <T>(value: T): void => {
+  saveToStorage(BUDGETS_KEY, value);
+};
+
+export const loadPreferences = <T>(defaultValue: T): T => {
+  return loadFromStorage(PREFERENCES_KEY, defaultValue);
+};
+
+export const savePreferences = <T>(value: T): void => {
+  saveToStorage(PREFERENCES_KEY, value);
 };

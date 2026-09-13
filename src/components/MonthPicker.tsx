@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface MonthPickerProps {
@@ -9,9 +10,8 @@ interface MonthPickerProps {
   onClose: () => void;
 }
 
-const MONTH_LABELS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-
 export const MonthPicker = ({ selectedMonth, onMonthChange, onClose }: MonthPickerProps) => {
+  const { t } = useTranslation();
   const [year, setYear] = useState(Number(selectedMonth.slice(0, 4)) || new Date().getFullYear());
   const currentMonth = Number(selectedMonth.slice(5, 7)) - 1;
   const currentYear = Number(selectedMonth.slice(0, 4));
@@ -38,7 +38,7 @@ export const MonthPicker = ({ selectedMonth, onMonthChange, onClose }: MonthPick
           className="flex items-center justify-between p-4"
           style={{ borderBottom: '1px solid var(--line)' }}
         >
-          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>选择月份</h3>
+          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('monthpicker.title')}</h3>
           <button onClick={onClose} className="icon-btn w-9 h-9">
             <X size={18} />
           </button>
@@ -54,7 +54,7 @@ export const MonthPicker = ({ selectedMonth, onMonthChange, onClose }: MonthPick
               className="text-lg font-bold w-24 text-center amount-num whitespace-nowrap"
               style={{ color: 'var(--ink)' }}
             >
-              {year}年
+              {t('calendar.year', { year })}
             </span>
             <button onClick={() => setYear(year + 1)} className="icon-btn w-9 h-9">
               <ChevronRight size={18} />
@@ -63,12 +63,12 @@ export const MonthPicker = ({ selectedMonth, onMonthChange, onClose }: MonthPick
 
           {/* 月份网格 */}
           <div className="grid grid-cols-4 gap-2">
-            {MONTH_LABELS.map((label, index) => {
+            {Array.from({ length: 12 }, (_, index) => {
               const isSelected = year === currentYear && index === currentMonth;
               const isCurrent = year === now.getFullYear() && index === now.getMonth();
               return (
                 <button
-                  key={label}
+                  key={index}
                   onClick={() => handleSelect(index)}
                   className="h-11 rounded-card text-sm font-medium transition-all"
                   style={
@@ -80,14 +80,14 @@ export const MonthPicker = ({ selectedMonth, onMonthChange, onClose }: MonthPick
                         }
                   }
                 >
-                  {label}
+                  {t(`calendar.month${index + 1}`)}
                 </button>
               );
             })}
           </div>
 
           <p className="text-center text-xs mt-4" style={{ color: 'var(--ink-2)' }}>
-            已选 {currentYear}年{currentMonth + 1}月
+            {t('monthpicker.selected', { y: currentYear, m: currentMonth + 1 })}
           </p>
         </div>
       </div>

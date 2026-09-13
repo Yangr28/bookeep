@@ -344,10 +344,75 @@ public class AppUpdatePlugin extends Plugin {
         }).start();
     }
 
+    /**
+     * OCR 资源 CDN 下载（原生下载器，复用热更新的多镜像切换 + 超时 + .part 保护）。
+     * JS 传入三组候选地址；缺失文件才下载，已有文件跳过。
+     * langUrls/workerUrls：单个文件的镜像列表；coreUrls：各 core 文件完整 URL 的并集
+     * （按末段文件名分组，同名归为一组互为镜像）。
+     */
+    @PluginMethod
+    public void downloadOcrResources(PluginCall call) {
+        new Thread(() -> {
+            try {
+                File cacheDir = new File(getContext().getFilesDir(), "ocr_cache");
+                File coreDir = new File(cacheDir, "core");
+                coreDir.mkdirs();
+
+                java.util.List<String> langUrls = stringList(call, "langUrls");
+                java.util.List<String> workerUrls = stringList(call, "workerUrls");
+                java.util.List<String> coreUrls = stringList(call, "coreUrls");
+
+                File langFile = new File(cacheDir, "chi_sim.traineddata.gz");
+                if ((!langFile.exists() || langFile.length() == 0) && !langUrls.isEmpty()) {
+                    downloadFile(langUrls, langFile, "ocr");
+                }
+                File workerFile = new File(cacheDir, "worker.min.js");
+                if ((!workerFile.exists() || workerFile.length() == 0) && !workerUrls.isEmpty()) {
+                    downloadFile(workerUrls, workerFile, "ocr");
+                }
+                if (!coreUrls.isEmpty()) {
+                    java.util.LinkedHashMap<String, java.util.List<String>> groups = new java.util.LinkedHashMap<>();
+                    for (String u : coreUrls) {
+                        String name = u.substring(u.lastIndexOf('/') + 1);
+                        int q = name.indexOf('?');
+                        if (q >= 0) name = name.substring(0, q);
+                        if (name.isEmpty()) continue;
+                        java.util.List<String> mirrors = groups.get(name);
+                        if (mirrors == null) {
+                            mirrors = new java.util.ArrayList<>();
+                            groups.put(name, mirrors);
+                        }
+                        if (!mirrors.contains(u)) mirrors.add(u);
+                    }
+                    for (java.util.Map.Entry<String, java.util.List<String>> e : groups.entrySet()) {
+                        File f = new File(coreDir, e.getKey());
+                        if (f.exists() && f.length() > 0) continue;
+                        downloadFile(e.getValue(), f, "ocr");
+                    }
+                }
+
+                boolean ready = langFile.exists() && langFile.length() > 0
+                        && workerFile.exists() && workerFile.length() > 0
+                        && coreDir.list() != null && coreDir.list().length > 0;
+                JSObject ret = new JSObject();
+                ret.put("ready", ready);
+                call.resolve(ret);
+            } catch (Exception e) {
+                call.reject("OCR 资源下载失败: " + e.getMessage());
+            }
+        }).start();
+    }
+
     private boolean copyOcrAssetsFromApk() throws Exception {
         File cacheDir = new File(getContext().getFilesDir(), "ocr_cache");
         File coreDir = new File(cacheDir, "core");
         coreDir.mkdirs();
+        // 清理旧版基座遗留的错误 core 文件（v5 非 lstm 变体，v7 worker 不会请求，白占空间）
+        for (String stale : new String[]{"tesseract-core.wasm.js", "tesseract-core-simd.wasm.js",
+                "tesseract-core.wasm", "tesseract-core-simd.wasm"}) {
+            File f = new File(coreDir, stale);
+            if (f.exists()) f.delete();
+        }
 
         String[] files = getContext().getAssets().list("public/ocr");
         if (files == null || files.length == 0) {
@@ -376,6 +441,22 @@ public class AppUpdatePlugin extends Plugin {
 
     // ---------- helpers ----------
 
+    /** 解析 JS 传入的字符串数组参数（去重、去空） */
+    private java.util.List<String> stringList(PluginCall call, String key) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        try {
+            org.json.JSONArray arr = call.getArray(key);
+            if (arr != null) {
+                for (int i = 0; i < arr.length(); i++) {
+                    String u = arr.optString(i, null);
+                    if (u != null && !u.isEmpty() && !out.contains(u)) out.add(u);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return out;
+    }
+
     /** 解析下载地址候选列表：优先 urls（JS 传入的镜像加速列表），url 兜底并去重 */
     private java.util.List<String> resolveUrlCandidates(PluginCall call) {
         java.util.List<String> urls = new java.util.ArrayList<>();
@@ -397,36 +478,52 @@ public class AppUpdatePlugin extends Plugin {
     /**
      * 多源下载：依次尝试每个候选地址（国内 GitHub 加速镜像优先，直链兜底）。
      * 镜像快速失败（连接超时 20s，每个源最多 2 次）；最后一个源（通常是直链）多试 4 次。
+     * 先写入 <target>.part 临时文件，成功后 rename 原子替换，防止下载中断产生损坏文件。
      */
     private void downloadFile(java.util.List<String> candidates, File target, String kind) throws Exception {
+        File part = new File(target.getParentFile(), target.getName() + ".part");
         Exception lastError = null;
-        for (int ui = 0; ui < candidates.size(); ui++) {
-            String urlStr = candidates.get(ui);
-            boolean isLast = ui == candidates.size() - 1;
-            int attempts = isLast ? 4 : 2;
-            for (int attempt = 0; attempt < attempts; attempt++) {
-                if (ui > 0 || attempt > 0) {
+        try {
+            for (int ui = 0; ui < candidates.size(); ui++) {
+                String urlStr = candidates.get(ui);
+                boolean isLast = ui == candidates.size() - 1;
+                int attempts = isLast ? 4 : 2;
+                for (int attempt = 0; attempt < attempts; attempt++) {
+                    if (ui > 0 || attempt > 0) {
+                        try {
+                            Thread.sleep(isLast ? 1500L * (attempt + 1) : 800L);
+                        } catch (InterruptedException ignored) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
                     try {
-                        Thread.sleep(isLast ? 1500L * (attempt + 1) : 800L);
-                    } catch (InterruptedException ignored) {
-                        Thread.currentThread().interrupt();
+                        downloadOne(urlStr, part, kind, isLast, target.getName());
+                        if (!part.exists() || part.length() == 0) {
+                            throw new Exception("下载内容为空");
+                        }
+                        if (target.exists()) target.delete();
+                        if (!part.renameTo(target)) {
+                            // rename 失败（极少见）退化为复制
+                            copyFile(part, target);
+                            part.delete();
+                        }
+                        Log.i(TAG, "download success from: " + urlStr);
+                        return;
+                    } catch (Exception e) {
+                        lastError = e;
+                        Log.w(TAG, "download failed [源 " + (ui + 1) + "/" + candidates.size()
+                                + " 第 " + (attempt + 1) + " 次] " + urlStr + " -> " + e.getMessage());
                     }
                 }
-                try {
-                    downloadOne(urlStr, target, kind, isLast);
-                    Log.i(TAG, "download success from: " + urlStr);
-                    return;
-                } catch (Exception e) {
-                    lastError = e;
-                    Log.w(TAG, "download failed [源 " + (ui + 1) + "/" + candidates.size()
-                            + " 第 " + (attempt + 1) + " 次] " + urlStr + " -> " + e.getMessage());
-                }
             }
+            throw lastError != null ? lastError : new Exception("下载失败");
+        } finally {
+            // 中断/失败时清理临时文件，避免残留 .part 被误判为完整资源
+            if (part.exists()) part.delete();
         }
-        throw lastError != null ? lastError : new Exception("下载失败");
     }
 
-    private void downloadOne(String urlStr, File target, String kind, boolean isDirectSource) throws Exception {
+    private void downloadOne(String urlStr, File target, String kind, boolean isDirectSource, String fileLabel) throws Exception {
         HttpURLConnection conn = null;
         InputStream input = null;
         OutputStream output = null;
@@ -459,11 +556,11 @@ public class AppUpdatePlugin extends Plugin {
                 long now = System.currentTimeMillis();
                 if (now - lastNotify > 200) {
                     lastNotify = now;
-                    notifyProgress(kind, read, total);
+                    notifyProgress(kind, read, total, fileLabel);
                 }
             }
             output.flush();
-            notifyProgress(kind, read, total > 0 ? total : read);
+            notifyProgress(kind, read, total > 0 ? total : read, fileLabel);
         } finally {
             if (output != null) try { output.close(); } catch (Exception ignored) {}
             if (input != null) try { input.close(); } catch (Exception ignored) {}
@@ -471,12 +568,26 @@ public class AppUpdatePlugin extends Plugin {
         }
     }
 
+    private void copyFile(File src, File dest) throws Exception {
+        try (InputStream in = new FileInputStream(src);
+             OutputStream out = new FileOutputStream(dest)) {
+            byte[] buf = new byte[65536];
+            int n;
+            while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+        }
+    }
+
     private void notifyProgress(String kind, long loaded, long total) {
+        notifyProgress(kind, loaded, total, "");
+    }
+
+    private void notifyProgress(String kind, long loaded, long total, String fileLabel) {
         JSObject data = new JSObject();
         data.put("kind", kind);
         data.put("loaded", loaded);
         data.put("total", total);
         data.put("percent", total > 0 ? (int) (loaded * 100 / total) : 0);
+        data.put("file", fileLabel);
         notifyListeners("downloadProgress", data);
     }
 

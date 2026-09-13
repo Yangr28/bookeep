@@ -1,5 +1,6 @@
 import { StateCreator } from 'zustand';
 import { RecurringRecord, Transaction } from '../types';
+import { parseDateKey } from '../utils/date';
 
 export interface RecurringSlice {
   recurringRecords: RecurringRecord[];
@@ -114,7 +115,9 @@ export const createRecurringSlice: StateCreator<RecurringSlice> = (set, get) => 
       }
 
       if (record.endDate) {
-        const endDate = new Date(record.endDate);
+        // endDate 为 'YYYY-MM-DD' 键,必须按本地时区解析;new Date(key) 按 UTC 解析会导致
+        // UTC-5 等西半球时区在截止日当天被误判为已过期
+        const endDate = parseDateKey(record.endDate);
         if (today > endDate) shouldGenerate = false;
       }
 

@@ -1,4 +1,5 @@
 import { useState, useRef, TouchEvent, DragEvent, useEffect } from 'react';
+import { todayKey, toDateKey, addMonths, parseDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
 import { Building2, Wallet, MessageCircle, Banknote, CreditCard, Plus, X, ChevronRight, Trash2, Edit3, Calendar, Clock, Percent, Palette, ArrowUpDown, Landmark, ArrowRight, ArrowRightLeft, AlertCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
@@ -50,12 +51,7 @@ interface AccountsProps {
 }
 
 export const Accounts = ({
-  isTab: _isTab,
   onViewAccountDetail,
-  onGoToBudgets,
-  onGoToRecurring,
-  onGoToTemplates,
-  onGoToCurrencyConverter,
 }: AccountsProps) => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -175,7 +171,7 @@ export const Accounts = ({
     principal: '',
     rate: '',
     term: 12,
-    startDate: new Date().toISOString().split('T')[0]
+    startDate: todayKey()
   });
   const [loanFormData, setLoanFormData] = useState({
     name: '',
@@ -183,7 +179,7 @@ export const Accounts = ({
     principal: '',
     rate: '',
     term: 36,
-    startDate: new Date().toISOString().split('T')[0]
+    startDate: todayKey()
   });
   const [showCustomBank, setShowCustomBank] = useState(false);
 
@@ -204,9 +200,8 @@ export const Accounts = ({
   };
 
   const calculateEndDate = (startDate: string, term: number): string => {
-    const date = new Date(startDate);
-    date.setMonth(date.getMonth() + term);
-    return date.toISOString().split('T')[0];
+    // parseDateKey 本地正午构造,避免 new Date('YYYY-MM-DD') 的 UTC 解析偏差
+    return toDateKey(addMonths(parseDateKey(startDate), term));
   };
 
   const handleOpenAddModal = () => {
@@ -1461,7 +1456,7 @@ export const Accounts = ({
       {showDepositDatePicker && createPortal(
         <CalendarPicker
           selectedDate={(() => {
-            const [y, m, d] = (depositFormData.startDate || new Date().toISOString().split('T')[0]).split('-').map(Number);
+            const [y, m, d] = (depositFormData.startDate || todayKey()).split('-').map(Number);
             return new Date(y, m - 1, d);
           })()}
           onDateChange={(date) => {
@@ -1477,7 +1472,7 @@ export const Accounts = ({
       {showLoanDatePicker && createPortal(
         <CalendarPicker
           selectedDate={(() => {
-            const [y, m, d] = (loanFormData.startDate || new Date().toISOString().split('T')[0]).split('-').map(Number);
+            const [y, m, d] = (loanFormData.startDate || todayKey()).split('-').map(Number);
             return new Date(y, m - 1, d);
           })()}
           onDateChange={(date) => {

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Home, ReceiptText, Wallet, User, Plus } from 'lucide-react';
 
 interface BottomNavProps {
@@ -8,13 +9,15 @@ interface BottomNavProps {
 }
 
 const navItems = [
-  { id: '/', icon: Home, label: '首页' },
-  { id: '/records', icon: ReceiptText, label: '账单' },
-  { id: '/accounts', icon: Wallet, label: '资产' },
-  { id: '/profile', icon: User, label: '我的' },
+  { id: '/', icon: Home, labelKey: 'nav.home' },
+  { id: '/records', icon: ReceiptText, labelKey: 'nav.records' },
+  { id: '/accounts', icon: Wallet, labelKey: 'nav.accounts' },
+  { id: '/profile', icon: User, labelKey: 'nav.profile' },
 ];
 
 export const BottomNav = ({ currentPage, onPageChange, onRecord }: BottomNavProps) => {
+  const { t } = useTranslation();
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50"
@@ -30,6 +33,7 @@ export const BottomNav = ({ currentPage, onPageChange, onRecord }: BottomNavProp
           <NavButton
             key={item.id}
             item={item}
+            label={t(item.labelKey)}
             active={currentPage === item.id}
             onClick={() => onPageChange(item.id)}
           />
@@ -39,7 +43,7 @@ export const BottomNav = ({ currentPage, onPageChange, onRecord }: BottomNavProp
         <div className="w-[72px] flex-shrink-0 flex justify-center">
           <button
             onClick={onRecord}
-            aria-label="记一笔"
+            aria-label={t('nav.record')}
             className="w-14 h-14 rounded-full flex items-center justify-center text-white -mt-6 active:scale-95 transition-transform"
             style={{
               background: 'var(--primary)',
@@ -55,6 +59,7 @@ export const BottomNav = ({ currentPage, onPageChange, onRecord }: BottomNavProp
           <NavButton
             key={item.id}
             item={item}
+            label={t(item.labelKey)}
             active={currentPage === item.id}
             onClick={() => onPageChange(item.id)}
           />
@@ -66,10 +71,12 @@ export const BottomNav = ({ currentPage, onPageChange, onRecord }: BottomNavProp
 
 function NavButton({
   item,
+  label,
   active,
   onClick,
 }: {
-  item: { id: string; icon: typeof Home; label: string };
+  item: { id: string; icon: typeof Home; labelKey: string };
+  label: string;
   active: boolean;
   onClick: () => void;
 }) {
@@ -81,7 +88,7 @@ function NavButton({
       style={{ color: active ? 'var(--primary)' : 'var(--ink-2)' }}
     >
       <Icon size={22} strokeWidth={active ? 2.3 : 1.9} />
-      <span className={`text-label ${active ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
+      <span className={`text-label ${active ? 'font-bold' : 'font-medium'}`}>{label}</span>
     </button>
   );
 }

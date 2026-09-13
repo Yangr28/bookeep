@@ -1,0 +1,186 @@
+{
+  "common": {
+    "confirm": "确定",
+    "cancel": "取消",
+    "save": "保存",
+    "edit": "编辑",
+    "income": "收入",
+    "expense": "支出",
+    "amount": "金额",
+    "category": "分类",
+    "account": "账户",
+    "date": "日期",
+    "time": "时间",
+    "note": "备注",
+    "unknownDate": "未知日期",
+    "unknown": "未知"
+  },
+  "nav": {
+    "home": "首页",
+    "records": "账单",
+    "accounts": "资产",
+    "profile": "我的",
+    "record": "记一笔"
+  },
+  "app": {
+    "toast": {
+      "storageError": "存储空间不足，请尽快导出数据备份",
+      "edited": "修改成功",
+      "saved": "记账成功",
+      "latestVersion": "当前已是最新版本",
+      "checkUpdateFailed": "检查更新失败"
+    },
+    "accountPicker": {
+      "title": "选择账户",
+      "empty": "还没有添加账户"
+    },
+    "exit": {
+      "title": "确认退出",
+      "message": "确定要退出 Bookeep 吗？",
+      "confirm": "退出"
+    }
+  },
+  "dashboard": {
+    "greeting": {
+      "night": "夜深了",
+      "morning": "早上好",
+      "afternoon": "下午好",
+      "evening": "晚上好"
+    },
+    "monthBalance": "本月余额",
+    "trend6m": "近 6 月趋势",
+    "income": "收入",
+    "expense": "支出",
+    "monthBudget": "本月预算",
+    "overCount": "{{n}} 项超支",
+    "used": "已用 {{percent}}%",
+    "statusOver": "已超支",
+    "statusNearLimit": "接近上限",
+    "statusNormal": "正常",
+    "smartInputPlaceholder": "记一笔？试试输入「午餐30」",
+    "categoryNotFound": "分类未识别",
+    "accountNotFound": "账户未识别",
+    "save": "保存",
+    "incomplete": "信息不全",
+    "edit": "编辑",
+    "ocrShot": "拍票",
+    "record": "记一笔",
+    "todayIncome": "今日收入",
+    "todayExpense": "今日支出",
+    "totalAssets": "总资产",
+    "recentRecords": "最近记录",
+    "noRecords": "暂无记录",
+    "noRecordsHint": "使用上方智能记账添加第一笔吧",
+    "search": "搜索",
+    "currencyConverter": "汇率转换",
+    "settings": "设置",
+    "toolTransfer": "转账",
+    "toolRecurring": "周期记账",
+    "toolTemplates": "模板",
+    "toolBudget": "预算"
+  },
+  "record": {
+    "titleEdit": "编辑记录",
+    "titleNew": "记一笔",
+    "smartPlaceholder": "智能记账，如「午饭28」",
+    "smartParsed": "已智能解析，确认后保存",
+    "expense": "支出",
+    "income": "收入",
+    "selectCategory": "选择分类",
+    "categoryRequired": "请选择一个分类",
+    "amountInvalid": "金额必须大于 0",
+    "account": "账户",
+    "selectAccount": "请选择账户",
+    "date": "日期",
+    "today": "今天",
+    "time": "时间",
+    "notePlaceholder": "添加备注",
+    "saveEdit": "保存修改",
+    "confirm": "确认记账",
+    "back": "返回"
+  },
+  "calendar": {
+    "title": "选择日期",
+    "year": "{{year}}年",
+    "month1": "1月",
+    "month2": "2月",
+    "month3": "3月",
+    "month4": "4月",
+    "month5": "5月",
+    "month6": "6月",
+    "month7": "7月",
+    "month8": "8月",
+    "month9": "9月",
+    "month10": "10月",
+    "month11": "11月",
+    "month12": "12月",
+    "weekday0": "日",
+    "weekday1": "一",
+    "weekday2": "二",
+    "weekday3": "三",
+    "weekday4": "四",
+    "weekday5": "五",
+    "weekday6": "六",
+    "selected": "已选 {{y}}年{{m}}月{{d}}日"
+  },
+  "timepicker": {
+    "title": "选择时间",
+    "hours": "小时",
+    "minutes": "分钟",
+    "quickSelect": "快捷选择",
+    "confirm": "确定"
+  },
+  "monthpicker": {
+    "title": "选择月份",
+    "selected": "已选 {{y}}年{{m}}月"
+  },
+  "ocr": {
+    "error": {
+      "notImage": "请选择图片文件",
+      "readFailed": "读取图片失败",
+      "noTransactions": "未能识别到交易记录，请尝试清晰的截图",
+      "recognizeFailed": "图片识别失败，请重试",
+      "accountRequired": "请选择账户"
+    },
+    "title": "批量记账",
+    "file": {
+      "lang": "语言数据包",
+      "worker": "识别引擎",
+      "core": "核心运行库"
+    },
+    "successCount": "成功添加 {{n}} 条记录",
+    "upload": {
+      "title": "上传支付记录截图",
+      "subtitle": "支持微信、支付宝等支付账单截图",
+      "hint": "提示：请确保截图清晰，包含交易金额和描述信息。支持识别多条交易记录。"
+    },
+    "preview": {
+      "foundCount": "识别到 {{n}} 条记录",
+      "confirmEdit": "确认并编辑",
+      "reupload": "重新上传"
+    },
+    "edit": {
+      "selectAccount": "选择账户",
+      "recordNo": "记录 {{n}}",
+      "amount": "金额",
+      "category": "分类",
+      "note": "备注",
+      "date": "日期",
+      "back": "返回",
+      "confirm": "确认记账 ({{n}})"
+    },
+    "progress": {
+      "downloading": "正在下载{{file}}...",
+      "firstTimeHint": "首次使用需要下载识别引擎，之后可离线使用",
+      "recognizing": "正在识别图片..."
+    }
+  },
+  "settings": {
+    "language": {
+      "title": "语言",
+      "system": "跟随系统",
+      "zh": "中文",
+      "en": "English"
+    }
+  }
+}

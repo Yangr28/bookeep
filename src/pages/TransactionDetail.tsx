@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { toDateKey } from '../utils/date';
 import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
 import { formatCurrencyShort } from '../utils/format';
@@ -75,7 +76,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
   const filteredTransactions = [...transactions]
     .filter((t) => {
       const tDate = new Date(t.createdAt);
-      const dateStr = tDate.toISOString().split('T')[0];
+      const dateStr = toDateKey(tDate);
       const isToday = tDate >= todayStart && tDate < todayEnd;
       const isThisMonth = tDate >= monthStart && tDate < monthEnd;
       const isIncome = t.type === 'income';
@@ -267,8 +268,8 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
                       end = new Date(today.getFullYear(), today.getMonth(), 0);
                     }
 
-                    setStartDate(start.toISOString().split('T')[0]);
-                    setEndDate(end.toISOString().split('T')[0]);
+                    setStartDate(toDateKey(start));
+                    setEndDate(toDateKey(end));
                   }}
                   className="chip chip-inactive text-xs"
                 >

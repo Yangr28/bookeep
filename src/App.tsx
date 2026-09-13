@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dashboard } from './pages/Dashboard';
 import { Record } from './pages/Record';
 import { Categories } from './pages/Categories';
@@ -27,7 +28,7 @@ import { X, Wallet, CheckCircle } from 'lucide-react';
 import { App as CapApp } from '@capacitor/app';
 import { useStore } from './store/useStore';
 import { setStorageErrorCallback } from './utils/storage';
-import { iconMap, getIcon } from './utils/iconMap';
+import { getIcon } from './utils/iconMap';
 import { AccountTypeNames } from './types';
 import { useHistory } from './hooks/useHistory';
 import { useModal } from './hooks/useModal';
@@ -40,6 +41,7 @@ import WidgetLaunch from './plugins/widgetLaunch';
 type FilterType = 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance';
 
 export default function App() {
+  const { t } = useTranslation();
   const { theme, isDark, toggleTheme } = useTheme();
 
   const {
@@ -72,11 +74,11 @@ export default function App() {
   // 存储写入失败时提示用户导出备份（防止数据丢失）
   useEffect(() => {
     setStorageErrorCallback(() => {
-      setToastMessage('存储空间不足，请尽快导出数据备份');
+      setToastMessage(t('app.toast.storageError'));
       setTimeout(() => setToastMessage(null), 5000);
     });
     return () => setStorageErrorCallback(() => {});
-  }, []);
+  }, [t]);
   
   const { 
     currentPage, 
@@ -174,7 +176,7 @@ export default function App() {
     } else {
       resetHistory('/');
     }
-    setToastMessage(editTransaction ? '修改成功' : '记账成功');
+    setToastMessage(editTransaction ? t('app.toast.edited') : t('app.toast.saved'));
     setTimeout(() => setToastMessage(null), 2000);
     setEditTransaction(null);
     setRecordAmount('');
@@ -182,7 +184,7 @@ export default function App() {
     setRecordNote('');
     setRecordType('expense');
     setShowKeypad(false);
-  }, [resetHistory, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setShowKeypad, editTransaction]);
+  }, [resetHistory, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setShowKeypad, editTransaction, t]);
 
   const handleViewDetail = useCallback((filterType: FilterType) => {
     setDetailFilter(filterType);
@@ -292,7 +294,7 @@ export default function App() {
         resetHistory('/');
         setWidgetQuickInput(quickInput);
       }
-    } catch (e) {
+    } catch {
       // 插件不可用（如 Web 环境），忽略
     }
   }, [resetHistory]);
@@ -333,14 +335,14 @@ export default function App() {
     try {
       const result = await checkUpdate(true);
       if (result === 'latest') {
-        setToastMessage('当前已是最新版本');
+        setToastMessage(t('app.toast.latestVersion'));
         setTimeout(() => setToastMessage(null), 2000);
       }
     } catch (e) {
-      setToastMessage(e instanceof Error ? e.message : '检查更新失败');
+      setToastMessage(e instanceof Error ? e.message : t('app.toast.checkUpdateFailed'));
       setTimeout(() => setToastMessage(null), 2500);
     }
-  }, [checkUpdate, setToastMessage]);
+  }, [checkUpdate, setToastMessage, t]);
 
   useEffect(() => {
     if (!appUnlocked) return;
@@ -443,9 +445,9 @@ export default function App() {
     // 记账成功后回到页面顶部，确保余额卡片在可视区域内
     window.scrollTo(0, 0);
 
-    setToastMessage('记账成功');
+    setToastMessage(t('app.toast.saved'));
     setTimeout(() => setToastMessage(null), 2000);
-  }, [quickRecordAmount, quickRecordCategoryId, quickRecordAccountId, quickRecordType, quickRecordNote, quickRecordDateTime, quickRecordCurrency, addTransaction, setToastMessage]);
+  }, [quickRecordAmount, quickRecordCategoryId, quickRecordAccountId, quickRecordType, quickRecordNote, quickRecordDateTime, quickRecordCurrency, addTransaction, setToastMessage, t]);
 
   // 首页智能输入「快速保存」：绕过 quickRecord state，直接用解析结果完成记账
   const handleSmartQuickSave = useCallback((parsed: {
@@ -478,9 +480,9 @@ export default function App() {
       }),
     });
     window.scrollTo(0, 0);
-    setToastMessage('记账成功');
+    setToastMessage(t('app.toast.saved'));
     setTimeout(() => setToastMessage(null), 2000);
-  }, [addTransaction, setToastMessage]);
+  }, [addTransaction, setToastMessage, t]);
 
   const handleQuickRecordDateChange = useCallback((date: Date) => {
     const time = quickRecordDateTime;
@@ -741,7 +743,7 @@ export default function App() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--line)' }}>
-              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>选择账户</h3>
+              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('app.accountPicker.title')}</h3>
               <button onClick={() => setShowAccountPicker(false)} className="icon-btn w-9 h-9">
                 <X size={18} />
               </button>
@@ -753,7 +755,7 @@ export default function App() {
                   <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--paper-deep)' }}>
                     <Wallet size={28} style={{ color: 'var(--ink-2)' }} />
                   </div>
-                  <p style={{ color: 'var(--ink-2)' }}>还没有添加账户</p>
+                  <p style={{ color: 'var(--ink-2)' }}>{t('app.accountPicker.empty')}</p>
                 </div>
               ) : (
                 accounts.map((account) => {
@@ -800,15 +802,15 @@ export default function App() {
         >
           <div className="card w-full max-w-sm mx-4 p-5 animate-bounce-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>确认退出</h3>
+              <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{t('app.exit.title')}</h3>
               <button onClick={() => setShowExitConfirm(false)} className="icon-btn w-9 h-9">
                 <X size={18} />
               </button>
             </div>
-            <p className="text-sm mb-5" style={{ color: 'var(--ink-2)' }}>确定要退出 Bookeep 吗？</p>
+            <p className="text-sm mb-5" style={{ color: 'var(--ink-2)' }}>{t('app.exit.message')}</p>
             <div className="flex gap-3">
-              <button onClick={() => setShowExitConfirm(false)} className="btn-ghost flex-1">取消</button>
-              <button onClick={handleConfirmExit} className="btn-danger flex-1">退出</button>
+              <button onClick={() => setShowExitConfirm(false)} className="btn-ghost flex-1">{t('common.cancel')}</button>
+              <button onClick={handleConfirmExit} className="btn-danger flex-1">{t('app.exit.confirm')}</button>
             </div>
           </div>
         </div>

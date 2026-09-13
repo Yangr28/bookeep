@@ -1,5 +1,6 @@
 import { StateCreator } from 'zustand';
 import { Transaction, Category, Account, FixedDeposit, Loan, Transfer } from '../types';
+import { todayKey, toDateKey, getMonthKey } from '../utils/date';
 
 /** 单个账户对账结果 */
 export interface AccountReconciliation {
@@ -72,16 +73,16 @@ export const createCalculationsSlice: StateCreator<
   },
 
   getTodayIncome: () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayKey();
     return round2(get().transactions
-      .filter((t) => t.type === 'income' && t.createdAt.startsWith(today))
+      .filter((t) => t.type === 'income' && toDateKey(new Date(t.createdAt)) === today)
       .reduce((sum, t) => sum + t.amount, 0));
   },
 
   getTodayExpense: () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayKey();
     return round2(get().transactions
-      .filter((t) => t.type === 'expense' && t.createdAt.startsWith(today))
+      .filter((t) => t.type === 'expense' && toDateKey(new Date(t.createdAt)) === today)
       .reduce((sum, t) => sum + t.amount, 0));
   },
 
@@ -247,21 +248,21 @@ export const createCalculationsSlice: StateCreator<
     );
 
     const now = new Date();
-    const monthKeys: { year: number; month: number; label: string }[] = [];
+    const monthKeys: { year: number; month: number; label: string; key: string }[] = [];
     for (let i = months - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       monthKeys.push({
         year: d.getFullYear(),
         month: d.getMonth(),
         label: `${d.getMonth() + 1}月`,
+        key: getMonthKey(d),
       });
     }
 
     // 按月聚合净流（income - expense，transfers 在账户间移动不影响总资产）
     const monthlyNet: Record<string, number> = {};
     for (const t of transactions) {
-      const d = new Date(t.createdAt);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const key = getMonthKey(new Date(t.createdAt));
       monthlyNet[key] = round2((monthlyNet[key] || 0) + (t.type === 'income' ? t.amount : -t.amount));
     }
 
@@ -273,7 +274,7 @@ export const createCalculationsSlice: StateCreator<
       assets: currentAssets,
     };
     for (let i = monthKeys.length - 2; i >= 0; i--) {
-      const nextKey = `${monthKeys[i + 1].year}-${monthKeys[i + 1].month}`;
+      const nextKey = monthKeys[i + 1].key;
       const nextNet = monthlyNet[nextKey] || 0;
       result[i] = {
         month: monthKeys[i].label,

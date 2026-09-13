@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Plus, Bookmark, Trash2, Edit3, X, Check } from 'lucide-react';
+import { ArrowLeft, Plus, Bookmark, Trash2, Edit3, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getIcon } from '../utils/iconMap';
 import { RecordTemplate, Transaction } from '../types';

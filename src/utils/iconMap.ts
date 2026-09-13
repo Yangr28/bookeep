@@ -3,18 +3,18 @@ import {
   Wallet, Gift, TrendingUp, Plus, Briefcase, Award,
   Circle, Building2, MessageCircle, Banknote, CreditCard,
   CheckCircle, Bookmark, Landmark, PiggyBank, Coins,
-  Receipt, FileText, HandCoins, PiggyBank as Jar,
+  Receipt, FileText, HandCoins,
   // 支出 - 餐饮
   UtensilsCrossed, Utensils, Coffee, Cake, Wine, IceCream, Cookie,
   // 支出 - 交通
   Car, Plane, Train, Bus, Bike, CarTaxiFront, Fuel, ParkingCircle,
   // 支出 - 购物
-  ShoppingBag, ShoppingCart, Shirt, Watch, Gem, Package, Gift as Gift2,
+  ShoppingBag, ShoppingCart, Shirt, Watch, Gem, Package,
   // 支出 - 居住
   Home, Key, Paintbrush, Wrench, Lightbulb, Droplet, Flame, Wifi,
   // 支出 - 生活
-  ShoppingBag as Grocery, Baby, HeartPulse, Pill, Dumbbell, Scissors,
-  PawPrint, Stethoscope, Hand, Music, Headphones, Tv, Radio,
+  Baby, HeartPulse, Pill, Dumbbell, Scissors,
+  PawPrint, Stethoscope, Music, Headphones, Tv, Radio,
   // 支出 - 教育娱乐
   GraduationCap, BookOpen, Gamepad2, Film, Theater, Palette, Brush,
   Camera, Image, Video, Mic, Pencil, Ruler, Calculator,
@@ -22,7 +22,6 @@ import {
   Phone, Laptop, MoreHorizontal, Heart, HelpCircle, AlertTriangle, Lock,
   ShieldCheck, Flag, Globe, Users, Crown, Star, Sun, Moon, Cloud, Bell,
   Calendar, Clock, MapPin, Navigation, Compass, Target, Zap, Leaf,
-  Flame as Fire, Coffee as Cup, Cookie as Biscuit, Wine as Bottle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 

@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/useStore';
 import { CategoryCard } from '../components/CategoryCard';
 import { TransactionType, Transaction } from '../types';
 import { formatDateTime } from '../utils/format';
+import { isSameLocalDate } from '../utils/date';
 import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
 import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
@@ -28,6 +30,7 @@ interface RecordProps {
 }
 
 const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, onSubmit }: RecordProps) => {
+  const { t } = useTranslation();
   const [smartInput, setSmartInput] = useState('');
   const [showSmartResult, setShowSmartResult] = useState(false);
 
@@ -50,8 +53,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
   const filteredCategories = categories.filter((c) => c.type === type);
 
   const isToday = () => {
-    const today = new Date();
-    return selectedDateTime.toDateString() === today.toDateString();
+    return isSameLocalDate(selectedDateTime, new Date());
   };
 
   const hasAmountError = amount !== '' && parseFloat(amount) <= 0;
@@ -106,12 +108,12 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
       {/* 头部 */}
       <div className="safe-top px-4 pt-2 pb-2 flex items-center gap-3">
         {onBack && (
-          <button onClick={onBack} className="icon-btn" aria-label="返回">
+          <button onClick={onBack} className="icon-btn" aria-label={t('record.back')}>
             <ArrowLeft size={20} />
           </button>
         )}
         <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>
-          {isEditMode ? '编辑记录' : '记一笔'}
+          {isEditMode ? t('record.titleEdit') : t('record.titleNew')}
         </h1>
       </div>
 
@@ -130,7 +132,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
                     handleSmartSubmit();
                   }
                 }}
-                placeholder="智能记账，如「午饭28」"
+                placeholder={t('record.smartPlaceholder')}
                 className="flex-1 bg-transparent outline-none text-sm"
                 style={{ color: 'var(--ink)' }}
               />
@@ -147,7 +149,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
             </div>
             {showSmartResult && (
               <p className="text-xs mt-2 text-center animate-fade-in" style={{ color: 'var(--primary)' }}>
-                已智能解析，确认后保存
+                {t('record.smartParsed')}
               </p>
             )}
           </div>
@@ -165,7 +167,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
               ? { background: 'var(--expense)', color: '#fff', fontWeight: 600, boxShadow: '0 4px 12px rgba(224,104,79,0.3)' }
               : undefined}
           >
-            支出
+            {t('record.expense')}
           </button>
           <button
             onClick={() => {
@@ -177,13 +179,13 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
               ? { background: 'var(--primary)', color: '#fff', fontWeight: 600, boxShadow: '0 4px 12px rgba(46,133,222,0.3)' }
               : undefined}
           >
-            收入
+            {t('record.income')}
           </button>
         </div>
 
         {/* 分类 */}
         <div className="card p-4">
-          <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>选择分类</p>
+          <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>{t('record.selectCategory')}</p>
           <div className="grid grid-cols-4 gap-2">
             {filteredCategories.map((category) => (
               <CategoryCard
@@ -195,7 +197,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
             ))}
           </div>
           {hasCategoryError && (
-            <p className="text-xs mt-3 text-center" style={{ color: 'var(--expense)' }}>请选择一个分类</p>
+            <p className="text-xs mt-3 text-center" style={{ color: 'var(--expense)' }}>{t('record.categoryRequired')}</p>
           )}
         </div>
 
@@ -221,7 +223,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
             />
           </div>
           {hasAmountError && (
-            <p className="text-xs mt-2 text-center" style={{ color: 'var(--expense)' }}>金额必须大于 0</p>
+            <p className="text-xs mt-2 text-center" style={{ color: 'var(--expense)' }}>{t('record.amountInvalid')}</p>
           )}
         </div>
 
@@ -237,9 +239,9 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
               <AccountIcon size={19} />
             </div>
             <div className="flex-1 text-left min-w-0">
-              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>账户</p>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('record.account')}</p>
               <p className="text-sm font-semibold mt-0.5 truncate" style={{ color: selectedAccount ? 'var(--ink)' : 'var(--expense)' }}>
-                {selectedAccount ? selectedAccount.name : '请选择账户'}
+                {selectedAccount ? selectedAccount.name : t('record.selectAccount')}
               </p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
@@ -250,9 +252,9 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
               <Calendar size={19} />
             </div>
             <div className="flex-1 text-left">
-              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>日期</p>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('record.date')}</p>
               <p className="text-sm font-semibold mt-0.5" style={{ color: 'var(--ink)' }}>
-                {isToday() ? '今天' : formatDateTime(selectedDateTime.toISOString()).split(' ')[0]}
+                {isToday() ? t('record.today') : formatDateTime(selectedDateTime.toISOString()).split(' ')[0]}
               </p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
@@ -263,7 +265,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
               <Clock size={19} />
             </div>
             <div className="flex-1 text-left">
-              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>时间</p>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('record.time')}</p>
               <p className="text-sm font-semibold mt-0.5" style={{ color: 'var(--ink)' }}>
                 {formatDateTime(selectedDateTime.toISOString()).split(' ')[1]}
               </p>
@@ -276,7 +278,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
               type="text"
               value={note}
               onChange={(e) => onNoteChange(e.target.value)}
-              placeholder="添加备注"
+              placeholder={t('record.notePlaceholder')}
               className="flex-1 bg-transparent outline-none text-sm"
               style={{ color: 'var(--ink)' }}
             />
@@ -298,7 +300,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
           disabled={!canSubmit}
           className="btn-primary w-full text-base py-3.5"
         >
-          {isEditMode ? '保存修改' : '确认记账'}
+          {isEditMode ? t('record.saveEdit') : t('record.confirm')}
         </button>
       </div>
     </div>

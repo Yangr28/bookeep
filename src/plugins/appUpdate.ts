@@ -10,11 +10,13 @@ export interface VersionInfo {
 }
 
 export interface DownloadProgress {
-  /** hot: 热更新包；apk: 整包 */
-  kind: 'hot' | 'apk';
+  /** hot: 热更新包；apk: 整包；ocr: OCR 识别资源 */
+  kind: 'hot' | 'apk' | 'ocr';
   loaded: number;
   total: number;
   percent: number;
+  /** 当前下载的目标文件名（ocr 下载时用于区分语言包/引擎/核心库） */
+  file?: string;
 }
 
 export interface AppUpdatePlugin {
@@ -36,6 +38,13 @@ export interface AppUpdatePlugin {
    * 返回 ready=false 表示当前基座 APK 不含 OCR 资源（旧基座），调用方降级 CDN 下载。
    */
   prepareOcrAssets(): Promise<{ ready: boolean }>;
+  /**
+   * OCR 资源 CDN 下载（原生下载器：多镜像切换 + 超时 + .part 保护）。
+   * langUrls/workerUrls：单个文件的镜像候选；coreUrls：各 core 文件完整 URL 的并集
+   * （原生按末段文件名分组，同名互为镜像）。缺失文件才下载。
+   * 旧基座无此方法时调用会被拒绝，调用方应降级 JS fetch。
+   */
+  downloadOcrResources(options: { langUrls: string[]; workerUrls: string[]; coreUrls: string[] }): Promise<{ ready: boolean }>;
   /** 下载进度事件 */
   addListener(
     eventName: 'downloadProgress',
@@ -56,6 +65,9 @@ const AppUpdate = registerPlugin<AppUpdatePlugin>('AppUpdate', {
     },
     installApk: async () => ({ resultCode: 0 }),
     prepareOcrAssets: async () => ({ ready: false }),
+    downloadOcrResources: async () => {
+      throw new Error('Web 环境不支持 OCR 资源下载');
+    },
   },
 });
 

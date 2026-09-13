@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface TimePickerProps {
@@ -8,6 +9,7 @@ interface TimePickerProps {
 }
 
 export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerProps) => {
+  const { t } = useTranslation();
   const [hours, setHours] = useState(selectedTime.hours);
   const [minutes, setMinutes] = useState(selectedTime.minutes);
 
@@ -52,7 +54,7 @@ export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerPr
           className="flex items-center justify-between p-4"
           style={{ borderBottom: '1px solid var(--line)' }}
         >
-          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>选择时间</h3>
+          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('timepicker.title')}</h3>
           <button onClick={onClose} className="icon-btn w-9 h-9">
             <X size={18} />
           </button>
@@ -62,7 +64,7 @@ export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerPr
           <div className="flex items-start justify-center gap-2 mb-6">
             {/* 小时 */}
             <div className="flex flex-col items-center">
-              <span className="text-xs mb-2" style={{ color: 'var(--ink-2)' }}>小时</span>
+              <span className="text-xs mb-2" style={{ color: 'var(--ink-2)' }}>{t('timepicker.hours')}</span>
               <div className="flex items-center gap-2">
                 <button onClick={handleHoursDecrease} className="icon-btn w-10 h-10">
                   <ChevronLeft size={18} />
@@ -85,7 +87,7 @@ export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerPr
 
             {/* 分钟 */}
             <div className="flex flex-col items-center">
-              <span className="text-xs mb-2" style={{ color: 'var(--ink-2)' }}>分钟</span>
+              <span className="text-xs mb-2" style={{ color: 'var(--ink-2)' }}>{t('timepicker.minutes')}</span>
               <div className="flex items-center gap-2">
                 <button onClick={handleMinutesDecrease} className="icon-btn w-10 h-10">
                   <ChevronLeft size={18} />
@@ -106,7 +108,7 @@ export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerPr
           </div>
 
           {/* 快捷选择 */}
-          <p className="text-xs mb-2 text-center" style={{ color: 'var(--ink-2)' }}>快捷选择</p>
+          <p className="text-xs mb-2 text-center" style={{ color: 'var(--ink-2)' }}>{t('timepicker.quickSelect')}</p>
           <div className="grid grid-cols-6 gap-1.5">
             {['08:00', '12:00', '14:00', '18:00', '20:00', '22:00'].map((time) => {
               const [h, m] = time.split(':').map(Number);
@@ -124,7 +126,7 @@ export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerPr
           </div>
 
           <button onClick={handleConfirm} className="btn-primary w-full mt-6">
-            确定
+            {t('timepicker.confirm')}
           </button>
         </div>
       </div>

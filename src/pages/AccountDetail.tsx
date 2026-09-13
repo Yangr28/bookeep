@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
@@ -112,8 +113,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
   ];
 
   const filteredRecords = combinedRecords.filter((record) => {
-    const date = new Date(record.createdAt);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toDateKey(new Date(record.createdAt));
 
     if (startDate && dateStr < startDate) return false;
     if (endDate && dateStr > endDate) return false;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
@@ -79,8 +80,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
   ];
 
   const filteredRecords = allRecords.filter((record) => {
-    const date = new Date(record.createdAt);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toDateKey(new Date(record.createdAt));
 
     if (startDate && dateStr < startDate) return false;
     if (endDate && dateStr > endDate) return false;
@@ -199,8 +199,8 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
                     end = new Date(today.getFullYear(), today.getMonth(), 0);
                   }
 
-                  setStartDate(start.toISOString().split('T')[0]);
-                  setEndDate(end.toISOString().split('T')[0]);
+                  setStartDate(toDateKey(start));
+                  setEndDate(toDateKey(end));
                 }}
                 className="chip chip-inactive"
               >

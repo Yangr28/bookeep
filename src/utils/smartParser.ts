@@ -1,5 +1,7 @@
 import { TransactionType, Transaction, Account } from '../types';
 
+import { toDateKey, addDays } from './date';
+
 export interface ParseResult {
   amount: string;
   type: TransactionType;
@@ -395,15 +397,11 @@ const extractDateTime = (text: string): { date: string; time: string } => {
 
   const now = new Date();
   if (todayPatterns.some(p => p.test(text))) {
-    date = now.toISOString().split('T')[0];
+    date = toDateKey(now);
   } else if (yesterdayPatterns.some(p => p.test(text))) {
-    const y = new Date(now);
-    y.setDate(y.getDate() - 1);
-    date = y.toISOString().split('T')[0];
+    date = toDateKey(addDays(now, -1));
   } else if (tomorrowPatterns.some(p => p.test(text))) {
-    const t = new Date(now);
-    t.setDate(t.getDate() + 1);
-    date = t.toISOString().split('T')[0];
+    date = toDateKey(addDays(now, 1));
   }
 
   const morningPatterns = [/早上/, /早晨/, /上午/, /凌晨/, /清晨/];
@@ -556,7 +554,6 @@ export const parseSmartInput = (input: string, userAccounts: Account[] = [], use
   // 仅在通用关键词未匹配时，才尝试匹配用户现有分类名
   let bestMatchScore = 0;
   let bestCategoryKeyword = '';
-  let bestCategoryName = '';
 
   // 从搜索文本中移除已识别的账户关键词，避免"支付宝"被误识别为分类
   const searchTextForCategory = accountKeyword
@@ -567,27 +564,25 @@ export const parseSmartInput = (input: string, userAccounts: Account[] = [], use
   for (const searchText of searchTexts) {
     if (!searchText) continue;
 
-    for (const [category, keywords] of Object.entries(expenseKeywordCategories)) {
+    for (const [, keywords] of Object.entries(expenseKeywordCategories)) {
       for (const keyword of keywords) {
         if (searchText.includes(keyword)) {
           const score = keyword.length / Math.max(searchText.length, 1);
           if (score > bestMatchScore || (score === bestMatchScore && keyword.length > bestCategoryKeyword.length)) {
             bestMatchScore = score;
             bestCategoryKeyword = keyword;
-            bestCategoryName = category;
           }
         }
       }
     }
 
-    for (const [category, aliases] of Object.entries(categoryAliases)) {
+    for (const [, aliases] of Object.entries(categoryAliases)) {
       for (const alias of aliases) {
         if (searchText.includes(alias)) {
           const score = alias.length / Math.max(searchText.length, 1);
           if (score > bestMatchScore || (score === bestMatchScore && alias.length > bestCategoryKeyword.length)) {
             bestMatchScore = score;
             bestCategoryKeyword = alias;
-            bestCategoryName = category;
           }
         }
       }

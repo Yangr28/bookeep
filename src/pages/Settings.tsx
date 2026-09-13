@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/useStore';
 import {
   exportData,
@@ -63,6 +64,9 @@ interface FetchedRelease {
 }
 
 export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheckUpdate, onGoToCategories, onRollback, rollbackFlow }: SettingsProps) => {
+  const { t } = useTranslation();
+  const language = useStore((s) => s.language);
+  const setLanguage = useStore((s) => s.setLanguage);
   const [showChangelog, setShowChangelog] = useState(false);
   const [rollbackOpen, setRollbackOpen] = useState(false);
   const [subPage, setSubPage] = useState<'help' | 'privacy' | 'backups' | null>(null);
@@ -706,6 +710,27 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               />
             </div>
           </button>
+
+          {/* 语言选择：跟随系统 / 中文 / English */}
+          <div className="w-full flex items-center gap-4 p-4" style={{ borderTop: '1px solid var(--line)' }}>
+            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}>
+              <FileText size={21} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.language.title')}</p>
+              <div className="flex gap-1.5 mt-2">
+                {(['system', 'zh-CN', 'en-US'] as const).map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setLanguage(lang)}
+                    className={`chip px-3 py-1 text-xs ${language === lang ? 'chip-active' : 'chip-inactive'}`}
+                  >
+                    {lang === 'system' ? t('settings.language.system') : lang === 'zh-CN' ? t('settings.language.zh') : t('settings.language.en')}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 关于 */}

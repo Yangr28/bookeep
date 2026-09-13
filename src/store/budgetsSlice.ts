@@ -1,5 +1,7 @@
 import { StateCreator } from 'zustand';
 import { Transaction } from '../types';
+import { loadBudgets, saveBudgets } from '../utils/storage';
+import { getMonthKey } from '../utils/date';
 
 export interface Budget {
   id: string;
@@ -22,7 +24,7 @@ export interface BudgetsSlice {
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 export const createBudgetsSlice: StateCreator<BudgetsSlice> = (set, get) => ({
-  budgets: [],
+  budgets: loadBudgets([]),
 
   addBudget: (categoryId, amount, month) => {
     const existing = get().getBudgetByCategory(categoryId, month);
@@ -37,19 +39,31 @@ export const createBudgetsSlice: StateCreator<BudgetsSlice> = (set, get) => ({
       spent: 0,
       month,
     };
-    set((state) => ({ budgets: [...state.budgets, newBudget] }));
+    set((state) => {
+      const next = { budgets: [...state.budgets, newBudget] };
+      saveBudgets(next.budgets);
+      return next;
+    });
   },
 
   updateBudget: (id, updates) => {
-    set((state) => ({
-      budgets: state.budgets.map((b) =>
-        b.id === id ? { ...b, ...updates } : b
-      ),
-    }));
+    set((state) => {
+      const next = {
+        budgets: state.budgets.map((b) =>
+          b.id === id ? { ...b, ...updates } : b
+        ),
+      };
+      saveBudgets(next.budgets);
+      return next;
+    });
   },
 
   deleteBudget: (id) => {
-    set((state) => ({ budgets: state.budgets.filter((b) => b.id !== id) }));
+    set((state) => {
+      const next = { budgets: state.budgets.filter((b) => b.id !== id) };
+      saveBudgets(next.budgets);
+      return next;
+    });
   },
 
   getBudgetByCategory: (categoryId, month) => {
@@ -60,14 +74,15 @@ export const createBudgetsSlice: StateCreator<BudgetsSlice> = (set, get) => ({
 
   calculateBudgetUsage: (categoryId, month, transactions) => {
     const budget = get().getBudgetByCategory(categoryId, month);
-    
+
     const spent = transactions
       .filter((t) => {
-        const tMonth = new Date(t.createdAt).toISOString().slice(0, 7);
+        // 月份键必须按本地时区派生;toISOString().slice(0,7) 在 UTC+8 早 8 点前会错月
+        const tMonth = getMonthKey(new Date(t.createdAt));
         return t.categoryId === categoryId && t.type === 'expense' && tMonth === month;
       })
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     return {
       budget: budget?.amount || 0,
       spent,
@@ -75,5 +90,8 @@ export const createBudgetsSlice: StateCreator<BudgetsSlice> = (set, get) => ({
     };
   },
 
-  setBudgets: (budgets) => set({ budgets }),
+  setBudgets: (budgets) => {
+    saveBudgets(budgets);
+    set({ budgets });
+  },
 });
