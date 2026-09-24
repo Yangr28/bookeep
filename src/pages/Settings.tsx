@@ -296,14 +296,15 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   }, []);
 
   /**
-   * 可回退的历史版本列表：当前运行的是热更新版本（hotVersion 非空）时，
-   * 取比当前版本旧、且附带热更新包的所有 Release。
-   * 用户可在弹窗中选择要回退到哪个版本。
+   * 可回退的历史版本列表：取比当前运行版本旧、且附带热更新包的所有 Release。
+   * 当前运行版本 = 热更新版本（若有），否则为整包内置 Web 版本——
+   * 纯整包安装（从未应用过热更新）也允许回退 Web 版本。
    */
   const rollbackTargets = (() => {
-    if (!hotVersion || !onRollback || !releases) return [];
+    if (!onRollback || !releases) return [];
+    const runningWeb = hotVersion || appVersion;
     return releases.filter(
-      (r) => r.hasHotPackage && compareVersions(r.version, appVersion) < 0,
+      (r) => r.hasHotPackage && compareVersions(r.version, runningWeb) < 0,
     );
   })();
 

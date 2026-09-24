@@ -10,6 +10,7 @@
   "periodThisMonth": "This month",
   "periodAll": "All time",
   "categoryDetail": "{{name}} details",
+  "relatedRecords": "Related records",
   "recordCount": "{{count}} records",
   "recordCountCompact": "{{count}} records",
   "totalByType": "Total {{type}}",

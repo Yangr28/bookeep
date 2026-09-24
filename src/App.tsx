@@ -131,6 +131,8 @@ export default function App() {
   const accounts = useStore((state) => state.accounts);
   const addTransaction = useStore((state) => state.addTransaction);
   const updateTransaction = useStore((state) => state.updateTransaction);
+  // 智能洞察精准定位：携带具体交易 id 列表时，明细页仅显示这些记录
+  const [insightTransactionIds, setInsightTransactionIds] = useState<string[] | null>(null);
 
   const handleBack = useCallback(() => {
     // 更新弹窗打开时优先处理：强制更新/下载中拦截返回键，其余情况关闭弹窗
@@ -191,18 +193,23 @@ export default function App() {
   const handleViewDetail = useCallback((filterType: FilterType) => {
     setDetailFilter(filterType);
     setSelectedCategoryId(null);
+    setInsightTransactionIds(null);
     handlePageChange('/detail');
   }, [handlePageChange, setDetailFilter, setSelectedCategoryId]);
 
   const handleViewCategoryDetail = useCallback((categoryId: string) => {
     setSelectedCategoryId(categoryId);
+    setInsightTransactionIds(null);
     handlePageChange('/detail');
   }, [handlePageChange, setSelectedCategoryId]);
 
-  // 智能洞察跳转：带分类→该分类当月支出明细；否则→全部当月支出明细
+  // 智能洞察跳转：优先按 payload.transactionIds 精准定位；无 ids 时按分类/当月筛选
   const handleInsightClick = useCallback((payload: { categoryId?: string; transactionIds?: string[]; month?: string }) => {
     setDetailFilter('month-expense');
     setSelectedCategoryId(payload.categoryId ?? null);
+    setInsightTransactionIds(
+      payload.transactionIds && payload.transactionIds.length > 0 ? payload.transactionIds : null,
+    );
     handlePageChange('/detail');
   }, [handlePageChange, setDetailFilter, setSelectedCategoryId]);
 
@@ -619,10 +626,11 @@ export default function App() {
         return <Transfer onBack={handleBack} />;
       case '/detail':
         return (
-          <TransactionDetail 
-            onBack={handleBack} 
-            filterType={detailFilter} 
+          <TransactionDetail
+            onBack={handleBack}
+            filterType={detailFilter}
             categoryId={selectedCategoryId}
+            insightTransactionIds={insightTransactionIds}
             onEditTransaction={handleEditTransaction}
           />
         );

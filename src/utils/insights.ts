@@ -152,11 +152,11 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
   if (ctx.budgets && ctx.budgets.length > 0) {
     for (const budget of ctx.budgets) {
       if (budget.month !== currentMonth || budget.amount <= 0) continue;
-      const spent = currentExpenses
-        .filter((t) => t.categoryId === budget.categoryId)
-        .reduce((sum, t) => sum + t.amount, 0);
+      const catTxs = currentExpenses.filter((t) => t.categoryId === budget.categoryId);
+      const spent = catTxs.reduce((sum, t) => sum + t.amount, 0);
       const ratio = spent / budget.amount;
       const cat = categoryName(budget.categoryId);
+      const catTxIds = catTxs.map((t) => t.id);
 
       // 2. 已超支 / 临超支
       if (ratio >= BUDGET_DANGER_RATIO) {
@@ -172,7 +172,7 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
             pct: Math.round(ratio * 100),
           },
           amount: spent - budget.amount,
-          payload: { categoryId: budget.categoryId, month: currentMonth },
+          payload: { categoryId: budget.categoryId, month: currentMonth, transactionIds: catTxIds },
         });
       } else if (ratio >= BUDGET_WARNING_RATIO) {
         insights.push({
@@ -187,15 +187,13 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
             pct: Math.round(ratio * 100),
           },
           amount: spent,
-          payload: { categoryId: budget.categoryId, month: currentMonth },
+          payload: { categoryId: budget.categoryId, month: currentMonth, transactionIds: catTxIds },
         });
       }
 
       // 3. 预计月末超支（仅在尚未超支时报告，避免与规则 2 重复）
       if (sufficient && ratio < BUDGET_DANGER_RATIO) {
-        const catDailyAvg =
-          currentExpenses.filter((t) => t.categoryId === budget.categoryId)
-            .reduce((sum, t) => sum + t.amount, 0) / elapsedDays;
+        const catDailyAvg = spent / elapsedDays;
         const forecast = catDailyAvg * totalDays;
         if (forecast > budget.amount) {
           insights.push({
@@ -209,7 +207,7 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
               budget: formatAmount(budget.amount),
             },
             amount: forecast - budget.amount,
-            payload: { categoryId: budget.categoryId, month: currentMonth },
+            payload: { categoryId: budget.categoryId, month: currentMonth, transactionIds: catTxIds },
           });
         }
       }
@@ -258,7 +256,7 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
   recurring: for (const [categoryId, txs] of recentByCategory) {
     // 同分类按金额升序，贪心聚类：与簇首金额相差 ±5% 视为同一订阅
     const sorted = txs.slice().sort((a, b) => a.amount - b.amount);
-    const clusters: { amount: number; months: Set<string>; count: number }[] = [];
+    const clusters: { amount: number; months: Set<string>; count: number; ids: string[] }[] = [];
     for (const tx of sorted) {
       let placed = false;
       for (const c of clusters) {
@@ -266,6 +264,7 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
         if (denom > 0 && Math.abs(tx.amount - c.amount) / denom <= RECURRING_AMOUNT_TOLERANCE) {
           c.months.add(txMonth(tx));
           c.count += 1;
+          c.ids.push(tx.id);
           placed = true;
           break;
         }
@@ -275,6 +274,7 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
           amount: tx.amount,
           months: new Set([txMonth(tx)]),
           count: 1,
+          ids: [tx.id],
         });
       }
     }
@@ -291,7 +291,7 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
             months: c.months.size,
           },
           amount: c.amount,
-          payload: { categoryId, month: currentMonth },
+          payload: { categoryId, month: currentMonth, transactionIds: c.ids },
         });
         // 一个分类只取首个命中簇，避免噪声
         continue recurring;
@@ -301,22 +301,24 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
 
   // ── 6. 高频消费 ──
   if (sufficient) {
-    const counts = new Map<string, number>();
+    const counts = new Map<string, string[]>();
     for (const tx of currentExpenses) {
-      counts.set(tx.categoryId, (counts.get(tx.categoryId) ?? 0) + 1);
+      const ids = counts.get(tx.categoryId);
+      if (ids) ids.push(tx.id);
+      else counts.set(tx.categoryId, [tx.id]);
     }
     // 同分类只输出一条；按 count 降序保证 UI 渲染稳定
-    const sortedCounts = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-    for (const [categoryId, count] of sortedCounts) {
-      if (count >= FREQUENT_TX_THRESHOLD) {
+    const sortedCounts = [...counts.entries()].sort((a, b) => b[1].length - a[1].length);
+    for (const [categoryId, ids] of sortedCounts) {
+      if (ids.length >= FREQUENT_TX_THRESHOLD) {
         insights.push({
           type: 'frequent',
           severity: 'info',
           titleKey: 'insights.frequent.title',
-          titleParams: { category: categoryName(categoryId), count },
+          titleParams: { category: categoryName(categoryId), count: ids.length },
           descriptionKey: 'insights.frequent.description',
-          descriptionParams: { count },
-          payload: { categoryId, month: currentMonth },
+          descriptionParams: { count: ids.length },
+          payload: { categoryId, month: currentMonth, transactionIds: ids },
         });
       }
     }

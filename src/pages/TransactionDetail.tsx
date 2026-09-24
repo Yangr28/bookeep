@@ -15,10 +15,12 @@ interface TransactionDetailProps {
   onBack: () => void;
   filterType: 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance';
   categoryId?: string | null;
+  /** 智能洞察精准定位：非空时仅显示这些 id 对应的记录（优先于其他筛选） */
+  insightTransactionIds?: string[] | null;
   onEditTransaction?: (transaction: Transaction) => void;
 }
 
-export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransaction }: TransactionDetailProps) => {
+export const TransactionDetail = ({ onBack, filterType, categoryId, insightTransactionIds, onEditTransaction }: TransactionDetailProps) => {
   const { t } = useTranslation();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -101,6 +103,11 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
         return isCategoryMatch;
       }
 
+      // 智能洞察精准定位：仅显示洞察携带的交易（可跨月，如固定订阅聚类）
+      if (insightTransactionIds) {
+        return insightTransactionIds.includes(t.id);
+      }
+
       switch (filterType) {
         case 'today-income':
           return isToday && isIncome;
@@ -141,7 +148,9 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
 
   const pageTitle = isCategoryDetail && selectedCategory
     ? t('transactionDetail.categoryDetail', { name: selectedCategory.name })
-    : t(config.titleKey);
+    : insightTransactionIds
+      ? t('transactionDetail.relatedRecords')
+      : t(config.titleKey);
 
   const categoryFilterChips = [
     { value: 'all', label: t('transactionDetail.filterAll') },

@@ -281,13 +281,12 @@ body {
   }
 }
 
-/* === 键盘焦点环：仅键盘导航可见（触摸不触发），主色 2px + 2px 偏移 === */
+/* === 键盘焦点环：仅键盘导航可见（触摸不触发），主色 2px + 2px 偏移 ===
+   注意：不含 input/select/textarea——文本输入框聚焦时按规范恒匹配 focus-visible，
+   会把蓝框误显示给触摸点击输入框的用户；文本框有光标提示，无需焦点环 */
 a:focus-visible,
 button:focus-visible,
 [role='button']:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
 [tabindex]:focus-visible,
 summary:focus-visible {
   outline: 2px solid var(--primary);

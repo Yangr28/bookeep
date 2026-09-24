@@ -10,6 +10,7 @@
   "periodThisMonth": "本月",
   "periodAll": "全部",
   "categoryDetail": "{{name}}明细",
+  "relatedRecords": "相关记录",
   "recordCount": "共 {{count}} 笔记录",
   "recordCountCompact": "共{{count}}笔记录",
   "totalByType": "累计{{type}}",
