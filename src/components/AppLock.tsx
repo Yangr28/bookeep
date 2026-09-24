@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Lock, Eye, EyeOff, Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AppLockProps {
   onUnlock: () => void;
@@ -11,6 +12,7 @@ const LOCK_KEY = 'bookeep_app_lock';
 const PASSWORD_KEY = 'bookeep_password';
 
 export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppLockProps) => {
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -47,11 +49,11 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
   const handleSubmit = () => {
     if (isSetupMode) {
       if (password.length < 4 || confirmPassword.length < 4) {
-        setError('请输入4位数字密码');
+        setError(t('appLock.enter4Digits'));
         return;
       }
       if (password !== confirmPassword) {
-        setError('两次输入的密码不一致');
+        setError(t('appLock.mismatch'));
         setPassword('');
         setConfirmPassword('');
         return;
@@ -64,7 +66,7 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
       if (password === savedPassword) {
         onUnlock();
       } else {
-        setError('密码错误');
+        setError(t('appLock.wrongPassword'));
         setPassword('');
       }
     }
@@ -104,10 +106,10 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
             {isSetupMode ? <Settings size={30} /> : <Lock size={30} />}
           </div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--ink)' }}>
-            {isSetupMode ? '设置应用锁' : '请输入密码'}
+            {isSetupMode ? t('appLock.setupTitle') : t('appLock.unlockTitle')}
           </h1>
           <p className="text-sm mt-2" style={{ color: 'var(--ink-2)' }}>
-            {isSetupMode ? '设置4位数字密码保护您的账户安全' : '输入密码解锁应用'}
+            {isSetupMode ? t('appLock.setupSubtitle') : t('appLock.unlockSubtitle')}
           </p>
         </div>
 
@@ -145,7 +147,7 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
             style={{ color: 'var(--ink-2)' }}
           >
             {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-            {showPassword ? '隐藏密码' : '显示密码'}
+            {showPassword ? t('appLock.hidePassword') : t('appLock.showPassword')}
           </button>
 
           {showPassword && (
@@ -189,7 +191,7 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
               className="w-full mt-4 py-2 text-sm"
               style={{ color: 'var(--ink-2)' }}
             >
-              跳过（不推荐）
+              {t('appLock.skip')}
             </button>
           )}
         </div>

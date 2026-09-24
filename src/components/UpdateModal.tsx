@@ -1,5 +1,6 @@
 import { Zap, Package, X, RefreshCw, AlertCircle, CheckCircle, Loader2, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { UpdateCheckResult } from '../utils/update';
 import type { UpdateFlowState } from '../hooks/useUpdateCheck';
 
@@ -14,6 +15,7 @@ interface UpdateModalProps {
 }
 
 export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpdate }: UpdateModalProps) => {
+  const { t } = useTranslation();
   const [showApkOption, setShowApkOption] = useState(false);
   const isHot = result.type === 'hot';
   const mandatory = result.mandatory;
@@ -53,11 +55,11 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
             </div>
             <div className="min-w-0">
               <h3 className="text-base font-bold" style={{ color: 'var(--ink)' }}>
-                发现新版本 v{result.version}
+                {t('update.title', { version: result.version })}
               </h3>
               <p className="text-sm mt-0.5" style={{ color: 'var(--ink-2)' }}>
-                {isHot ? '快速更新 · 无需重新安装' : '完整更新 · 需下载安装包'}
-                {mandatory && ' · 重要更新'}
+                {isHot ? t('update.hotHint') : t('update.fullHint')}
+                {mandatory && t('update.importantSuffix')}
               </p>
             </div>
           </div>
@@ -73,11 +75,11 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
               >
                 <AlertCircle size={28} />
               </div>
-              <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>更新失败</p>
+              <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{t('update.errorTitle')}</p>
               <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{flow.error}</p>
               {!isHot && result.apkUrl && (
                 <p className="text-xs mt-3 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-                  应用内下载失败？可在浏览器打开
+                  {t('update.browserHint1')}
                   <a
                     href={result.apkUrl}
                     target="_blank"
@@ -85,9 +87,9 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
                     className="underline mx-1"
                     style={{ color: 'var(--primary)' }}
                   >
-                    下载页
+                    {t('update.downloadPage')}
                   </a>
-                  下载 APK 安装
+                  {t('update.browserHint2')}
                 </p>
               )}
             </div>
@@ -97,10 +99,12 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
                 <Loader2 size={22} className="animate-spin flex-shrink-0" style={{ color: 'var(--primary)' }} />
                 <div className="flex-1">
                   <p className="font-semibold" style={{ color: 'var(--ink)' }}>
-                    正在下载{isHot ? '更新包' : '安装包'}...
+                    {isHot ? t('update.downloadingHot') : t('update.downloadingFull')}
                   </p>
                   <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
-                    {flow.percent}%{isHot ? ' · 更新包很小，请稍候' : ' · 请保持网络畅通'}
+                    {isHot
+                      ? t('update.percentHot', { percent: flow.percent })
+                      : t('update.percentFull', { percent: flow.percent })}
                   </p>
                 </div>
               </div>
@@ -122,9 +126,9 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
               >
                 <Package size={28} />
               </div>
-              <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>安装包已下载</p>
+              <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{t('update.installingTitle')}</p>
               <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
-                即将调起系统安装器，请在安装完成后重新打开 Bookeep
+                {t('update.installingDesc')}
               </p>
             </div>
           ) : flow.phase === 'done' ? (
@@ -136,27 +140,27 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
                 <CheckCircle size={28} />
               </div>
               <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>
-                {isHot ? '更新完成，正在重新加载...' : '安装器已启动'}
+                {isHot ? t('update.doneHotTitle') : t('update.doneFullTitle')}
               </p>
               <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
-                {isHot ? '页面将自动刷新到新版本' : '请在系统安装器中完成安装，安装后重新打开应用'}
+                {isHot ? t('update.doneHotDesc') : t('update.doneFullDesc')}
               </p>
             </div>
           ) : (
             <>
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 <span className="chip chip-inactive text-xs">
-                  当前版本 v{isHot ? result.webVersion : result.nativeVersion}
+                  {t('update.currentVersion', { version: isHot ? result.webVersion : result.nativeVersion })}
                 </span>
                 <span
                   className="chip text-xs"
                   style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}
                 >
-                  最新版本 v{result.version}
+                  {t('update.latestVersion', { version: result.version })}
                 </span>
               </div>
               <p className="text-sm font-semibold mb-2" style={{ color: 'var(--ink)' }}>
-                更新内容
+                {t('update.changelogTitle')}
               </p>
               <div
                 className="rounded-card p-4 max-h-48 overflow-y-auto"
@@ -171,16 +175,16 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
                   </pre>
                 ) : (
                   <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
-                    性能优化与问题修复，建议及时更新。
+                    {t('update.changelogFallback')}
                   </p>
                 )}
               </div>
               <p className="text-xs mt-3 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
                 {isHot
-                  ? '热更新仅更新界面资源，下载后自动生效，不影响您的数据。'
+                  ? t('update.hotNote')
                   : result.requireApk
-                    ? '本版本包含原生功能更新（如应用图标、权限等），必须通过整包安装完成更新，记账数据不会丢失。'
-                    : '整包更新会下载完整安装包，需在系统安装器中确认安装，记账数据不会丢失。'}
+                    ? t('update.apkRequiredNote')
+                    : t('update.fullNote')}
               </p>
             </>
           )}
@@ -197,14 +201,14 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
                 onClick={onClose}
                 className="btn-ghost flex-1"
               >
-                关闭
+                {t('update.close')}
               </button>
               <button
                 onClick={onUpdate}
                 className="btn-primary flex-1"
               >
                 <RefreshCw size={18} />
-                重试
+                {t('common.retry')}
               </button>
             </div>
           ) : flow.phase === 'idle' ? (
@@ -215,7 +219,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
                     onClick={onSkip}
                     className="btn-ghost flex-1"
                   >
-                    以后再说
+                    {t('update.later')}
                   </button>
                 )}
                 <button
@@ -223,7 +227,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
                   className="btn-primary flex-1"
                 >
                   {isHot ? <Zap size={18} /> : <Package size={18} />}
-                  立即更新
+                  {t('update.updateNow')}
                 </button>
               </div>
               {isHot && result.apkUrl && onApkUpdate && (
@@ -234,7 +238,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
                     style={{ color: 'var(--ink-2)' }}
                   >
                     <ChevronDown size={14} className={`transition-transform ${showApkOption ? 'rotate-180' : ''}`} />
-                    整包更新（修复原生功能）
+                    {t('update.apkOption')}
                   </button>
                   {showApkOption && (
                     <button
@@ -242,7 +246,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
                       className="btn-ghost w-full flex items-center justify-center gap-2 text-sm"
                     >
                       <Package size={16} />
-                      下载完整安装包
+                      {t('update.downloadApk')}
                     </button>
                   )}
                 </>
@@ -253,7 +257,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
               onClick={onClose}
               className="btn-ghost w-full"
             >
-              我知道了
+              {t('update.gotIt')}
             </button>
           ) : (
             <button
@@ -261,7 +265,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
               className="btn-primary w-full"
             >
               <Loader2 size={18} className="animate-spin" />
-              请稍候...
+              {t('update.waiting')}
             </button>
           )}
         </div>

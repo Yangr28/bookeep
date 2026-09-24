@@ -1,0 +1,12 @@
+{
+  "enter4Digits": "Please enter a 4-digit PIN",
+  "mismatch": "The two PINs do not match",
+  "wrongPassword": "Incorrect PIN",
+  "setupTitle": "Set up app lock",
+  "unlockTitle": "Enter your PIN",
+  "setupSubtitle": "Create a 4-digit PIN to keep your accounts secure",
+  "unlockSubtitle": "Enter your PIN to unlock the app",
+  "hidePassword": "Hide PIN",
+  "showPassword": "Show PIN",
+  "skip": "Skip (not recommended)"
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/useStore';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
 import { PieChart, Pie, Cell, Sector, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -26,6 +27,7 @@ const TOOLTIP_STYLE = {
 };
 
 const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) => {
+  const { t } = useTranslation();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -39,10 +41,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
   const expenseData = getTransactionsGroupedByCategory('expense', selectedMonth, selectedYear);
   const incomeData = getTransactionsGroupedByCategory('income', selectedMonth, selectedYear);
 
-  const months = [
-    '1月', '2月', '3月', '4月', '5月', '6月',
-    '7月', '8月', '9月', '10月', '11月', '12月'
-  ];
+  const monthLabel = (m: number) => t(`calendar.month${m + 1}`);
 
   const generateMonthlyData = () => {
     const data = [];
@@ -55,22 +54,23 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
       let income = 0;
       let expense = 0;
 
-      useStore.getState().transactions.forEach((t) => {
-        const tDate = new Date(t.createdAt);
+      useStore.getState().transactions.forEach((tx) => {
+        const tDate = new Date(tx.createdAt);
         if (tDate.getMonth() === month && tDate.getFullYear() === year) {
-          if (t.type === 'income') {
-            income += t.amount;
+          if (tx.type === 'income') {
+            income += tx.amount;
           } else {
-            expense += t.amount;
+            expense += tx.amount;
           }
         }
       });
 
       data.push({
-        month: months[month],
+        month: monthLabel(month),
         income: income || 0,
         expense: expense || 0,
-        fullMonth: `${year}年${month + 1}月`,
+        fullMonth: t('statistics.fullMonth', { year, month: month + 1 }),
+        monthShort: monthLabel(month),
       });
     }
     return data;
@@ -158,8 +158,8 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
       {/* 页头 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
         <div className="flex-1">
-          <h1 className="page-title">统计报表</h1>
-          <p className="page-subtitle">查看您的财务数据</p>
+          <h1 className="page-title">{t('statistics.title')}</h1>
+          <p className="page-subtitle">{t('statistics.subtitle')}</p>
         </div>
       </div>
 
@@ -175,7 +175,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
             </div>
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>
-                {selectedYear}年 {months[selectedMonth]}
+                {t('statistics.selectedMonth', { year: selectedYear, month: monthLabel(selectedMonth) })}
               </span>
               <ChevronDown size={20} style={{ color: 'var(--ink-2)' }} />
             </div>
@@ -183,13 +183,13 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
 
           <div className="grid grid-cols-2 gap-3">
             <div className="text-center p-4 rounded-button" style={{ background: 'var(--paper)' }}>
-              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月收入</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('statistics.monthIncome')}</p>
               <p className="text-2xl font-bold amount-num mt-2" style={{ color: 'var(--primary)' }}>
                 {formatCurrencyShort(monthIncome)}
               </p>
             </div>
             <div className="text-center p-4 rounded-button" style={{ background: 'var(--paper)' }}>
-              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月支出</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('statistics.monthExpense')}</p>
               <p className="text-2xl font-bold amount-num mt-2" style={{ color: 'var(--expense)' }}>
                 {formatCurrencyShort(monthExpense)}
               </p>
@@ -197,7 +197,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
           </div>
 
           <div className="mt-3 p-4 rounded-button" style={{ background: 'var(--paper)' }}>
-            <p className="text-sm text-center font-medium" style={{ color: 'var(--ink-2)' }}>本月结余</p>
+            <p className="text-sm text-center font-medium" style={{ color: 'var(--ink-2)' }}>{t('statistics.monthBalance')}</p>
             <p
               className="text-3xl font-bold text-center amount-num mt-2"
               style={{ color: monthBalance >= 0 ? 'var(--primary)' : 'var(--expense)' }}
@@ -217,7 +217,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
               <div className="p-2 rounded-button" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
                 <Target size={18} />
               </div>
-              <span className="section-title mb-0">月度报表</span>
+              <span className="section-title mb-0">{t('statistics.monthReport')}</span>
             </div>
             <ChevronDown
               size={20}
@@ -237,23 +237,23 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                 <div className="p-3 rounded-button flex flex-col" style={{ background: 'var(--paper)' }}>
                   <div className="flex items-center gap-1.5 mb-1">
                     <TrendingUp size={14} style={{ color: 'var(--primary)' }} />
-                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>收入环比</span>
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('statistics.incomeMom')}</span>
                   </div>
                   <p className="text-lg font-bold amount-num leading-tight" style={{ color: incomeColor }}>
                     {reportData.prevIncome > 0
                       ? `${reportData.incomeChange >= 0 ? '+' : ''}${reportData.incomeChange.toFixed(1)}%`
-                      : '新建月'}
+                      : t('statistics.newMonth')}
                   </p>
                   {/* 本月/上月上下排列对齐对比，避免长金额左右重叠 */}
                   <div className="mt-2 pt-2" style={{ borderColor: 'var(--line)', borderTopWidth: '1px', borderTopStyle: 'solid' }}>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</span>
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('statistics.thisMonth')}</span>
                       <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink)' }}>
                         {formatCurrencyShort(monthIncome)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</span>
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('statistics.lastMonth')}</span>
                       <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink-2)' }}>
                         {formatCurrencyShort(reportData.prevIncome)}
                       </span>
@@ -263,22 +263,22 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                 <div className="p-3 rounded-button flex flex-col" style={{ background: 'var(--paper)' }}>
                   <div className="flex items-center gap-1.5 mb-1">
                     <TrendingDown size={14} style={{ color: 'var(--expense)' }} />
-                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>支出环比</span>
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('statistics.expenseMom')}</span>
                   </div>
                   <p className="text-lg font-bold amount-num leading-tight" style={{ color: expenseColor }}>
                     {reportData.prevExpense > 0
                       ? `${reportData.expenseChange >= 0 ? '+' : ''}${reportData.expenseChange.toFixed(1)}%`
-                      : '新建月'}
+                      : t('statistics.newMonth')}
                   </p>
                   <div className="mt-2 pt-2" style={{ borderColor: 'var(--line)', borderTopWidth: '1px', borderTopStyle: 'solid' }}>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>本月</span>
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('statistics.thisMonth')}</span>
                       <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink)' }}>
                         {formatCurrencyShort(monthExpense)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>上月</span>
+                      <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('statistics.lastMonth')}</span>
                       <span className="text-sm font-semibold amount-num" style={{ color: 'var(--ink-2)' }}>
                         {formatCurrencyShort(reportData.prevExpense)}
                       </span>
@@ -292,16 +292,16 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
               {/* 日均支出 + 最大单笔 */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
-                  <p className="text-xs" style={{ color: 'var(--ink-2)' }}>日均支出</p>
+                  <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('statistics.avgDaily')}</p>
                   <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--ink)' }}>
                     {formatCurrencyShort(reportData.avgDailyExpense)}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
-                    {reportData.elapsedDays}/{reportData.daysInMonth}天
+                    {t('statistics.dayProgress', { elapsed: reportData.elapsedDays, total: reportData.daysInMonth })}
                   </p>
                 </div>
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
-                  <p className="text-xs" style={{ color: 'var(--ink-2)' }}>最大单笔</p>
+                  <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('statistics.maxSingle')}</p>
                   <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
                     {formatCurrencyShort(reportData.maxExpense)}
                   </p>
@@ -313,7 +313,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
                   <div className="flex items-center gap-1.5 mb-2">
                     <Award size={14} style={{ color: 'var(--expense)' }} />
-                    <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>支出 Top3</span>
+                    <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>{t('statistics.top3')}</span>
                   </div>
                   <div className="space-y-2">
                     {reportData.top3Expense.map((item, idx) => (
@@ -337,7 +337,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
               {reportData.totalBudget > 0 && (
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>预算执行</span>
+                    <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>{t('statistics.budgetExecution')}</span>
                     <span className="text-xs amount-num" style={{ color: 'var(--ink-2)' }}>
                       {formatCurrencyShort(reportData.totalBudgetSpent)} / {formatCurrencyShort(reportData.totalBudget)}
                     </span>
@@ -349,9 +349,9 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     />
                   </div>
                   <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>已用 {reportData.budgetPercentage.toFixed(0)}%</span>
+                    <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('statistics.usedPct', { pct: reportData.budgetPercentage.toFixed(0) })}</span>
                     <span className="text-xs font-medium" style={{ color: getBudgetColor(reportData.budgetPercentage) }}>
-                      {reportData.budgetPercentage >= 100 ? '已超支' : reportData.budgetPercentage >= 80 ? '接近上限' : '正常'}
+                      {reportData.budgetPercentage >= 100 ? t('statistics.statusOver') : reportData.budgetPercentage >= 80 ? t('statistics.statusNearLimit') : t('statistics.statusNormal')}
                     </span>
                   </div>
                 </div>
@@ -362,7 +362,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
 
         {/* 支出分布 */}
         <div className="card p-4 mt-3">
-          <h2 className="section-title">支出分布</h2>
+          <h2 className="section-title">{t('statistics.expenseDistribution')}</h2>
           {expenseData.length > 0 ? (
             <div className="flex flex-col items-center">
               <ResponsiveContainer width="100%" height={240}>
@@ -389,7 +389,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => [`¥${formatCurrency(value)}`, '金额']}
+                    formatter={(value: number) => [`¥${formatCurrency(value)}`, t('common.amount')]}
                     contentStyle={TOOLTIP_STYLE}
                   />
                 </PieChart>
@@ -408,14 +408,14 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
               <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--paper-deep)' }}>
                 <CircleDot size={28} style={{ color: 'var(--ink-2)' }} />
               </div>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>暂无支出数据</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('statistics.noExpenseData')}</p>
             </div>
           )}
         </div>
 
         {/* 收入分布 */}
         <div className="card p-4 mt-3">
-          <h2 className="section-title">收入分布</h2>
+          <h2 className="section-title">{t('statistics.incomeDistribution')}</h2>
           {incomeData.length > 0 ? (
             <div className="flex flex-col items-center">
               <ResponsiveContainer width="100%" height={240}>
@@ -442,7 +442,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => [`¥${formatCurrency(value)}`, '金额']}
+                    formatter={(value: number) => [`¥${formatCurrency(value)}`, t('common.amount')]}
                     contentStyle={TOOLTIP_STYLE}
                   />
                 </PieChart>
@@ -461,7 +461,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
               <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--paper-deep)' }}>
                 <CircleDot size={28} style={{ color: 'var(--ink-2)' }} />
               </div>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>暂无收入数据</p>
+              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('statistics.noIncomeData')}</p>
             </div>
           )}
         </div>
@@ -469,13 +469,13 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
         {/* 收支趋势 */}
         <div className="card p-4 mt-3 mb-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="section-title mb-0">收支趋势</h2>
+            <h2 className="section-title mb-0">{t('statistics.trend')}</h2>
             <button
               onClick={() => setShowFullYear(!showFullYear)}
               className="chip text-xs"
               style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
             >
-              {showFullYear ? '收起' : '查看全年'}
+              {showFullYear ? t('statistics.collapse') : t('statistics.viewFullYear')}
               <ChevronDown
                 size={16}
                 className={`transition-transform ${showFullYear ? 'rotate-180' : ''}`}
@@ -487,9 +487,8 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
               <ResponsiveContainer width={showFullYear ? 520 : 320} height={240}>
                 <BarChart data={displayedChartData} barSize={showFullYear ? 22 : 30}>
                   <XAxis
-                    dataKey="fullMonth"
+                    dataKey="monthShort"
                     tick={{ fontSize: 11, fill: CHART_COLORS.axis }}
-                    tickFormatter={(value: string) => value.replace(/^\d+年/, '')}
                     interval={0}
                     tickLine={false}
                     axisLine={{ stroke: 'var(--line)' }}
@@ -501,8 +500,8 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     cursor={{ fill: CHART_COLORS.cursor }}
                   />
                   <Legend wrapperStyle={{ paddingTop: 10, fontSize: 12, color: 'var(--ink-2)' }} />
-                  <Bar dataKey="income" name="收入" fill={CHART_COLORS.income} radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="expense" name="支出" fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="income" name={t('common.income')} fill={CHART_COLORS.income} radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="expense" name={t('common.expense')} fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

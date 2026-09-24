@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
 import { ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle, Clock, ChevronDown } from 'lucide-react';
@@ -13,6 +14,7 @@ interface BudgetsProps {
 }
 
 export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
+  const { t } = useTranslation();
   const [selectedMonth, setSelectedMonth] = useState(getMonthKey(new Date()));
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState('');
@@ -46,10 +48,10 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
   const handleSave = (categoryId: string) => {
     const amount = parseFloat(editAmount);
     if (isNaN(amount) || amount <= 0) {
-      onToast?.('请输入有效金额');
+      onToast?.(t('budgets.toast.invalidAmount'));
     } else {
       addBudget(categoryId, amount, selectedMonth);
-      onToast?.('预算已保存');
+      onToast?.(t('budgets.toast.saved'));
     }
     setEditingCategoryId(null);
     setEditAmount('');
@@ -76,18 +78,18 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
     <div className="page-root pb-nav page-enter">
       <div className="safe-top px-4 pt-2 pb-1">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="icon-btn" aria-label="返回">
+          <button onClick={onBack} className="icon-btn" aria-label={t('budgets.back')}>
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="page-title">预算管理</h1>
-            <p className="page-subtitle">{selectedMonth.slice(0, 4)}年{Number(selectedMonth.slice(5))}月</p>
+            <h1 className="page-title">{t('budgets.title')}</h1>
+            <p className="page-subtitle">{t('budgets.monthFormat', { year: selectedMonth.slice(0, 4), month: Number(selectedMonth.slice(5)) })}</p>
           </div>
         </div>
 
         <div className="card mt-4 p-4" style={{ background: 'var(--primary-soft)' }}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm" style={{ color: 'var(--primary-ink)' }}>总预算使用</span>
+            <span className="text-sm" style={{ color: 'var(--primary-ink)' }}>{t('budgets.totalUsage')}</span>
             <span className="text-sm font-medium amount-num" style={{ color: 'var(--primary-ink)' }}>
               ¥{formatCurrency(totalSpent)} / ¥{formatCurrency(totalBudget)}
             </span>
@@ -99,11 +101,11 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
             />
           </div>
           <div className="flex items-center justify-between mt-2">
-            <span className="text-xs" style={{ color: 'var(--primary-ink)' }}>已使用 {totalPercentage.toFixed(0)}%</span>
+            <span className="text-xs" style={{ color: 'var(--primary-ink)' }}>{t('budgets.used', { percent: totalPercentage.toFixed(0) })}</span>
             {overBudgetCategories.length > 0 && (
               <span className="text-xs flex items-center gap-1" style={{ color: 'var(--expense-ink)' }}>
                 <AlertCircle size={12} />
-                {overBudgetCategories.length} 项超支
+                {t('budgets.overCount', { count: overBudgetCategories.length })}
               </span>
             )}
           </div>
@@ -112,13 +114,13 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
 
       <div className="px-4 mt-4">
         <div className="flex items-center justify-between mb-3">
-          <label className="section-title">选择月份</label>
+          <label className="section-title">{t('budgets.selectMonth')}</label>
           <button
             onClick={() => setShowMonthPicker(true)}
             className="rounded-button px-3 py-2 text-sm flex items-center gap-1 amount-num"
             style={{ background: 'var(--card)', color: 'var(--ink)', boxShadow: 'var(--shadow-card)' }}
           >
-            {selectedMonth.slice(0, 4)}年{selectedMonth.slice(5)}月
+            {t('budgets.monthFormat', { year: selectedMonth.slice(0, 4), month: selectedMonth.slice(5) })}
             <ChevronDown size={14} style={{ color: 'var(--ink-2)' }} />
           </button>
         </div>
@@ -149,7 +151,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                       {isOverBudget && (
                         <span className="text-xs flex items-center gap-1" style={{ color: 'var(--expense)' }}>
                           <AlertCircle size={12} />
-                          超支
+                          {t('budgets.overBudget')}
                         </span>
                       )}
                     </div>
@@ -177,7 +179,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                       type="number"
                       value={editAmount}
                       onChange={(e) => setEditAmount(e.target.value)}
-                      placeholder="输入预算金额"
+                      placeholder={t('budgets.amountPlaceholder')}
                       className="flex-1 rounded-button px-3 py-2 text-sm outline-none"
                       style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
                     />
@@ -208,7 +210,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                           className="text-sm"
                           style={{ color: 'var(--ink-2)' }}
                         >
-                          修改预算
+                          {t('budgets.editBudget')}
                         </button>
                         <button
                           onClick={() => {
@@ -218,7 +220,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                           className="text-sm"
                           style={{ color: 'var(--expense)' }}
                         >
-                          删除预算
+                          {t('budgets.deleteBudget')}
                         </button>
                       </>
                     ) : (
@@ -228,7 +230,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                         style={{ color: 'var(--primary)' }}
                       >
                         <Plus size={16} />
-                        设置预算
+                        {t('budgets.setBudget')}
                       </button>
                     )}
                   </div>
@@ -243,9 +245,9 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
             <div className="flex items-start gap-3">
               <AlertCircle size={20} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--expense-ink)' }} />
               <div>
-                <h3 className="font-medium" style={{ color: 'var(--expense-ink)' }}>预算超支提醒</h3>
+                <h3 className="font-medium" style={{ color: 'var(--expense-ink)' }}>{t('budgets.alertTitle')}</h3>
                 <p className="text-sm mt-1" style={{ color: 'var(--expense-ink)' }}>
-                  以下分类已超过预算：{overBudgetCategories.map((c) => c.name).join('、')}
+                  {t('budgets.alertMessage', { categories: overBudgetCategories.map((c) => c.name).join(t('budgets.listSeparator')) })}
                 </p>
               </div>
             </div>
@@ -256,9 +258,9 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
           <div className="flex items-start gap-3">
             <Clock size={20} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--primary-ink)' }} />
             <div>
-              <h3 className="font-medium" style={{ color: 'var(--primary-ink)' }}>预算小贴士</h3>
+              <h3 className="font-medium" style={{ color: 'var(--primary-ink)' }}>{t('budgets.tipsTitle')}</h3>
               <p className="text-sm mt-1" style={{ color: 'var(--primary-ink)' }}>
-                合理规划预算有助于控制开支，建议每月初设置各项预算目标。当某项支出超过预算的80%时，系统会提醒您注意控制。
+                {t('budgets.tipsBody')}
               </p>
             </div>
           </div>

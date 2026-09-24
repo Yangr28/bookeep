@@ -1,0 +1,57 @@
+{
+  "title": "Stats",
+  "subtitle": "Track every income and expense",
+  "back": "Back",
+  "cards": {
+    "streak": "Current Streak",
+    "totalTransactions": "Total Entries",
+    "totalAmount": "Amount Logged",
+    "monthlyAverage": "Monthly Average",
+    "activeDays": "Active Days",
+    "categoryCount": "Categories Used"
+  },
+  "units": {
+    "day_one": "day",
+    "day_other": "days",
+    "entry_one": "entry",
+    "entry_other": "entries",
+    "category_one": "category",
+    "category_other": "categories"
+  },
+  "achievementsTitle": "Achievements ({{earned}}/{{total}})",
+  "emptyTitle": "No achievements yet",
+  "emptyDescription": "Start logging to unlock more achievements!",
+  "inProgress": "In Progress",
+  "tipTitle": "Bookkeeping Tips",
+  "tipBody": "Logging regularly helps you understand your spending habits and plan your finances. Try logging at least 2-3 times a week to keep complete records.",
+  "achievements": {
+    "first_blood": {
+      "name": "First Entry",
+      "description": "Log your first transaction"
+    },
+    "transactions_100": {
+      "name": "Centurion",
+      "description": "Log {{count}} transactions in total"
+    },
+    "transactions_1000": {
+      "name": "Grand Master",
+      "description": "Log {{count}} transactions in total"
+    },
+    "amount_10000": {
+      "name": "Ten Grand",
+      "description": "Log over ¥{{amount}} in total"
+    },
+    "amount_100000": {
+      "name": "Big Saver",
+      "description": "Log over ¥{{amount}} in total"
+    },
+    "active_days_30": {
+      "name": "Monthly Regular",
+      "description": "Stay active for {{count}} days"
+    },
+    "active_days_100": {
+      "name": "100-Day Regular",
+      "description": "Stay active for {{count}} days"
+    }
+  }
+}

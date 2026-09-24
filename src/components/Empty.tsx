@@ -12,16 +12,16 @@ interface EmptyProps {
 
 export default function Empty({
   icon: Icon = null,
-  title = '暂无数据',
+  title = '',
   description = '',
   actionText = '',
   onAction = undefined,
   className = '',
 }: EmptyProps) {
   return (
-    <div className={cn('card flex flex-col items-center justify-center py-12 px-4', className)}>
+    <div className={cn('card empty-state', className)}>
       <div
-        className="w-16 h-16 rounded-full flex items-center justify-center mb-3 animate-fade-in"
+        className="w-16 h-16 rounded-full flex items-center justify-center animate-fade-in"
         style={{ background: 'var(--paper-deep)' }}
       >
         {Icon ? (
@@ -32,10 +32,10 @@ export default function Empty({
           </svg>
         )}
       </div>
-      <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--ink)' }}>{title}</h3>
-      {description && <p className="text-xs text-center mb-4" style={{ color: 'var(--ink-2)' }}>{description}</p>}
+      {title && <h3 className="empty-state-title">{title}</h3>}
+      {description && <p className="empty-state-desc mb-4">{description}</p>}
       {actionText && onAction && (
-        <button onClick={onAction} className="btn-primary px-6 py-2.5 text-sm">
+        <button onClick={onAction} className="btn-primary px-6 py-2.5 text-sm mt-1">
           {actionText}
         </button>
       )}

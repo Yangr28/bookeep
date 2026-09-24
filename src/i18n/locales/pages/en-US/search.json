@@ -1,0 +1,8 @@
+{
+  "back": "Back",
+  "placeholder": "Search notes, amounts, categories...",
+  "filterAll": "All",
+  "emptyTitle": "No matching records",
+  "emptyHintActive": "Try searching with other keywords",
+  "emptyHintIdle": "Type a keyword to start searching"
+}

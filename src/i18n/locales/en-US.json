@@ -13,7 +13,33 @@
     "time": "Time",
     "note": "Note",
     "unknownDate": "Unknown date",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Confirm deletion",
+    "deleteConfirmMessage": "This can't be undone. Continue?",
+    "deleteTransactionTitle": "Delete this transaction?",
+    "unclassified": "Uncategorized"
+  },
+  "speech": {
+    "tapToSpeak": "Tap to speak",
+    "listening": "Listening…",
+    "stop": "Stop",
+    "preparing": "Preparing…",
+    "sheetTitle": "Voice entry",
+    "hint": "Say something like “lunch, $30”",
+    "retry": "Say again",
+    "useText": "Use this text",
+    "emptyResult": "Nothing heard, please say it again",
+    "gotIt": "Got it",
+    "error": {
+      "unavailable": "Speech recognition is not available on this device",
+      "permissionDenied": "Microphone permission is off. Please enable it in system settings",
+      "noSpeech": "No speech detected, please try again",
+      "serviceUnavailable": "Speech service unavailable, please try again later",
+      "generic": "Speech recognition failed, please try again"
+    }
   },
   "nav": {
     "home": "Home",
@@ -27,6 +53,7 @@
       "storageError": "Storage is full. Please export a backup soon",
       "edited": "Changes saved",
       "saved": "Transaction saved",
+      "savedContinue": "Saved. Add another",
       "latestVersion": "You're on the latest version",
       "checkUpdateFailed": "Update check failed"
     },
@@ -87,6 +114,7 @@
     "expense": "Expense",
     "income": "Income",
     "selectCategory": "Select category",
+    "frequentBadge": "Frequent",
     "categoryRequired": "Please select a category",
     "amountInvalid": "Amount must be greater than 0",
     "account": "Account",
@@ -97,7 +125,43 @@
     "notePlaceholder": "Add a note",
     "saveEdit": "Save changes",
     "confirm": "Save transaction",
+    "continueToggle": "Keep adding after saving",
+    "saveAndContinue": "Save & add another",
     "back": "Back"
+  },
+  "insights": {
+    "title": "Smart insights",
+    "empty": "Nothing unusual this month. Keep it up!",
+    "directionUp": "up",
+    "directionDown": "down",
+    "anomaly_mom": {
+      "title": "Spending {{direction}} {{pct}}%",
+      "description": "¥{{current}} this month vs ¥{{prev}} last month"
+    },
+    "budget_overrun": {
+      "title": "{{category}} budget exceeded",
+      "description": "Spent ¥{{spent}} of ¥{{budget}} budget ({{pct}}%)"
+    },
+    "budget_warning": {
+      "title": "{{category}} budget nearing limit",
+      "description": "Spent ¥{{spent}} of ¥{{budget}} budget ({{pct}}%)"
+    },
+    "forecast_overrun": {
+      "title": "{{category}} heading over budget",
+      "description": "On pace to spend ¥{{forecast}} vs ¥{{budget}} budget"
+    },
+    "large_expense": {
+      "title": "{{count}} large expense(s)",
+      "description": "Largest: ¥{{amount}}"
+    },
+    "recurring": {
+      "title": "{{category}} looks recurring",
+      "description": "About ¥{{amount}}/month for {{months}} months"
+    },
+    "frequent": {
+      "title": "{{category}} ×{{count}} entries",
+      "description": "{{count}} entries this month — maybe worth a review"
+    }
   },
   "calendar": {
     "title": "Select Date",

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
@@ -15,6 +16,7 @@ interface AccountDetailProps {
 }
 
 export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountDetailProps) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [currentAccount, setCurrentAccount] = useState<Account | null>(null);
   const [startDate, setStartDate] = useState('');
@@ -53,7 +55,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
           className="w-8 h-8 border-2 rounded-full animate-spin mb-4"
           style={{ borderColor: 'var(--line)', borderTopColor: 'var(--primary)' }}
         />
-        <p style={{ color: 'var(--ink-2)' }}>加载中...</p>
+        <p style={{ color: 'var(--ink-2)' }}>{t('common.loading')}</p>
       </div>
     );
   }
@@ -61,9 +63,9 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
   if (!accountId || !currentAccount) {
     return (
       <div className="page-root pb-6 flex flex-col items-center justify-center p-4">
-        <p className="mb-4" style={{ color: 'var(--ink-2)' }}>账户不存在</p>
+        <p className="mb-4" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.accountNotFound')}</p>
         <button onClick={onBack} className="btn-primary px-6">
-          返回资产页面
+          {t('accountDetail.backToAssets')}
         </button>
       </div>
     );
@@ -129,17 +131,15 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
     setEndDate('');
   };
 
-  const accountTypeLabel =
-    currentAccount.type === 'bank' ? '银行' :
-    currentAccount.type === 'alipay' ? '支付宝' :
-    currentAccount.type === 'wechat' ? '微信' :
-    currentAccount.type === 'cash' ? '现金' : '其他';
+  const accountTypeLabel = t('accountDetail.accountTypeLabel', {
+    type: t(`accountDetail.type.${currentAccount.type}`),
+  });
 
   return (
     <div className="page-root pb-6">
       {/* 页头 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
-        <button onClick={onBack} className="icon-btn flex-shrink-0" aria-label="返回">
+        <button onClick={onBack} className="icon-btn flex-shrink-0" aria-label={t('accountDetail.ariaBack')}>
           <ArrowLeft size={20} />
         </button>
         <div
@@ -150,14 +150,14 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
         </div>
         <div className="flex-1 min-w-0">
           <h1 className="page-title truncate" style={{ fontSize: '1.35rem' }}>{currentAccount.name}</h1>
-          <p className="page-subtitle">{accountTypeLabel}账户</p>
+          <p className="page-subtitle">{accountTypeLabel}</p>
         </div>
       </div>
 
       {/* 账户余额 */}
       <div className="px-4 mt-3">
         <div className="card p-5">
-          <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>账户余额</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.balance')}</p>
           <p className="text-3xl font-bold amount-num mt-1.5" style={{ color: 'var(--ink)' }}>
             {formatCurrencyShort(currentAccount.balance)}
           </p>
@@ -172,7 +172,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
               <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
                 <TrendingUp size={16} />
               </div>
-              <span className="text-sm" style={{ color: 'var(--ink-2)' }}>总收入</span>
+              <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.totalIncome')}</span>
             </div>
             <p className="text-lg font-bold amount-num" style={{ color: 'var(--primary)' }}>+{formatCurrencyShort(accountIncome)}</p>
           </div>
@@ -181,7 +181,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
               <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}>
                 <TrendingDown size={16} />
               </div>
-              <span className="text-sm" style={{ color: 'var(--ink-2)' }}>总支出</span>
+              <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.totalExpense')}</span>
             </div>
             <p className="text-lg font-bold amount-num" style={{ color: 'var(--expense)' }}>-{formatCurrencyShort(accountExpense)}</p>
           </div>
@@ -193,16 +193,16 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
         <div className="card p-4">
           <div className="flex items-center gap-2 mb-3">
             <Scale size={17} style={{ color: 'var(--ink-2)' }} />
-            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>对账</span>
-            <span className="text-xs ml-auto" style={{ color: 'var(--ink-2)' }}>初始 + 收入 - 支出 + 转入 - 转出</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t('accountDetail.reconciliation')}</span>
+            <span className="text-xs ml-auto" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.reconFormula')}</span>
           </div>
           <div className="space-y-1.5 text-sm">
             {[
-              { label: '初始余额', value: recon.initialBalance },
-              { label: '收入', value: recon.income, prefix: '+', color: 'var(--primary)' },
-              { label: '支出', value: recon.expense, prefix: '-', color: 'var(--expense)' },
-              { label: '转入', value: recon.transfersIn, prefix: '+', color: 'var(--primary)' },
-              { label: '转出', value: recon.transfersOut, prefix: '-', color: 'var(--expense)' },
+              { label: t('accountDetail.initialBalance'), value: recon.initialBalance },
+              { label: t('common.income'), value: recon.income, prefix: '+', color: 'var(--primary)' },
+              { label: t('common.expense'), value: recon.expense, prefix: '-', color: 'var(--expense)' },
+              { label: t('accountDetail.transferIn'), value: recon.transfersIn, prefix: '+', color: 'var(--primary)' },
+              { label: t('accountDetail.transferOut'), value: recon.transfersOut, prefix: '-', color: 'var(--expense)' },
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between">
                 <span style={{ color: 'var(--ink-2)' }}>{row.label}</span>
@@ -215,11 +215,11 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
           <div className="my-3" style={{ borderTop: '1px dashed var(--line)' }} />
           <div className="space-y-1.5 text-sm">
             <div className="flex items-center justify-between">
-              <span style={{ color: 'var(--ink-2)' }}>理论余额</span>
+              <span style={{ color: 'var(--ink-2)' }}>{t('accountDetail.expectedBalance')}</span>
               <span className="amount-num font-semibold" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(recon.expectedBalance)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span style={{ color: 'var(--ink-2)' }}>当前余额</span>
+              <span style={{ color: 'var(--ink-2)' }}>{t('accountDetail.currentBalance')}</span>
               <span className="amount-num font-semibold" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(recon.currentBalance)}</span>
             </div>
           </div>
@@ -229,21 +229,21 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
               <div className="flex items-center gap-2 mb-1">
                 <AlertTriangle size={16} style={{ color: 'var(--expense)' }} />
                 <span className="text-sm font-medium" style={{ color: 'var(--expense)' }}>
-                  账目差额 {recon.diff > 0 ? '+' : '-'}{formatCurrencyShort(Math.abs(recon.diff))}
+                  {t('accountDetail.diffLabel')} {recon.diff > 0 ? '+' : '-'}{formatCurrencyShort(Math.abs(recon.diff))}
                 </span>
               </div>
               <p className="text-xs mb-2.5" style={{ color: 'var(--expense)' }}>
-                余额与流水对不上，可能是记录被误删或编辑异常。校正后余额将按流水重算。
+                {t('accountDetail.diffHint')}
               </p>
               <button onClick={handleFixBalance} className="btn-primary w-full py-2 text-sm flex items-center justify-center gap-1.5">
                 <Wrench size={15} />
-                一键校正为理论余额
+                {t('accountDetail.fixBalance')}
               </button>
             </div>
           ) : (
             <div className="mt-3 flex items-center gap-2 rounded-card p-2.5" style={{ background: 'var(--primary-soft)' }}>
               <CheckCircle2 size={15} style={{ color: 'var(--primary)' }} />
-              <span className="text-xs" style={{ color: 'var(--primary-ink)' }}>账目平衡，余额与流水一致</span>
+              <span className="text-xs" style={{ color: 'var(--primary-ink)' }}>{t('accountDetail.balanced')}</span>
             </div>
           )}
         </div>
@@ -254,14 +254,14 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
         <div className="card p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={18} style={{ color: 'var(--ink-2)' }} />
-            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>日期筛选</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t('accountDetail.dateFilter')}</span>
             {(startDate || endDate) && (
               <button
                 onClick={handleResetFilter}
                 className="ml-auto text-xs font-medium"
                 style={{ color: 'var(--expense)' }}
               >
-                重置
+                {t('accountDetail.reset')}
               </button>
             )}
           </div>
@@ -271,7 +271,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
               className="input-field flex-1 py-2.5 px-3 text-left text-sm flex items-center gap-2"
             >
               <span className="amount-num" style={{ color: startDate ? 'var(--ink)' : 'var(--ink-3)' }}>
-                {startDate || '开始日期'}
+                {startDate || t('accountDetail.startDate')}
               </span>
             </button>
             <button
@@ -279,14 +279,14 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
               className="input-field flex-1 py-2.5 px-3 text-left text-sm flex items-center gap-2"
             >
               <span className="amount-num" style={{ color: endDate ? 'var(--ink)' : 'var(--ink-2)' }}>
-                {endDate || '结束日期'}
+                {endDate || t('accountDetail.endDate')}
               </span>
             </button>
           </div>
         </div>
 
         {/* 交易记录 */}
-        <h2 className="section-title">交易记录</h2>
+        <h2 className="section-title">{t('accountDetail.transactions')}</h2>
         {sortedRecords.length > 0 ? (
           <div className="space-y-2 pb-6">
             {sortedRecords.map((record) => {
@@ -317,15 +317,15 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
                       <div className="min-w-0">
                         <div className="flex items-center gap-1">
                           <span className="text-xs flex-shrink-0" style={{ color: 'var(--ink-2)' }}>
-                            {isIn ? '转入' : '转出'}
+                            {isIn ? t('accountDetail.transferIn') : t('accountDetail.transferOut')}
                           </span>
                           <ArrowRight size={12} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
                           <span className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>
-                            {record.relatedAccount?.name || '未知账户'}
+                            {record.relatedAccount?.name || t('accountDetail.unknownAccount')}
                           </span>
                         </div>
                         <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-2)' }}>
-                          {record.transfer?.note || '转账'}
+                          {record.transfer?.note || t('accountDetail.transfer')}
                         </p>
                       </div>
                     </div>
@@ -346,7 +346,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
                     className="mt-2 text-xs font-medium"
                     style={{ color: 'var(--expense)' }}
                   >
-                    删除
+                    {t('common.delete')}
                   </button>
                 </div>
               );
@@ -357,7 +357,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
             <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--paper-deep)' }}>
               <Wallet size={28} style={{ color: 'var(--ink-2)' }} />
             </div>
-            <p className="text-sm" style={{ color: 'var(--ink-2)' }}>该账户暂无交易记录</p>
+            <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.emptyRecords')}</p>
           </div>
         )}
       </div>

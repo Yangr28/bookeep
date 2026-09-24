@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/useStore';
 import { ArrowLeft, Star, Trophy, Target, Zap, Award, TrendingUp, Wallet, Clock, Calendar } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
@@ -11,8 +12,6 @@ interface StatsProps {
 
 interface Achievement {
   id: string;
-  name: string;
-  description: string;
   icon: typeof Star;
   color: string;
   condition: (data: StatsData) => boolean;
@@ -31,63 +30,60 @@ interface StatsData {
 const achievements: Achievement[] = [
   {
     id: 'first_blood',
-    name: '初尝记账',
-    description: '记录第一笔交易',
     icon: Star,
     color: '#FBBF24',
     condition: (data) => data.totalTransactions >= 1,
   },
   {
     id: 'transactions_100',
-    name: '百笔记录',
-    description: '累计记录100笔交易',
     icon: Target,
     color: '#10B981',
     condition: (data) => data.totalTransactions >= 100,
   },
   {
     id: 'transactions_1000',
-    name: '千笔大师',
-    description: '累计记录1000笔交易',
     icon: Award,
     color: '#06B6D4',
     condition: (data) => data.totalTransactions >= 1000,
   },
   {
     id: 'amount_10000',
-    name: '万元户',
-    description: '累计记账金额超过1万元',
     icon: Zap,
     color: '#84CC16',
     condition: (data) => data.totalAmount >= 10000,
   },
   {
     id: 'amount_100000',
-    name: '十万富翁',
-    description: '累计记账金额超过10万元',
     icon: Trophy,
     color: '#F59E0B',
     condition: (data) => data.totalAmount >= 100000,
   },
   {
     id: 'active_days_30',
-    name: '月度活跃',
-    description: '累计活跃30天',
     icon: Calendar,
     color: '#3B82F6',
     condition: (data) => data.daysWithTransactions >= 30,
   },
   {
     id: 'active_days_100',
-    name: '百日活跃',
-    description: '累计活跃100天',
     icon: Trophy,
     color: '#D946EF',
     condition: (data) => data.daysWithTransactions >= 100,
   },
 ];
 
+// 成就描述插值参数（名称/描述文案在 i18n 分片 stats.achievements.<id> 中）
+const achievementParams: Record<string, Record<string, number> | undefined> = {
+  transactions_100: { count: 100 },
+  transactions_1000: { count: 1000 },
+  amount_10000: { amount: 10000 },
+  amount_100000: { amount: 100000 },
+  active_days_30: { count: 30 },
+  active_days_100: { count: 100 },
+};
+
 export const Stats = ({ onBack }: StatsProps) => {
+  const { t } = useTranslation();
   const transactions = useStore((state) => state.transactions);
 
   useEffect(() => {
@@ -163,6 +159,12 @@ export const Stats = ({ onBack }: StatsProps) => {
     };
   }, [transactions]);
 
+  const getAchievementName = (achievement: Achievement): string =>
+    t(`stats.achievements.${achievement.id}.name`);
+
+  const getAchievementDescription = (achievement: Achievement): string =>
+    t(`stats.achievements.${achievement.id}.description`, achievementParams[achievement.id]);
+
   const earnedAchievements = achievements.filter((a) => a.condition(statsData));
   const progressAchievements = achievements
     .filter((a) => !a.condition(statsData))
@@ -188,24 +190,24 @@ export const Stats = ({ onBack }: StatsProps) => {
   };
 
   const statCards = [
-    { icon: Clock, label: '连续记账', value: statsData.consecutiveDays, unit: '天', color: '#d9930f' },
-    { icon: Target, label: '累计交易', value: statsData.totalTransactions, unit: '笔', color: 'var(--primary)', soft: true },
-    { icon: Wallet, label: '记账金额', value: formatCurrency(statsData.totalAmount), unit: '', color: '#7c6ef0' },
-    { icon: TrendingUp, label: '月均金额', value: formatCurrency(statsData.monthlyAverage), unit: '', color: '#14b8a6' },
-    { icon: Calendar, label: '活跃天数', value: statsData.daysWithTransactions, unit: '天', color: '#06b6d4' },
-    { icon: Star, label: '使用分类', value: statsData.categoryCount, unit: '个', color: '#ec4899' },
+    { icon: Clock, label: t('stats.cards.streak'), value: statsData.consecutiveDays, unit: t('stats.units.day', { count: statsData.consecutiveDays }), color: '#d9930f' },
+    { icon: Target, label: t('stats.cards.totalTransactions'), value: statsData.totalTransactions, unit: t('stats.units.entry', { count: statsData.totalTransactions }), color: 'var(--primary)', soft: true },
+    { icon: Wallet, label: t('stats.cards.totalAmount'), value: formatCurrency(statsData.totalAmount), unit: '', color: '#7c6ef0' },
+    { icon: TrendingUp, label: t('stats.cards.monthlyAverage'), value: formatCurrency(statsData.monthlyAverage), unit: '', color: '#14b8a6' },
+    { icon: Calendar, label: t('stats.cards.activeDays'), value: statsData.daysWithTransactions, unit: t('stats.units.day', { count: statsData.daysWithTransactions }), color: '#06b6d4' },
+    { icon: Star, label: t('stats.cards.categoryCount'), value: statsData.categoryCount, unit: t('stats.units.category', { count: statsData.categoryCount }), color: '#ec4899' },
   ];
 
   return (
     <div className="page-root pb-nav">
       {/* 页头 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
-        <button onClick={onBack} className="icon-btn" aria-label="返回">
+        <button onClick={onBack} className="icon-btn" aria-label={t('stats.back')}>
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="page-title">记账统计</h1>
-          <p className="page-subtitle">记录你的每一笔收支</p>
+          <h1 className="page-title">{t('stats.title')}</h1>
+          <p className="page-subtitle">{t('stats.subtitle')}</p>
         </div>
       </div>
 
@@ -242,13 +244,13 @@ export const Stats = ({ onBack }: StatsProps) => {
         <div className="mt-6">
           <h3 className="section-title flex items-center gap-2">
             <Trophy size={18} style={{ color: '#d9930f' }} />
-            已获得成就 ({earnedAchievements.length}/{achievements.length})
+            {t('stats.achievementsTitle', { earned: earnedAchievements.length, total: achievements.length })}
           </h3>
           {earnedAchievements.length === 0 ? (
             <Empty
               icon={Trophy}
-              title="还没有获得任何成就"
-              description="开始记账，解锁更多成就！"
+              title={t('stats.emptyTitle')}
+              description={t('stats.emptyDescription')}
             />
           ) : (
             <div className="grid grid-cols-4 gap-3">
@@ -258,7 +260,7 @@ export const Stats = ({ onBack }: StatsProps) => {
                   <div
                     key={achievement.id}
                     className="card p-3 text-center card-hover"
-                    title={achievement.description}
+                    title={getAchievementDescription(achievement)}
                   >
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2"
@@ -269,7 +271,7 @@ export const Stats = ({ onBack }: StatsProps) => {
                         style={{ color: achievement.color }}
                       />
                     </div>
-                    <p className="text-xs font-medium truncate" style={{ color: 'var(--ink)' }}>{achievement.name}</p>
+                    <p className="text-xs font-medium truncate" style={{ color: 'var(--ink)' }}>{getAchievementName(achievement)}</p>
                   </div>
                 );
               })}
@@ -282,7 +284,7 @@ export const Stats = ({ onBack }: StatsProps) => {
           <div className="mt-6">
             <h3 className="section-title flex items-center gap-2">
               <Target size={18} style={{ color: 'var(--primary)' }} />
-              进行中
+              {t('stats.inProgress')}
             </h3>
             <div className="space-y-3">
               {progressAchievements.map((achievement) => {
@@ -302,7 +304,7 @@ export const Stats = ({ onBack }: StatsProps) => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium" style={{ color: 'var(--ink)' }}>{achievement.name}</span>
+                          <span className="font-medium" style={{ color: 'var(--ink)' }}>{getAchievementName(achievement)}</span>
                           <span className="text-sm amount-num flex-shrink-0 ml-2" style={{ color: 'var(--ink-2)' }}>{progress.toFixed(0)}%</span>
                         </div>
                         <div className="h-2 rounded-full overflow-hidden mt-2" style={{ background: 'var(--paper-deep)' }}>
@@ -325,9 +327,9 @@ export const Stats = ({ onBack }: StatsProps) => {
           <div className="flex items-start gap-3">
             <Zap size={20} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--primary)' }} />
             <div>
-              <h3 className="font-medium" style={{ color: 'var(--ink)' }}>记账小贴士</h3>
+              <h3 className="font-medium" style={{ color: 'var(--ink)' }}>{t('stats.tipTitle')}</h3>
               <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>
-                定期记账可以帮助您更好地了解自己的消费习惯，合理规划财务。建议每周至少记账2-3次，保持财务记录的完整性。
+                {t('stats.tipBody')}
               </p>
             </div>
           </div>

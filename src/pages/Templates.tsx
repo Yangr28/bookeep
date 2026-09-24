@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Plus, Bookmark, Trash2, Edit3, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getIcon } from '../utils/iconMap';
@@ -9,6 +10,7 @@ const TEMPLATE_ICONS = ['Bookmark', 'Coffee', 'UtensilsCrossed', 'Car', 'Shoppin
 const TEMPLATE_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'];
 
 const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplate?: (transaction: Transaction) => void }) => {
+  const { t } = useTranslation();
   const { templates, categories, accounts, addTemplate, updateTemplate, deleteTemplate, addTransaction } = useStore();
   const [showModal, setShowModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<RecordTemplate | null>(null);
@@ -98,14 +100,14 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
     <div className="page-root pb-nav page-enter">
       <div className="safe-top px-4 pt-2 pb-1">
         <div className="flex items-center gap-3 mb-3">
-          <button onClick={onBack} className="icon-btn" aria-label="返回">
+          <button onClick={onBack} className="icon-btn" aria-label={t('templates.back')}>
             <ArrowLeft size={20} />
           </button>
           <div className="flex-1">
-            <h1 className="page-title">记账模板</h1>
-            <p className="page-subtitle">保存常用记录，一键快速记账</p>
+            <h1 className="page-title">{t('templates.title')}</h1>
+            <p className="page-subtitle">{t('templates.subtitle')}</p>
           </div>
-          <button onClick={openAddModal} className="icon-btn" aria-label="新建模板">
+          <button onClick={openAddModal} className="icon-btn" aria-label={t('templates.newTemplate')}>
             <Plus size={20} />
           </button>
         </div>
@@ -113,7 +115,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
         <div className="card flex items-center justify-between p-4">
           <div>
             <p className="text-2xl font-bold amount-num" style={{ color: 'var(--ink)' }}>{templates.length}</p>
-            <p className="text-xs" style={{ color: 'var(--ink-2)' }}>已保存模板</p>
+            <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('templates.savedCount')}</p>
           </div>
           <Bookmark size={40} style={{ color: 'var(--primary)' }} />
         </div>
@@ -128,9 +130,9 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
             >
               <Bookmark size={36} style={{ color: 'var(--ink-2)' }} />
             </div>
-            <p className="mb-5" style={{ color: 'var(--ink-2)' }}>还没有保存记账模板</p>
+            <p className="mb-5" style={{ color: 'var(--ink-2)' }}>{t('templates.empty')}</p>
             <button onClick={openAddModal} className="btn-primary w-fit mx-auto px-8">
-              创建模板
+              {t('templates.create')}
             </button>
           </div>
         ) : (
@@ -200,27 +202,27 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--line)' }}>
-              <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{editingTemplate ? '编辑模板' : '新建模板'}</h3>
-              <button onClick={() => setShowModal(false)} className="icon-btn" aria-label="关闭">
+              <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{editingTemplate ? t('templates.editTitle') : t('templates.newTitle')}</h3>
+              <button onClick={() => setShowModal(false)} className="icon-btn" aria-label={t('templates.close')}>
                 <X size={18} />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>模板名称</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('templates.nameLabel')}</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="如: 早餐、地铁费"
+                  placeholder={t('templates.namePlaceholder')}
                   className="w-full px-4 py-3 rounded-card text-lg font-bold outline-none"
                   style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>图标</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('templates.icon')}</label>
                 <div className="grid grid-cols-5 gap-2">
                   {TEMPLATE_ICONS.map((iconName) => {
                     const IconComponent = getIcon(iconName);
@@ -241,7 +243,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>颜色</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('templates.color')}</label>
                 <div className="grid grid-cols-5 gap-2">
                   {TEMPLATE_COLORS.map((color) => (
                     <button
@@ -259,24 +261,24 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
               </div>
 
               <div className="flex gap-2 mb-4">
-                {(['expense', 'income'] as const).map((t) => (
+                {(['expense', 'income'] as const).map((type) => (
                   <button
-                    key={t}
+                    key={type}
                     onClick={() => {
-                      setForm({ ...form, type: t, categoryId: categories.find(c => c.type === t)?.id || '' });
+                      setForm({ ...form, type, categoryId: categories.find(c => c.type === type)?.id || '' });
                     }}
                     className="flex-1 py-2.5 rounded-button text-sm font-medium transition-all"
-                    style={form.type === t
-                      ? { background: t === 'expense' ? 'var(--expense)' : 'var(--primary)', color: '#fff' }
+                    style={form.type === type
+                      ? { background: type === 'expense' ? 'var(--expense)' : 'var(--primary)', color: '#fff' }
                       : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
                   >
-                    {t === 'expense' ? '支出' : '收入'}
+                    {type === 'expense' ? t('common.expense') : t('common.income')}
                   </button>
                 ))}
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>金额</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('common.amount')}</label>
                 <input
                   type="number"
                   value={form.amount}
@@ -288,7 +290,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>分类</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('common.category')}</label>
                 <div className="grid grid-cols-4 gap-2">
                   {filteredCategories.map((cat) => {
                     const IconComponent = getIcon(cat.icon);
@@ -312,7 +314,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>账户</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('common.account')}</label>
                 <div className="flex gap-2 flex-wrap">
                   {accounts.map((acc) => {
                     const IconComponent = getIcon(acc.icon);
@@ -334,12 +336,12 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>备注</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('common.note')}</label>
                 <input
                   type="text"
                   value={form.note}
                   onChange={(e) => setForm({ ...form, note: e.target.value })}
-                  placeholder="添加备注..."
+                  placeholder={t('templates.notePlaceholder')}
                   className="w-full px-4 py-2.5 rounded-button text-sm outline-none"
                   style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
                 />
@@ -353,7 +355,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
                 className="btn-primary w-full"
                 style={(!form.name || !form.amount || !form.categoryId || !form.accountId) ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
               >
-                {editingTemplate ? '保存修改' : '创建模板'}
+                {editingTemplate ? t('templates.saveEdit') : t('templates.create')}
               </button>
             </div>
           </div>

@@ -1,0 +1,322 @@
+{
+  "back": "Back",
+  "title": "Settings",
+  "profileTitle": "Me",
+  "data": {
+    "sectionTitle": "Data management",
+    "export": "Export data",
+    "exportDesc": "Export all data as a JSON file",
+    "import": "Import data",
+    "importDesc": "Restore data from a JSON file",
+    "backups": "Exported data",
+    "backupCount": "{{count}} backup files",
+    "backupsDesc": "Manage and restore backups",
+    "recalculate": "Account reconciliation",
+    "recalculateMismatch": "{{count}} accounts don't match their transaction history. Tap to fix",
+    "recalculateDesc": "Recalculate account balances from income, expenses and transfers"
+  },
+  "manage": {
+    "sectionTitle": "Bookkeeping",
+    "categories": "Categories",
+    "categoriesDesc": "Customize income/expense categories"
+  },
+  "appearance": {
+    "sectionTitle": "Appearance",
+    "darkMode": "Dark mode",
+    "darkOn": "On",
+    "darkOff": "Off"
+  },
+  "about": {
+    "sectionTitle": "About",
+    "version": "Version & updates",
+    "currentVersion": "Version v{{version}}",
+    "hotVersion": " (hot update · built-in v{{version}})",
+    "rollbackAvailable": " · {{count}} older versions available",
+    "changelogLink": " · What's new",
+    "checkUpdate": "Check for updates",
+    "ariaCheckUpdate": "Check for updates",
+    "help": "Help & feedback",
+    "helpDesc": "User guide and feedback",
+    "privacy": "Privacy policy",
+    "privacyDesc": "Learn how your data is handled"
+  },
+  "toast": {
+    "recalcDoneTitle": "Reconciled",
+    "recalcDoneMessage": "Recalculated balances for {{count}} accounts from income, expenses and transfers",
+    "balancedTitle": "Balanced",
+    "balancedMessage": "All account balances match their transaction history. No fixes needed",
+    "exportSuccessTitle": "Exported",
+    "exportSuccessMessage": "The file was saved to your device's Documents folder and can be managed under “Exported data”.",
+    "exportFailedTitle": "Export failed",
+    "exportFailedMessage": "Please try again or check storage permissions",
+    "importFailedTitle": "Import failed",
+    "invalidFile": "Incorrect file format",
+    "importSuccessTitle": "Imported",
+    "importSuccessMessage": "{{transactions}} transactions · {{accounts}} accounts · {{categories}} categories",
+    "restoreSuccessTitle": "Restored",
+    "restoreSuccessMessage": "Data restored from {{name}}",
+    "restoreFailedTitle": "Restore failed",
+    "fileMissing": "The file may have been deleted",
+    "deletedTitle": "Deleted",
+    "backupDeletedMessage": "Backup {{name}} deleted",
+    "deleteFailedTitle": "Delete failed",
+    "pleaseRetry": "Please try again"
+  },
+  "help": {
+    "title": "Help & feedback",
+    "quickStart": "Quick start",
+    "recordTitle": "📝 Add a transaction",
+    "recordBody": "Tap the “Add transaction” button in the center of the bottom bar, choose a category, enter an amount and select an account. You can also type something like “lunch 30” into the smart input on the Home page.",
+    "accountTitle": "💳 Manage accounts",
+    "accountBody": "Add bank cards, cash, e-wallets and other accounts on the Assets page, and assign every income or expense to an account to track your finances in real time.",
+    "statsTitle": "📊 View statistics",
+    "statsBody": "On the Records page, browse income and expenses by time and category to understand your spending trends.",
+    "backupTitle": "🔄 Back up your data",
+    "backupBody": "Export your data as a JSON file under “Data management”. After exporting, you can view, restore or delete backups directly under “Exported data” — no need to hunt for files.",
+    "faqTitle": "FAQ",
+    "faq1q": "Q: Is my data uploaded to the cloud?",
+    "faq1a": "A: All data is stored locally on your device and is never uploaded to a server. We recommend exporting backups regularly.",
+    "faq2q": "Q: How do I move my data to a new phone?",
+    "faq2a": "A: On the old phone, go to “Data management → Export data”, transfer the exported JSON file to the new phone, then use “Import data”. On the same phone you can also restore a backup directly from “Exported data”.",
+    "faq3q": "Q: How can I recover a deleted record?",
+    "faq3a": "A: Deleted records cannot be recovered, so please delete with care. You can export a data backup before deleting.",
+    "feedbackTitle": "Feedback",
+    "feedbackIntro": "If you run into a problem or have a suggestion, we'd love to hear from you:",
+    "githubIssuesDesc": "Report a bug or suggest a feature"
+  },
+  "privacy": {
+    "updated": "Last updated: September 2026",
+    "s1Title": "1. Information we collect",
+    "s1Lead": "This app respects and protects your privacy. We ",
+    "s1Strong": "do not collect",
+    "s1Tail": " any personally identifiable information. All bookkeeping data (transactions, accounts, categories, etc.) is stored locally on your device and is never uploaded to any server.",
+    "s2Title": "2. Data storage",
+    "s2Item1": "Bookkeeping data is stored locally in the browser's IndexedDB and can only be accessed on this device",
+    "s2Item2": "Exported data files (JSON format) are kept by you; we recommend encrypting them",
+    "s2Item3": "Clearing app data or uninstalling the app will permanently delete local data, so please export a backup first",
+    "s3Title": "3. Network usage",
+    "s3Item1": "The app uses the network only for: checking for updates (GitHub Releases API) and downloading hot-update packages",
+    "s3Item2": "Update checks send no user data; they only request version information",
+    "s3Item3": "The currency converter uses an online exchange-rate API and carries no personal information",
+    "s4Title": "4. Permissions",
+    "s4StorageTitle": "Storage",
+    "s4StorageBody": ": used to export/import data files",
+    "s4CameraTitle": "Camera",
+    "s4CameraBody": ": used for receipt photo recognition (OCR); images are processed only on-device",
+    "s4NotifyTitle": "Notifications",
+    "s4NotifyBody": ": used for recurring bookkeeping reminders",
+    "s5Title": "5. Third-party services",
+    "s5Intro": "This app uses the following third-party services; please refer to their respective privacy policies:",
+    "s5GithubDesc": "code hosting and releases",
+    "s5RateDesc": "Exchange-rate API: used for multi-currency conversion",
+    "s6Title": "6. Data security",
+    "s6Body": "We take reasonable technical measures to protect your data. However, no storage method can be guaranteed 100% secure, so we recommend exporting backups regularly.",
+    "s7Title": "7. Policy changes",
+    "s7Body": "This privacy policy may be revised with app updates. Significant changes will be announced in the app. Continued use constitutes acceptance of the updated policy.",
+    "s8Title": "8. Contact us",
+    "s8Body": "If you have any questions about this policy, please contact us via GitHub Issues."
+  },
+  "backupPage": {
+    "title": "Exported data",
+    "intro": "Backup files exported from within the app are listed here. You can restore or delete them directly in the app without opening a file manager.",
+    "emptyTitle": "No backups yet",
+    "emptyHint": "Tap “Export data” above to create a backup",
+    "browserBadge": "Browser",
+    "statTransactions": "Txns",
+    "statAccounts": "Accounts",
+    "statOthers": "Other",
+    "restore": "Restore"
+  },
+  "changelog": {
+    "title": "What's new",
+    "currentBadge": "Current",
+    "earlyVersions": "Earlier versions",
+    "gotIt": "Got it",
+    "rollbackButton": "Roll back to an older version ({{count}} available)"
+  },
+  "rollback": {
+    "title": "Roll back to older version",
+    "subtitle": "Choose the version to roll back to",
+    "downloading": "Downloading older version...",
+    "downloadProgress": "{{percent}}% · The package is small, please wait",
+    "failed": "Rollback failed",
+    "done": "Rollback complete, reloading...",
+    "doneHint": "The page will automatically refresh to the older version",
+    "updatesCount": "{{count}} updates",
+    "notice1": "Only interface resources are switched; your bookkeeping data is completely unaffected",
+    "notice2": "After rolling back, you can upgrade again via “Check for updates”",
+    "notice3": "If the old version fails to start, opening the app twice in a row will automatically recover it",
+    "close": "Close"
+  },
+  "importConfirm": {
+    "title": "Overwrite all data?",
+    "subtitle": "Importing will replace all current data",
+    "intro": "You are about to import the following data, overwriting all current records:",
+    "statTransactions": "Txns",
+    "statAccounts": "Accounts",
+    "statCategories": "Categories",
+    "confirm": "Confirm import"
+  },
+  "builtinChangelog": {
+    "v4_4_6": {
+      "date": "2026-09-07",
+      "notes": [
+        "The category delete button is back to a hidden style, with a confirmation dialog and undo to prevent accidental deletion",
+        "Swipe-back is now triggered from the screen edge, matching the system gesture and avoiding accidental triggers",
+        "Added a category filter on the transaction details page, including uncategorized records"
+      ]
+    },
+    "v4_4_5": {
+      "date": "2026-09-07",
+      "notes": [
+        "Fixed the Home balance card disappearing after saving a transaction",
+        "Merged duplicate transaction-detail entry points on Home",
+        "Fixed the details page scrolling to the middle before jumping to the top",
+        "Added a category filter (including uncategorized) to all transaction details",
+        "Fixed list swipes accidentally triggering edit or delete",
+        "Saving an edited record now returns to the previously open page",
+        "Improved keyboard timing: it only focuses on first launch",
+        "Category deletion now requires confirmation and supports undo to prevent mistakes"
+      ]
+    },
+    "v4_4_4": {
+      "date": "2026-08-12",
+      "notes": [
+        "Smart entry now recognizes currencies, including USD, EUR, HKD, JPY and other common currencies",
+        "Fixed a positioning issue with the currency converter popup"
+      ]
+    },
+    "v4_4_3": {
+      "date": "2026-08-12",
+      "notes": [
+        "Fixed abnormal positioning and bottom occlusion of the currency-switcher popup in the converter",
+        "Home screen widget is now a compact 2×1 size",
+        "Fixed the widget input popup being covered by the keyboard"
+      ]
+    },
+    "v4_4_2": {
+      "date": "2026-08-12",
+      "notes": [
+        "The widget now uses smart input: type bookkeeping text directly on the home screen and it is parsed after opening the app",
+        "Expanded currency support to 150+ currencies, covering all ISO 4217 codes"
+      ]
+    },
+    "v4_4_1": {
+      "date": "2026-08-12",
+      "notes": [
+        "Exchange rates now update in real time using open APIs",
+        "Expanded currency support to 80+ currencies across all continents, including minor ones",
+        "The currency picker now supports search to find a currency quickly",
+        "Exchange-rate lists are grouped by region, showing the rate source (live/default/custom)"
+      ]
+    },
+    "v4_4_0": {
+      "date": "2026-08-12",
+      "notes": [
+        "Added a currency converter with real-time conversion for 16 major currencies",
+        "Transactions can use foreign currencies, automatically converted to CNY",
+        "Custom exchange rates can be edited manually for each currency against CNY",
+        "Added a 2x2 home screen widget for one-tap bookkeeping without opening the app"
+      ]
+    },
+    "v4_3_5": {
+      "date": "2026-08-12",
+      "notes": [
+        "Recognizes bank abbreviations plus last digits (e.g. “ICBC 6894” → ICBC account 6894)",
+        "Fixed bank-card last digits being mistaken for amounts",
+        "Improved amount extraction: account keywords are identified and removed first"
+      ]
+    },
+    "v4_3_4": {
+      "date": "2026-08-12",
+      "notes": [
+        "Fixed keywords like “lunch” failing to match a category",
+        "Fixed bank names being misrecognized as category keywords"
+      ]
+    },
+    "v4_3_3": {
+      "date": "2026-08-12",
+      "notes": [
+        "Improved the smart-entry algorithm: existing account and category names take priority",
+        "Updated the app icon to the latest version"
+      ]
+    },
+    "v4_3_2": {
+      "date": "2026-08-12",
+      "notes": [
+        "Smart entry now auto-detects accounts (bank names, Alipay, WeChat, etc.)",
+        "After detecting an account, its keyword is automatically removed from the note"
+      ]
+    },
+    "v4_3_1": {
+      "date": "2026-08-11",
+      "notes": [
+        "Fixed the account picker popup being covered by the bottom navigation bar"
+      ]
+    },
+    "v4_3_0": {
+      "date": "2026-08-11",
+      "notes": [
+        "Added recurring transactions: daily/weekly/monthly/yearly automatic entries",
+        "Added bookkeeping templates: save common entries for one-tap reuse",
+        "Redesigned account selection as a selector bar plus bottom sheet, with balances shown",
+        "Quick actions are now a 4-tile grid: recurring, templates, budget, stats"
+      ]
+    },
+    "v4_2_0": {
+      "date": "2026-08-11",
+      "notes": [
+        "Improved quick-entry layout: note moved up, date and time moved down",
+        "Improved category icon sizes and spacing for a better look"
+      ]
+    },
+    "v4_1_0": {
+      "date": "2026-08-11",
+      "notes": [
+        "Fixed missing quick date presets on the all-records page",
+        "Fixed a logic error in the date-filter reset button",
+        "Improved dark-mode support on the all-records page"
+      ]
+    },
+    "v4_0_0": {
+      "date": "2026-07-16",
+      "notes": [
+        "Improved stats: de-emphasized streak days and added monthly average amount and category usage",
+        "Home reminders now appear only after 3 days without entries instead of nudging daily",
+        "Introduced a redesigned app icon",
+        "Removed streak achievements and added cumulative active-day achievements"
+      ]
+    },
+    "v3_8_0": {
+      "date": "2026-07-16",
+      "notes": [
+        "Added bookkeeping reminders (days without entries)",
+        "Added low-balance alerts for accounts",
+        "Added bulk actions (multi-select and batch delete)",
+        "Added a quick-action bar",
+        "Added record-card gestures (swipe left to delete, swipe right to edit)",
+        "Added quick options in the date picker",
+        "Added an app lock (4-digit PIN)"
+      ]
+    },
+    "v3_7_0": {
+      "date": "2026-07-16",
+      "notes": [
+        "Added global search",
+        "Added budget management",
+        "Added bookkeeping statistics (entry streaks and achievement badges)",
+        "Improved smart recognition in quick entry"
+      ]
+    },
+    "v3_0_0_plus": {
+      "date": "Earlier versions",
+      "notes": [
+        "Basic bookkeeping (income/expense records)",
+        "Account management (bank cards, cash, etc.)",
+        "Category management (custom categories)",
+        "Statistics and charts",
+        "Data export/import"
+      ]
+    }
+  }
+}

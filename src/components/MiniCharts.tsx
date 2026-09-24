@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * 首页 mini 数据可视化组件
@@ -163,6 +164,7 @@ export const StackedBar = ({
   height = 8,
   showBalanceRate = true,
 }: StackedBarProps) => {
+  const { t } = useTranslation();
   const reduced = useReducedMotion();
   const [animated, setAnimated] = useState(false);
 
@@ -212,7 +214,7 @@ export const StackedBar = ({
             className="text-[11px] font-semibold animate-pop-in"
             style={{ color: isPositive ? 'var(--primary)' : 'var(--expense)' }}
           >
-            结余率 {balanceRate > 0 ? '+' : ''}{balanceRate}%
+            {t('components.balanceRate')} {balanceRate > 0 ? '+' : ''}{balanceRate}%
           </span>
         </div>
       )}

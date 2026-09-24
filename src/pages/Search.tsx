@@ -4,6 +4,7 @@ import { TransactionCard } from '../components/TransactionCard';
 import { Search as SearchIcon, ArrowLeft, X, Filter, TrendingUp, TrendingDown } from 'lucide-react';
 import { TransactionType, Transaction } from '../types';
 import Empty from '../components/Empty';
+import { useTranslation } from 'react-i18next';
 
 interface SearchProps {
   onBack: () => void;
@@ -12,6 +13,7 @@ interface SearchProps {
 }
 
 export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState(initialQuery || '');
   const [filterType, setFilterType] = useState<TransactionType | 'all'>('all');
   const transactions = useStore((state) => state.transactions);
@@ -49,7 +51,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
     <div className="page-root pb-nav">
       <div className="safe-top px-4 pt-2 pb-3">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="icon-btn" aria-label="返回">
+          <button onClick={onBack} className="icon-btn" aria-label={t('search.back')}>
             <ArrowLeft size={20} />
           </button>
           <div className="flex-1 relative">
@@ -63,7 +65,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="搜索备注、金额、分类..."
+              placeholder={t('search.placeholder')}
               className="w-full rounded-button pl-10 pr-10 py-3 text-sm outline-none"
               style={{ background: 'var(--card)', color: 'var(--ink)', boxShadow: 'var(--shadow-card)' }}
             />
@@ -85,7 +87,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
               onClick={() => setFilterType('all')}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filterType === 'all' ? 'chip-active' : 'chip-inactive'}`}
             >
-              全部
+              {t('search.filterAll')}
             </button>
             <button
               onClick={() => setFilterType('expense')}
@@ -95,7 +97,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
                 : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
             >
               <TrendingDown size={13} />
-              支出
+              {t('common.expense')}
             </button>
             <button
               onClick={() => setFilterType('income')}
@@ -105,7 +107,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
                 : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
             >
               <TrendingUp size={13} />
-              收入
+              {t('common.income')}
             </button>
           </div>
         </div>
@@ -125,8 +127,8 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
           </div>
         ) : (
           <Empty
-            title="未找到相关记录"
-            description={query ? '尝试使用其他关键词搜索' : '输入关键词开始搜索'}
+            title={t('search.emptyTitle')}
+            description={query ? t('search.emptyHintActive') : t('search.emptyHintIdle')}
           />
         )}
       </div>

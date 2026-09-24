@@ -1,9 +1,10 @@
 import { useState, useRef, TouchEvent, DragEvent, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { todayKey, toDateKey, addMonths, parseDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
 import { Building2, Wallet, MessageCircle, Banknote, CreditCard, Plus, X, ChevronRight, Trash2, Edit3, Calendar, Clock, Percent, Palette, ArrowUpDown, Landmark, ArrowRight, ArrowRightLeft, AlertCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { Account, AccountIcons, AccountTypeNames } from '../types';
+import { Account, AccountIcons } from '../types';
 import { formatCurrencyShort } from '../utils/format';
 import { CalendarPicker } from '../components/CalendarPicker';
 
@@ -18,11 +19,11 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 const accountTypeOptions = [
-  { value: 'bank', label: '银行', icon: 'Building2' },
-  { value: 'alipay', label: '支付宝', icon: 'Wallet' },
-  { value: 'wechat', label: '微信', icon: 'MessageCircle' },
-  { value: 'cash', label: '现金', icon: 'Banknote' },
-  { value: 'other', label: '其他', icon: 'CreditCard' }
+  { value: 'bank', icon: 'Building2' },
+  { value: 'alipay', icon: 'Wallet' },
+  { value: 'wechat', icon: 'MessageCircle' },
+  { value: 'cash', icon: 'Banknote' },
+  { value: 'other', icon: 'CreditCard' }
 ];
 
 const colorOptions = [
@@ -31,13 +32,24 @@ const colorOptions = [
 ];
 
 const termOptions = [
-  { value: 3, label: '3个月' },
-  { value: 6, label: '6个月' },
-  { value: 12, label: '1年' },
-  { value: 24, label: '2年' },
-  { value: 36, label: '3年' },
-  { value: 60, label: '5年' }
+  { value: 3 },
+  { value: 6 },
+  { value: 12 },
+  { value: 24 },
+  { value: 36 },
+  { value: 60 }
 ];
+
+// 银行名为存量数据中的存储值，此处仅做展示名到 i18n key 的映射
+const bankKeyMap: Record<string, string> = {
+  '招商银行': 'cmb',
+  '工商银行': 'icb',
+  '建设银行': 'ccb',
+  '农业银行': 'abc',
+  '中国银行': 'boc',
+  '交通银行': 'bcm',
+  '其他银行': 'other'
+};
 
 const bankOptions = ['招商银行', '工商银行', '建设银行', '农业银行', '中国银行', '交通银行', '其他银行'];
 
@@ -53,6 +65,20 @@ interface AccountsProps {
 export const Accounts = ({
   onViewAccountDetail,
 }: AccountsProps) => {
+  const { t, i18n } = useTranslation();
+
+  /** 预设银行名翻译为当前语言，自定义银行名原样显示 */
+  const bankLabel = (name: string) => {
+    const key = bankKeyMap[name];
+    return key ? t(`accounts.banks.${key}`) : name;
+  };
+
+  /** 存期（月）本地化：不足 1 年显示月，否则显示年 */
+  const termLabel = (months: number) =>
+    months < 12
+      ? t('accounts.term.months', { count: months })
+      : t('accounts.term.years', { count: months / 12 });
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -241,7 +267,7 @@ export const Accounts = ({
   };
 
   const handleLoanDelete = (id: string) => {
-    if (confirm('确定要删除这笔贷款吗？')) {
+    if (confirm(t('accounts.loan.deleteConfirm'))) {
       deleteLoan(id);
     }
   };
@@ -292,13 +318,13 @@ export const Accounts = ({
   };
 
   const handleAccountDelete = (id: string) => {
-    if (confirm('确定要删除这个账户吗？')) {
+    if (confirm(t('accounts.deleteAccountConfirm'))) {
       deleteAccount(id);
     }
   };
 
   const handleDepositDelete = (id: string) => {
-    if (confirm('确定要删除这笔定期存款吗？')) {
+    if (confirm(t('accounts.deposit.deleteConfirm'))) {
       deleteFixedDeposit(id);
     }
   };
@@ -308,14 +334,14 @@ export const Accounts = ({
     const end = new Date(endDate);
     const diffTime = end.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays <= 0) return '已到期';
-    if (diffDays < 30) return `${diffDays}天后到期`;
+    if (diffDays <= 0) return t('accounts.deposit.daysMatured');
+    if (diffDays < 30) return t('accounts.deposit.daysRemaining', { count: diffDays });
     const months = Math.ceil(diffDays / 30);
-    if (months < 12) return `${months}个月后到期`;
+    if (months < 12) return t('accounts.deposit.monthsRemaining', { count: months });
     const years = Math.floor(months / 12);
     const remainingMonths = months % 12;
-    if (remainingMonths === 0) return `${years}年后到期`;
-    return `${years}年${remainingMonths}个月后到期`;
+    if (remainingMonths === 0) return t('accounts.deposit.yearsRemaining', { count: years });
+    return t('accounts.deposit.yearsMonthsRemaining', { years, months: remainingMonths });
   };
 
   const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -337,27 +363,27 @@ export const Accounts = ({
       {/* 页头 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
         <div className="flex-1">
-          <h1 className="page-title">资产</h1>
-          <p className="page-subtitle">管理您的所有账户</p>
+          <h1 className="page-title">{t('accounts.title')}</h1>
+          <p className="page-subtitle">{t('accounts.subtitle')}</p>
         </div>
       </div>
 
       {/* 总资产卡 */}
       <div className="px-4 mt-3">
         <div className="card p-5">
-          <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>总资产</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('accounts.totalAssets')}</p>
           <p className="text-3xl font-bold mt-2 amount-num truncate" style={{ color: 'var(--ink)' }}>
             {formatCurrencyShort(totalAssetsValue)}
           </p>
           <div className="flex flex-wrap gap-x-5 gap-y-1 mt-4 text-sm">
             <span style={{ color: 'var(--ink-2)' }}>
-              活期 <span className="font-semibold amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(liquidAssets)}</span>
+              {t('accounts.liquid')} <span className="font-semibold amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(liquidAssets)}</span>
             </span>
             <span style={{ color: 'var(--ink-2)' }}>
-              定期 <span className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(totalFixedDepositsValue)}</span>
+              {t('accounts.fixed')} <span className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(totalFixedDepositsValue)}</span>
             </span>
             <span style={{ color: 'var(--ink-2)' }}>
-              贷款 <span className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(-totalLoansValue)}</span>
+              {t('accounts.loansLabel')} <span className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(-totalLoansValue)}</span>
             </span>
           </div>
         </div>
@@ -370,32 +396,32 @@ export const Accounts = ({
             onClick={() => setActiveTab('accounts')}
             className={`seg-item text-xs ${activeTab === 'accounts' ? 'seg-item-active' : ''}`}
           >
-            活期账户
+            {t('accounts.tabs.accounts')}
           </button>
           <button
             onClick={() => setActiveTab('transfer')}
             className={`seg-item text-xs ${activeTab === 'transfer' ? 'seg-item-active' : ''}`}
           >
-            转账
+            {t('accounts.tabs.transfer')}
           </button>
           <button
             onClick={() => setActiveTab('deposits')}
             className={`seg-item text-xs ${activeTab === 'deposits' ? 'seg-item-active' : ''}`}
           >
-            定期存款
+            {t('accounts.tabs.deposits')}
           </button>
           <button
             onClick={() => setActiveTab('loans')}
             className={`seg-item text-xs ${activeTab === 'loans' ? 'seg-item-active' : ''}`}
           >
-            贷款还款
+            {t('accounts.tabs.loans')}
           </button>
         </div>
 
         {activeTab === 'accounts' && (
           <>
             <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>长按拖动排序</span>
+              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('accounts.dragHint')}</span>
               <ArrowUpDown size={16} style={{ color: 'var(--ink-2)' }} />
             </div>
             <div className="space-y-2">
@@ -431,7 +457,7 @@ export const Accounts = ({
                           </span>
                         )}
                       </div>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>{AccountTypeNames[account.type]}</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>{t(`accounts.type.${account.type}`)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -469,12 +495,12 @@ export const Accounts = ({
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--paper-deep)' }}>
                   <Wallet size={28} style={{ color: 'var(--ink-2)' }} />
                 </div>
-                <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>还没有添加账户</p>
+                <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>{t('accounts.emptyAccounts')}</p>
                 <button
                   onClick={handleOpenAddModal}
                   className="btn-primary px-6 py-2.5 text-sm"
                 >
-                  添加第一个账户
+                  {t('accounts.addFirstAccount')}
                 </button>
               </div>
             )}
@@ -486,7 +512,7 @@ export const Accounts = ({
               onClick={handleOpenAddModal}
               className="fixed bottom-24 right-6 w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-all z-40"
               style={{ background: 'var(--card)', color: 'var(--primary)', border: '2px solid var(--primary)', boxShadow: 'var(--shadow-card)' }}
-              aria-label="添加账户"
+              aria-label={t('accounts.ariaAddAccount')}
             >
               <Plus size={24} />
             </button>
@@ -497,7 +523,7 @@ export const Accounts = ({
           <>
             <div className="space-y-4">
               <div className="card p-4">
-                <label className="block text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>转出账户</label>
+                <label className="block text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>{t('accounts.transfer.from')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {accounts.map((account) => (
                     <button
@@ -532,7 +558,7 @@ export const Accounts = ({
               </div>
 
               <div className="card p-4">
-                <label className="block text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>转入账户</label>
+                <label className="block text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>{t('accounts.transfer.to')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {accounts.map((account) => (
                     <button
@@ -561,7 +587,7 @@ export const Accounts = ({
               </div>
 
               <div className="card p-4">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>转账金额</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.transfer.amount')}</label>
                 <div className="rounded-button p-3 flex items-baseline gap-2" style={{ background: 'var(--paper)' }}>
                   <span className="text-2xl font-semibold amount-num" style={{ color: 'var(--ink-2)' }}>¥</span>
                   <input
@@ -581,12 +607,12 @@ export const Accounts = ({
               </div>
 
               <div className="card p-4">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>备注</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.transfer.note')}</label>
                 <input
                   type="text"
                   value={transferNote}
                   onChange={(e) => setTransferNote(e.target.value)}
-                  placeholder="添加备注（可选）"
+                  placeholder={t('accounts.transfer.notePlaceholder')}
                   className="input-field w-full text-sm"
                 />
               </div>
@@ -614,11 +640,11 @@ export const Accounts = ({
                 disabled={!transferFromId || !transferToId || !transferAmount || parseFloat(transferAmount) <= 0 || transferFromId === transferToId}
                 className="btn-primary w-full py-3.5"
               >
-                确认转账
+                {t('accounts.transfer.submit')}
               </button>
 
               <div className="pt-4" style={{ borderTop: '1px solid var(--line)' }}>
-                <h3 className="font-bold text-base mb-3" style={{ color: 'var(--ink)' }}>转账记录</h3>
+                <h3 className="font-bold text-base mb-3" style={{ color: 'var(--ink)' }}>{t('accounts.transfer.recordsTitle')}</h3>
                 <div className="space-y-2">
                   {transfers.length > 0 ? (
                     [...transfers].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((transfer) => {
@@ -636,17 +662,17 @@ export const Accounts = ({
                               </div>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1">
-                                  <span className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{fromAccount?.name || '未知'}</span>
+                                  <span className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{fromAccount?.name || t('common.unknown')}</span>
                                   <ArrowRight size={12} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
-                                  <span className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{toAccount?.name || '未知'}</span>
+                                  <span className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{toAccount?.name || t('common.unknown')}</span>
                                 </div>
-                                <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-2)' }}>{transfer.note || '转账'}</p>
+                                <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-2)' }}>{transfer.note || t('accounts.transfer.defaultNote')}</p>
                               </div>
                             </div>
                             <div className="text-right flex-shrink-0">
                               <p className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(transfer.amount)}</p>
                               <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
-                                {new Date(transfer.createdAt).toLocaleString('zh-CN', {
+                                {new Date(transfer.createdAt).toLocaleString(i18n.language, {
                                   month: '2-digit',
                                   day: '2-digit',
                                   hour: '2-digit',
@@ -660,7 +686,7 @@ export const Accounts = ({
                             className="mt-2 text-xs px-2 py-1 rounded-button font-medium"
                             style={{ color: 'var(--expense)', background: 'var(--expense-soft)' }}
                           >
-                            删除
+                            {t('common.delete')}
                           </button>
                         </div>
                       );
@@ -670,7 +696,7 @@ export const Accounts = ({
                       <div className="w-14 h-14 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--paper-deep)' }}>
                         <ArrowRightLeft size={24} style={{ color: 'var(--ink-2)' }} />
                       </div>
-                      <p className="text-sm" style={{ color: 'var(--ink-2)' }}>暂无转账记录</p>
+                      <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('accounts.transfer.empty')}</p>
                     </div>
                   )}
                 </div>
@@ -699,10 +725,10 @@ export const Accounts = ({
                               : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }
                           }
                         >
-                          {deposit.status === 'active' ? '存期中' : '已到期'}
+                          {deposit.status === 'active' ? t('accounts.deposit.statusActive') : t('accounts.deposit.statusMatured')}
                         </span>
                       </div>
-                      <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>{deposit.bank}</p>
+                      <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>{bankLabel(deposit.bank)}</p>
                     </div>
                     <button
                       onClick={() => handleDepositDelete(deposit.id)}
@@ -715,11 +741,11 @@ export const Accounts = ({
                   
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div className="rounded-button p-3" style={{ background: 'var(--paper)' }}>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>本金</p>
+                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.principal')}</p>
                       <p className="font-semibold mt-1 truncate amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(deposit.principal)}</p>
                     </div>
                     <div className="rounded-button p-3" style={{ background: 'var(--paper)' }}>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>到期金额</p>
+                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.maturityAmount')}</p>
                       <p className="font-semibold mt-1 truncate amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(deposit.maturityAmount)}</p>
                     </div>
                   </div>
@@ -732,7 +758,7 @@ export const Accounts = ({
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock size={14} />
-                        <span>{deposit.term}个月</span>
+                        <span>{termLabel(deposit.term)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -749,12 +775,12 @@ export const Accounts = ({
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--paper-deep)' }}>
                   <Banknote size={28} style={{ color: 'var(--ink-2)' }} />
                 </div>
-                <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>还没有添加定期存款</p>
+                <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.empty')}</p>
                 <button
                   onClick={() => setShowDepositModal(true)}
                   className="btn-primary px-6 py-2.5 text-sm"
                 >
-                  添加定期存款
+                  {t('accounts.deposit.addButton')}
                 </button>
               </div>
             )}
@@ -766,7 +792,7 @@ export const Accounts = ({
               onClick={() => setShowDepositModal(true)}
               className="fixed bottom-24 right-6 w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-all z-40"
               style={{ background: 'var(--card)', color: 'var(--primary)', border: '2px solid var(--primary)', boxShadow: 'var(--shadow-card)' }}
-              aria-label="添加定期存款"
+              aria-label={t('accounts.deposit.ariaAdd')}
             >
               <Plus size={24} />
             </button>
@@ -793,10 +819,10 @@ export const Accounts = ({
                               : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }
                           }
                         >
-                          {loan.status === 'active' ? '还款中' : '已还清'}
+                          {loan.status === 'active' ? t('accounts.loan.statusActive') : t('accounts.loan.statusPaid')}
                         </span>
                       </div>
-                      <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>{loan.bank}</p>
+                      <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>{bankLabel(loan.bank)}</p>
                     </div>
                     <button
                       onClick={() => handleLoanDelete(loan.id)}
@@ -809,18 +835,18 @@ export const Accounts = ({
                   
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div className="rounded-button p-3" style={{ background: 'var(--paper)' }}>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>贷款总额</p>
+                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.principalTotal')}</p>
                       <p className="font-semibold mt-1 truncate amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(loan.principal)}</p>
                     </div>
                     <div className="rounded-button p-3" style={{ background: 'var(--paper)' }}>
-                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>剩余本金</p>
+                      <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.remainingPrincipal')}</p>
                       <p className="font-semibold mt-1 truncate amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(loan.remainingAmount)}</p>
                     </div>
                   </div>
 
                   <div className="rounded-button p-3 mb-3" style={{ background: 'var(--paper)' }}>
                     <div className="flex items-center justify-between text-sm mb-2">
-                      <span style={{ color: 'var(--ink-2)' }}>还款进度</span>
+                      <span style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.progress')}</span>
                       <span className="font-medium amount-num" style={{ color: 'var(--ink)' }}>{((loan.paidAmount / loan.principal) * 100).toFixed(1)}%</span>
                     </div>
                     <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
@@ -839,12 +865,12 @@ export const Accounts = ({
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock size={14} />
-                        <span>{loan.term}个月</span>
+                        <span>{termLabel(loan.term)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
                       <Landmark size={14} />
-                      <span className="font-medium truncate amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(loan.monthlyPayment)}/月</span>
+                      <span className="font-medium truncate amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(loan.monthlyPayment)}{t('accounts.loan.perMonthUnit')}</span>
                     </div>
                   </div>
                 </div>
@@ -856,12 +882,12 @@ export const Accounts = ({
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--paper-deep)' }}>
                   <Landmark size={28} style={{ color: 'var(--ink-2)' }} />
                 </div>
-                <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>还没有添加贷款</p>
+                <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.empty')}</p>
                 <button
                   onClick={() => setShowLoanModal(true)}
                   className="btn-primary px-6 py-2.5 text-sm"
                 >
-                  添加贷款
+                  {t('accounts.loan.addButton')}
                 </button>
               </div>
             )}
@@ -873,7 +899,7 @@ export const Accounts = ({
               onClick={() => setShowLoanModal(true)}
               className="fixed bottom-24 right-6 w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-all z-40"
               style={{ background: 'var(--card)', color: 'var(--expense)', border: '2px solid var(--expense)', boxShadow: 'var(--shadow-card)' }}
-              aria-label="添加贷款"
+              aria-label={t('accounts.loan.ariaAdd')}
             >
               <Plus size={24} />
             </button>
@@ -886,7 +912,7 @@ export const Accounts = ({
         <div className="fixed inset-0 z-[90] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowAddModal(false)}>
           <div className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 z-10 p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', background: 'var(--card)' }}>
-              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>添加账户</h3>
+              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('accounts.form.addTitle')}</h3>
               <button onClick={() => setShowAddModal(false)} className="icon-btn w-9 h-9">
                 <X size={18} />
               </button>
@@ -894,18 +920,18 @@ export const Accounts = ({
 
             <div className="p-4 space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>账户名称</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.form.nameLabel')}</label>
                 <input
                   type="text"
                   value={accountFormData.name}
                   onChange={(e) => setAccountFormData({ ...accountFormData, name: e.target.value })}
-                  placeholder="例如：招商银行"
+                  placeholder={t('accounts.form.namePlaceholder')}
                   className="input-field w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>账户类型</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.form.typeLabel')}</label>
                 <div className="grid grid-cols-5 gap-2">
                   {accountTypeOptions.map((option) => (
                     <button
@@ -921,14 +947,14 @@ export const Accounts = ({
                       }
                     >
                       <span className="flex items-center justify-center">{iconMap[option.icon]}</span>
-                      <span className="text-xs font-medium">{option.label}</span>
+                      <span className="text-xs font-medium">{t(`accounts.type.${option.value}`)}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>账户余额</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.form.balanceLabel')}</label>
                 <input
                   type="number"
                   value={accountFormData.balance}
@@ -939,7 +965,7 @@ export const Accounts = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>颜色</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.form.colorLabel')}</label>
                 <div className="flex flex-wrap gap-2">
                   {colorOptions.map((color) => (
                     <button
@@ -973,7 +999,7 @@ export const Accounts = ({
                   disabled={!accountFormData.name.trim() || accountFormData.balance === ''}
                   className="btn-primary w-full"
                 >
-                  添加账户
+                  {t('accounts.form.submitAdd')}
                 </button>
               </div>
             </div>
@@ -986,7 +1012,7 @@ export const Accounts = ({
         <div className="fixed inset-0 z-[90] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowEditModal(false)}>
           <div className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 z-10 p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', background: 'var(--card)' }}>
-              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>编辑账户</h3>
+              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('accounts.form.editTitle')}</h3>
               <button onClick={() => setShowEditModal(false)} className="icon-btn w-9 h-9">
                 <X size={18} />
               </button>
@@ -994,18 +1020,18 @@ export const Accounts = ({
 
             <div className="p-4 space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>账户名称</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.form.nameLabel')}</label>
                 <input
                   type="text"
                   value={accountFormData.name}
                   onChange={(e) => setAccountFormData({ ...accountFormData, name: e.target.value })}
-                  placeholder="例如：招商银行"
+                  placeholder={t('accounts.form.namePlaceholder')}
                   className="input-field w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>账户类型</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.form.typeLabel')}</label>
                 <div className="grid grid-cols-5 gap-2">
                   {accountTypeOptions.map((option) => (
                     <button
@@ -1021,14 +1047,14 @@ export const Accounts = ({
                       }
                     >
                       <span className="flex items-center justify-center">{iconMap[option.icon]}</span>
-                      <span className="text-xs font-medium">{option.label}</span>
+                      <span className="text-xs font-medium">{t(`accounts.type.${option.value}`)}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>账户余额</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.form.balanceLabel')}</label>
                 <input
                   type="number"
                   value={accountFormData.balance}
@@ -1039,7 +1065,7 @@ export const Accounts = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>颜色</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.form.colorLabel')}</label>
                 <div className="flex flex-wrap gap-2">
                   {colorOptions.map((color) => (
                     <button
@@ -1073,7 +1099,7 @@ export const Accounts = ({
                   disabled={!accountFormData.name.trim() || accountFormData.balance === ''}
                   className="btn-primary w-full"
                 >
-                  保存修改
+                  {t('accounts.form.saveEdit')}
                 </button>
               </div>
             </div>
@@ -1086,7 +1112,7 @@ export const Accounts = ({
         <div className="fixed inset-0 z-[90] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowDepositModal(false)}>
           <div className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 z-10 p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', background: 'var(--card)' }}>
-              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>添加定期存款</h3>
+              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('accounts.deposit.formTitle')}</h3>
               <button onClick={() => setShowDepositModal(false)} className="icon-btn w-9 h-9">
                 <X size={18} />
               </button>
@@ -1094,25 +1120,25 @@ export const Accounts = ({
 
             <div className="p-4 space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>存款名称</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.nameLabel')}</label>
                 <input
                   type="text"
                   value={depositFormData.name}
                   onChange={(e) => setDepositFormData({ ...depositFormData, name: e.target.value })}
-                  placeholder="例如：一年定期"
+                  placeholder={t('accounts.deposit.namePlaceholder')}
                   className="input-field w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>开户银行</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.bankLabel')}</label>
                 {showCustomBank ? (
                   <div className="space-y-2">
                     <input
                       type="text"
                       value={depositFormData.bank}
                       onChange={(e) => setDepositFormData({ ...depositFormData, bank: e.target.value })}
-                      placeholder="输入银行名称"
+                      placeholder={t('accounts.deposit.bankPlaceholder')}
                       className="input-field w-full"
                     />
                     <button
@@ -1123,7 +1149,7 @@ export const Accounts = ({
                       className="text-sm font-medium"
                       style={{ color: 'var(--primary)' }}
                     >
-                      选择预设银行
+                      {t('accounts.deposit.presetBank')}
                     </button>
                   </div>
                 ) : (
@@ -1140,7 +1166,7 @@ export const Accounts = ({
                               : { background: 'var(--paper)', border: '2px solid transparent', color: 'var(--ink)' }
                           }
                         >
-                          {bank}
+                          {bankLabel(bank)}
                         </button>
                       ))}
                     </div>
@@ -1152,14 +1178,14 @@ export const Accounts = ({
                       className="w-full py-2 px-3 rounded-button text-sm font-medium transition-colors hover:border-[color:var(--primary)] hover:text-[color:var(--primary)]"
                       style={{ border: '1.5px dashed var(--line)', color: 'var(--ink-2)' }}
                     >
-                      + 自定义银行
+                      {t('accounts.deposit.customBank')}
                     </button>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>存款金额</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.amountLabel')}</label>
                 <input
                   type="number"
                   value={depositFormData.principal}
@@ -1170,7 +1196,7 @@ export const Accounts = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>年利率 (%)</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.rateLabel')}</label>
                 <input
                   type="number"
                   step="0.01"
@@ -1182,7 +1208,7 @@ export const Accounts = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>存期</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.termLabel')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {termOptions.map((term) => (
                     <button
@@ -1195,20 +1221,20 @@ export const Accounts = ({
                           : { background: 'var(--paper)', color: 'var(--ink)' }
                       }
                     >
-                      {term.label}
+                      {termLabel(term.value)}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>起存日期</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.startDateLabel')}</label>
                 <button
                   onClick={() => setShowDepositDatePicker(true)}
                   className="input-field w-full py-2.5 px-3 text-left text-sm flex items-center"
                 >
                   <span className="amount-num" style={{ color: 'var(--ink)' }}>
-                    {depositFormData.startDate || '选择日期'}
+                    {depositFormData.startDate || t('accounts.deposit.selectDate')}
                   </span>
                 </button>
               </div>
@@ -1216,7 +1242,7 @@ export const Accounts = ({
               {depositFormData.principal && depositFormData.rate && (
                 <div className="rounded-button p-4" style={{ background: 'var(--paper)' }}>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm" style={{ color: 'var(--ink-2)' }}>到期金额</span>
+                    <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.maturityAmount')}</span>
                     <span className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>
                       {calculateMaturityAmount(
                         parseFloat(depositFormData.principal),
@@ -1226,7 +1252,7 @@ export const Accounts = ({
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm" style={{ color: 'var(--ink-2)' }}>到期日期</span>
+                    <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.maturityDate')}</span>
                     <span className="text-sm" style={{ color: 'var(--ink)' }}>
                       {calculateEndDate(depositFormData.startDate, depositFormData.term)}
                     </span>
@@ -1240,7 +1266,7 @@ export const Accounts = ({
                   disabled={!depositFormData.name.trim() || !depositFormData.principal || !depositFormData.rate}
                   className="btn-primary w-full"
                 >
-                  添加定期存款
+                  {t('accounts.deposit.submit')}
                 </button>
               </div>
             </div>
@@ -1253,7 +1279,7 @@ export const Accounts = ({
         <div className="fixed inset-0 z-[90] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowLoanModal(false)}>
           <div className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 z-10 p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', background: 'var(--card)' }}>
-              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>添加贷款</h3>
+              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('accounts.loan.formTitle')}</h3>
               <button onClick={() => setShowLoanModal(false)} className="icon-btn w-9 h-9">
                 <X size={18} />
               </button>
@@ -1261,18 +1287,18 @@ export const Accounts = ({
 
             <div className="p-4 space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>贷款名称</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.nameLabel')}</label>
                 <input
                   type="text"
                   value={loanFormData.name}
                   onChange={(e) => setLoanFormData({ ...loanFormData, name: e.target.value })}
-                  placeholder="例如：房贷"
+                  placeholder={t('accounts.loan.namePlaceholder')}
                   className="input-field w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>贷款银行</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.bankLabel')}</label>
                 {!showCustomBank ? (
                   <div className="grid grid-cols-4 gap-2">
                     {bankOptions.map((bank) => (
@@ -1286,7 +1312,7 @@ export const Accounts = ({
                             : { background: 'var(--paper)', border: '2px solid transparent', color: 'var(--ink)' }
                         }
                       >
-                        {bank}
+                        {bankLabel(bank)}
                       </button>
                     ))}
                     <button
@@ -1297,7 +1323,7 @@ export const Accounts = ({
                       className="py-2 rounded-button text-sm font-medium transition-colors hover:border-[color:var(--expense)] hover:text-[color:var(--expense)]"
                       style={{ border: '1.5px dashed var(--line)', color: 'var(--ink-2)' }}
                     >
-                      自定义
+                      {t('accounts.loan.custom')}
                     </button>
                   </div>
                 ) : (
@@ -1306,7 +1332,7 @@ export const Accounts = ({
                       type="text"
                       value={loanFormData.bank}
                       onChange={(e) => setLoanFormData({ ...loanFormData, bank: e.target.value })}
-                      placeholder="输入银行名称"
+                      placeholder={t('accounts.loan.bankPlaceholder')}
                       className="input-field flex-1"
                     />
                     <button
@@ -1316,14 +1342,14 @@ export const Accounts = ({
                       }}
                       className="btn-ghost px-4"
                     >
-                      取消
+                      {t('common.cancel')}
                     </button>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>贷款金额</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.amountLabel')}</label>
                 <input
                   type="number"
                   value={loanFormData.principal}
@@ -1334,7 +1360,7 @@ export const Accounts = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>年利率 (%)</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.rateLabel')}</label>
                 <input
                   type="number"
                   step="0.01"
@@ -1346,7 +1372,7 @@ export const Accounts = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>贷款期限</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.termLabel')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {termOptions.map((term) => (
                     <button
@@ -1359,20 +1385,20 @@ export const Accounts = ({
                           : { background: 'var(--paper)', color: 'var(--ink)' }
                       }
                     >
-                      {term.label}
+                      {termLabel(term.value)}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>开始日期</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.startDateLabel')}</label>
                 <button
                   onClick={() => setShowLoanDatePicker(true)}
                   className="input-field w-full py-2.5 px-3 text-left text-sm flex items-center"
                 >
                   <span className="amount-num" style={{ color: 'var(--ink)' }}>
-                    {loanFormData.startDate || '选择日期'}
+                    {loanFormData.startDate || t('accounts.loan.selectDate')}
                   </span>
                 </button>
               </div>
@@ -1380,7 +1406,7 @@ export const Accounts = ({
               {loanFormData.principal && loanFormData.rate && (
                 <div className="rounded-button p-4" style={{ background: 'var(--paper)' }}>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm" style={{ color: 'var(--ink-2)' }}>每月还款</span>
+                    <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.monthlyPayment')}</span>
                     <span className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>
                       {calculateMonthlyPayment(
                         parseFloat(loanFormData.principal),
@@ -1398,7 +1424,7 @@ export const Accounts = ({
                   disabled={!loanFormData.name.trim() || !loanFormData.principal || !loanFormData.rate}
                   className="btn-danger w-full"
                 >
-                  添加贷款
+                  {t('accounts.loan.submit')}
                 </button>
               </div>
             </div>
@@ -1410,7 +1436,7 @@ export const Accounts = ({
       {showCustomColorPicker && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowCustomColorPicker(false)}>
           <div className="w-full max-w-sm mx-4 rounded-card p-5 animate-bounce-in" style={{ background: 'var(--card)', boxShadow: 'var(--shadow-card)' }} onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold mb-4" style={{ color: 'var(--ink)' }}>自定义颜色</h3>
+            <h3 className="font-bold mb-4" style={{ color: 'var(--ink)' }}>{t('accounts.form.customColorTitle')}</h3>
             <div className="flex items-center gap-3 mb-4">
               <input
                 type="color"
@@ -1433,7 +1459,7 @@ export const Accounts = ({
                 onClick={() => setShowCustomColorPicker(false)}
                 className="btn-ghost flex-1"
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -1444,7 +1470,7 @@ export const Accounts = ({
                 }}
                 className="btn-primary flex-1"
               >
-                确定
+                {t('common.confirm')}
               </button>
             </div>
           </div>

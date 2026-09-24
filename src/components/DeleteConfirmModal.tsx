@@ -1,4 +1,5 @@
 import { Trash2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
@@ -13,10 +14,11 @@ export const DeleteConfirmModal = ({
   isOpen,
   onClose,
   onConfirm,
-  title = '确认删除',
-  message = '删除后无法恢复，确定要继续吗？',
+  title,
+  message,
   itemName = '',
 }: DeleteConfirmModalProps) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -29,7 +31,7 @@ export const DeleteConfirmModal = ({
         className="card relative w-full max-w-sm mx-4 p-5 animate-bounce-in"
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onClose} className="icon-btn w-9 h-9 absolute top-4 right-4">
+        <button onClick={onClose} className="icon-btn w-9 h-9 absolute top-4 right-4" aria-label={t('common.cancel')}>
           <X size={18} />
         </button>
         <div className="text-center pt-2">
@@ -39,15 +41,19 @@ export const DeleteConfirmModal = ({
           >
             <Trash2 size={28} />
           </div>
-          <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--ink)' }}>{title}</h3>
+          <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--ink)' }}>
+            {title ?? t('common.deleteConfirmTitle')}
+          </h3>
           {itemName && (
-            <p className="text-sm font-medium mb-1" style={{ color: 'var(--ink)' }}>{itemName}</p>
+            <p className="text-sm font-medium mb-1 amount-num" style={{ color: 'var(--ink)' }}>{itemName}</p>
           )}
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>{message}</p>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>
+            {message ?? t('common.deleteConfirmMessage')}
+          </p>
         </div>
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="btn-ghost flex-1">取消</button>
-          <button onClick={onConfirm} className="btn-danger flex-1">删除</button>
+          <button onClick={onClose} className="btn-ghost flex-1">{t('common.cancel')}</button>
+          <button onClick={onConfirm} className="btn-danger flex-1">{t('common.delete')}</button>
         </div>
       </div>
     </div>

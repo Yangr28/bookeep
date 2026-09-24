@@ -1,0 +1,20 @@
+{
+  "back": "Back",
+  "title": "All records",
+  "recordCount": "{{count}} records",
+  "filter": "Filter",
+  "reset": "Reset",
+  "presetToday": "Today",
+  "presetLast7": "Last 7 days",
+  "presetLast30": "Last 30 days",
+  "presetThisMonth": "This month",
+  "presetLastMonth": "Last month",
+  "startDate": "Start date",
+  "endDate": "End date",
+  "pleaseSelect": "Select",
+  "filterAll": "All",
+  "transactionDetails": "Transactions",
+  "transfer": "Transfer",
+  "transferPath": "{{from}} → {{to}}",
+  "noRecords": "No records"
+}

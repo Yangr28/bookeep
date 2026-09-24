@@ -1,0 +1,18 @@
+{
+  "back": "返回",
+  "title": "记账模板",
+  "subtitle": "保存常用记录，一键快速记账",
+  "newTemplate": "新建模板",
+  "close": "关闭",
+  "savedCount": "已保存模板",
+  "empty": "还没有保存记账模板",
+  "create": "创建模板",
+  "newTitle": "新建模板",
+  "editTitle": "编辑模板",
+  "nameLabel": "模板名称",
+  "namePlaceholder": "如: 早餐、地铁费",
+  "icon": "图标",
+  "color": "颜色",
+  "notePlaceholder": "添加备注...",
+  "saveEdit": "保存修改"
+}

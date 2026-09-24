@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
@@ -15,6 +16,7 @@ interface AllRecordsProps {
 }
 
 export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllRecordsProps) => {
+  const { t } = useTranslation();
 
   const transactions = useStore((state) => state.transactions);
   const transfers = useStore((state) => state.transfers);
@@ -50,31 +52,34 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
   }
 
   const allRecords: Record[] = [
-    ...transactions.map((t) => {
-      const category = useStore.getState().getCategoryById(t.categoryId);
+    ...transactions.map((tx) => {
+      const category = useStore.getState().getCategoryById(tx.categoryId);
       return {
-        id: t.id,
+        id: tx.id,
         type: 'transaction' as const,
-        amount: t.amount,
-        direction: t.type === 'income' ? 'in' as const : 'out' as const,
-        categoryName: category?.name || '未分类',
-        note: t.note,
-        createdAt: t.createdAt,
-        transaction: t,
+        amount: tx.amount,
+        direction: tx.type === 'income' ? 'in' as const : 'out' as const,
+        categoryName: category?.name || t('common.unclassified'),
+        note: tx.note,
+        createdAt: tx.createdAt,
+        transaction: tx,
       };
     }),
-    ...transfers.map((t) => {
-      const fromAccount = getAccountById(t.fromAccountId);
-      const toAccount = getAccountById(t.toAccountId);
+    ...transfers.map((tr) => {
+      const fromAccount = getAccountById(tr.fromAccountId);
+      const toAccount = getAccountById(tr.toAccountId);
       return {
-        id: t.id,
+        id: tr.id,
         type: 'transfer' as const,
-        amount: t.amount,
+        amount: tr.amount,
         direction: 'transfer' as const,
-        relatedAccountName: `${fromAccount?.name || '未知'} → ${toAccount?.name || '未知'}`,
-        note: t.note || '转账',
-        createdAt: t.createdAt,
-        transfer: t,
+        relatedAccountName: t('allRecords.transferPath', {
+          from: fromAccount?.name || t('common.unknown'),
+          to: toAccount?.name || t('common.unknown'),
+        }),
+        note: tr.note || t('allRecords.transfer'),
+        createdAt: tr.createdAt,
+        transfer: tr,
       };
     }),
   ];
@@ -119,9 +124,9 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
   };
 
   const categoryFilterChips = [
-    { value: 'all', label: '全部' },
+    { value: 'all', label: t('allRecords.filterAll') },
     ...categories.map((c) => ({ value: c.id, label: c.name, color: c.color })),
-    { value: 'uncategorized', label: '未分类' },
+    { value: 'uncategorized', label: t('common.unclassified') },
   ];
 
   return (
@@ -129,13 +134,13 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
       {/* 头部 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
         {!isTab && onBack && (
-          <button onClick={onBack} className="icon-btn" aria-label="返回">
+          <button onClick={onBack} className="icon-btn" aria-label={t('allRecords.back')}>
             <ArrowLeft size={20} />
           </button>
         )}
         <div className="flex-1">
-          <h1 className="page-title">{isTab ? '账单' : '全部记录'}</h1>
-          <p className="page-subtitle">共 {sortedRecords.length} 条记录</p>
+          <h1 className="page-title">{isTab ? t('nav.records') : t('allRecords.title')}</h1>
+          <p className="page-subtitle">{t('allRecords.recordCount', { count: sortedRecords.length })}</p>
         </div>
       </div>
 
@@ -144,14 +149,14 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
         <div className="card p-4">
           <div className="flex items-center justify-around">
             <div className="text-center flex-1">
-              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>收入</p>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('common.income')}</p>
               <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--primary)' }}>
                 +{formatCurrencyShort(totalIncome)}
               </p>
             </div>
             <div className="w-px self-stretch" style={{ background: 'var(--line)' }} />
             <div className="text-center flex-1">
-              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>支出</p>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('common.expense')}</p>
               <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
                 -{formatCurrencyShort(totalExpense)}
               </p>
@@ -165,21 +170,21 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
         <div className="card p-4">
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={16} style={{ color: 'var(--ink-2)' }} />
-            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>筛选</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t('allRecords.filter')}</span>
             {hasFilter && (
               <button onClick={handleResetFilter} className="ml-auto flex items-center gap-1 text-xs font-medium" style={{ color: 'var(--expense)' }}>
                 <X size={12} />
-                重置
+                {t('allRecords.reset')}
               </button>
             )}
           </div>
           <div className="flex flex-wrap gap-2 mb-3">
             {[
-              { label: '今日', days: 0 },
-              { label: '近7天', days: 7 },
-              { label: '近30天', days: 30 },
-              { label: '本月', days: 'month' },
-              { label: '上月', days: 'lastMonth' },
+              { label: t('allRecords.presetToday'), days: 0 },
+              { label: t('allRecords.presetLast7'), days: 7 },
+              { label: t('allRecords.presetLast30'), days: 30 },
+              { label: t('allRecords.presetThisMonth'), days: 'month' },
+              { label: t('allRecords.presetLastMonth'), days: 'lastMonth' },
             ].map((preset) => (
               <button
                 key={preset.label}
@@ -210,27 +215,27 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>开始日期</label>
+              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>{t('allRecords.startDate')}</label>
               <button
                 onClick={() => setShowDatePicker('start')}
                 className="input-field w-full py-2 text-sm flex items-center justify-between"
                 style={{ textAlign: 'left' }}
               >
                 <span style={{ color: startDate ? 'var(--ink)' : 'var(--ink-2)' }}>
-                  {startDate || '请选择'}
+                  {startDate || t('allRecords.pleaseSelect')}
                 </span>
                 <ChevronDown size={16} style={{ color: 'var(--ink-2)' }} />
               </button>
             </div>
             <div className="flex-1">
-              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>结束日期</label>
+              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>{t('allRecords.endDate')}</label>
               <button
                 onClick={() => setShowDatePicker('end')}
                 className="input-field w-full py-2 text-sm flex items-center justify-between"
                 style={{ textAlign: 'left' }}
               >
                 <span style={{ color: endDate ? 'var(--ink)' : 'var(--ink-2)' }}>
-                  {endDate || '请选择'}
+                  {endDate || t('allRecords.pleaseSelect')}
                 </span>
                 <ChevronDown size={16} style={{ color: 'var(--ink-2)' }} />
               </button>
@@ -264,7 +269,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
 
       {/* 明细列表 */}
       <div className="px-4 mt-5">
-        <h2 className="section-title">交易明细</h2>
+        <h2 className="section-title">{t('allRecords.transactionDetails')}</h2>
         {sortedRecords.length > 0 ? (
           <div>
             {sortedRecords.map((record) => {
@@ -292,11 +297,11 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
                       <div className="min-w-0">
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>
-                            {record.relatedAccountName || '转账'}
+                            {record.relatedAccountName || t('allRecords.transfer')}
                           </span>
                         </div>
                         <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-2)' }}>
-                          {record.note || '转账'} · {formatDateTime(record.createdAt)}
+                          {record.note || t('allRecords.transfer')} · {formatDateTime(record.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -309,7 +314,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
                         className="text-xs px-2 py-1 rounded-button"
                         style={{ color: 'var(--expense)', background: 'var(--expense-soft)' }}
                       >
-                        删除
+                        {t('common.delete')}
                       </button>
                     </div>
                   </div>
@@ -322,7 +327,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
             <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--paper-deep)' }}>
               <Wallet size={28} style={{ color: 'var(--ink-2)' }} />
             </div>
-            <p className="text-sm" style={{ color: 'var(--ink-2)' }}>暂无记录</p>
+            <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('allRecords.noRecords')}</p>
           </div>
         )}
       </div>

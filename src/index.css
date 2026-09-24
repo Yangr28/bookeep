@@ -45,6 +45,9 @@
   --shadow-card: 0 6px 20px rgba(168, 142, 110, 0.10);
   --shadow-card-hover: 0 10px 28px rgba(168, 142, 110, 0.16);
   --shadow-fab: 0 10px 24px rgba(46, 133, 222, 0.38);
+  /* 骨架屏：同纸面色系的静默底 + 轻扫光（不刺眼） */
+  --skeleton-base: #e9e3d7;
+  --skeleton-highlight: rgba(255, 255, 255, 0.6);
   --transition: all 0.2s ease-out;
 }
 
@@ -74,6 +77,9 @@
   --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.55);
   --shadow-fab: 0 10px 24px rgba(91, 160, 240, 0.32);
+  /* 骨架屏（深色）：卡面与次面之间的灰度，扫光用极低透明白 */
+  --skeleton-base: #23262f;
+  --skeleton-highlight: rgba(255, 255, 255, 0.06);
 }
 
 * {
@@ -227,6 +233,65 @@ body {
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
   }
+
+  /* === 骨架屏：同色系静默底 + 轻扫光 === */
+  .skeleton {
+    position: relative;
+    background-color: var(--skeleton-base);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--skeleton-highlight) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    border-radius: 0.5rem;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    overflow: hidden;
+  }
+
+  /* === 卡片/列表项统一按压态（轻微缩放，不做位移/变色） === */
+  .card-press {
+    transition: transform 0.15s ease-out;
+    will-change: transform;
+  }
+  .card-press:active {
+    transform: scale(0.98);
+  }
+
+  /* === 空态：克制的垂直居中排布，避免大卡片占位 === */
+  .empty-state {
+    @apply flex flex-col items-center justify-center text-center;
+    padding: 2.5rem 1rem;
+  }
+  .empty-state-title {
+    @apply text-sm font-semibold mt-3;
+    color: var(--ink);
+  }
+  .empty-state-desc {
+    @apply text-xs mt-1;
+    color: var(--ink-2);
+  }
+  /* 月报/卡片内嵌的一行轻空态（无图标、无卡片） */
+  .empty-inline {
+    @apply text-xs;
+    color: var(--ink-2);
+    padding: 0.75rem 0.25rem;
+  }
+}
+
+/* === 键盘焦点环：仅键盘导航可见（触摸不触发），主色 2px + 2px 偏移 === */
+a:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* === 安全区 === */
@@ -319,8 +384,48 @@ body {
 }
 .animate-pulse-warning { animation: pulse-warning 1.6s ease-in-out infinite; }
 
+/* 语音聆听波纹：麦克风图标外圈两层扩散（reduced-motion 下被全局守卫关停） */
+@keyframes speech-ripple {
+  0% { transform: scale(0.75); opacity: 0.55; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+.speech-ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--primary-soft);
+  animation: speech-ripple 1.8s ease-out infinite;
+  pointer-events: none;
+}
+.speech-ripple-delay { animation-delay: 0.9s; }
+
 /* 页面切换过渡 */
 .page-enter { animation: fade-in 0.2s ease-out; }
+
+/* 骨架屏扫光：高光从左扫到右 */
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* === 尊重系统"减少动态效果"：关停非必要动画与按压缩放 === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton {
+    animation: none;
+    background-image: none;
+  }
+  .card-press:active {
+    transform: none;
+  }
+}
 
 /* === react-colorful 无极调色板（分类管理弹窗） === */
 /* 容器：全宽 + 固定高度，不用 overflow-hidden 以免裁掉圆形拖动手柄 */

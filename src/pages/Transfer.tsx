@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { formatCurrencyShort } from '../utils/format';
 import { ArrowLeft, ArrowRight, Banknote } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 
 interface TransferProps {
@@ -10,6 +11,7 @@ interface TransferProps {
 }
 
 export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
+  const { t } = useTranslation();
 
   const accounts = useStore((state) => state.accounts);
   const addTransfer = useStore((state) => state.addTransfer);
@@ -72,19 +74,19 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
     <div className="page-root pb-6">
       {/* 页头 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
-        <button onClick={onBack} className="icon-btn" aria-label="返回">
+        <button onClick={onBack} className="icon-btn" aria-label={t('transfer.back')}>
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="page-title">转账</h1>
-          <p className="page-subtitle">在账户之间划转资金</p>
+          <h1 className="page-title">{t('transfer.title')}</h1>
+          <p className="page-subtitle">{t('transfer.subtitle')}</p>
         </div>
       </div>
 
       {/* 转账金额 */}
       <div className="px-4 mt-3">
         <div className="card p-5">
-          <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>转账金额</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('transfer.amountLabel')}</p>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-2xl font-semibold amount-num" style={{ color: 'var(--ink-2)' }}>¥</span>
             <input
@@ -103,7 +105,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
       <div className="px-4 mt-4 space-y-4 pb-28">
         {/* 转出账户 */}
         <div className="card p-4">
-          <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>转出账户</p>
+          <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>{t('transfer.fromAccount')}</p>
           <div className="grid grid-cols-2 gap-2">
             {accounts.map((account) => {
               const selected = fromAccountId === account.id;
@@ -141,7 +143,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
 
         {/* 转入账户 */}
         <div className="card p-4">
-          <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>转入账户</p>
+          <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>{t('transfer.toAccount')}</p>
           <div className="grid grid-cols-2 gap-2">
             {accounts.map((account) => {
               const selected = toAccountId === account.id;
@@ -173,12 +175,12 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
 
         {/* 备注 */}
         <div className="card p-4">
-          <p className="text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>备注</p>
+          <p className="text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('common.note')}</p>
           <input
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="添加备注（可选）"
+            placeholder={t('transfer.notePlaceholder')}
             className="input-field py-2.5 text-sm"
           />
         </div>
@@ -191,7 +193,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
           disabled={!canSubmit}
           className="btn-primary w-full"
         >
-          确认转账
+          {t('transfer.confirm')}
         </button>
       </div>
     </div>

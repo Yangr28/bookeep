@@ -1,4 +1,5 @@
 import { useState, useRef, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Transaction } from '../types';
 import { useStore } from '../store/useStore';
 import { formatCurrencyShort, formatDateTime } from '../utils/format';
@@ -15,6 +16,7 @@ interface TransactionCardProps {
 }
 
 const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled }: TransactionCardProps) => {
+  const { t } = useTranslation();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [translateX, setTranslateX] = useState(0);
   const startX = useRef(0);
@@ -64,15 +66,15 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled }: T
     <div className="relative overflow-hidden rounded-card mb-2">
       <div className="absolute inset-0 flex items-center">
         <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-16" style={{ background: 'var(--expense)' }}>
-          <button onClick={(e) => { e.stopPropagation(); handleDelete(); setTranslateX(0); }} className="w-full h-full flex flex-col items-center justify-center gap-1 text-white">
+          <button onClick={(e) => { e.stopPropagation(); handleDelete(); setTranslateX(0); }} className="w-full h-full flex flex-col items-center justify-center gap-1 text-white" aria-label={t('common.delete')}>
             <Trash2 size={20} />
-            <span className="text-xs">删除</span>
+            <span className="text-xs">{t('common.delete')}</span>
           </button>
         </div>
         <div className="absolute left-0 top-0 bottom-0 flex items-center justify-center w-16" style={{ background: 'var(--primary)' }}>
-          <button onClick={(e) => { e.stopPropagation(); onEdit?.(); setTranslateX(0); }} className="w-full h-full flex flex-col items-center justify-center gap-1 text-white">
+          <button onClick={(e) => { e.stopPropagation(); onEdit?.(); setTranslateX(0); }} className="w-full h-full flex flex-col items-center justify-center gap-1 text-white" aria-label={t('common.edit')}>
             <Edit3 size={20} />
-            <span className="text-xs">编辑</span>
+            <span className="text-xs">{t('common.edit')}</span>
           </button>
         </div>
       </div>
@@ -89,7 +91,7 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled }: T
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <p className="font-medium truncate" style={{ color: 'var(--ink)' }}>{category?.name || '未分类'}</p>
+              <p className="font-medium truncate" style={{ color: 'var(--ink)' }}>{category?.name || t('common.unclassified')}</p>
               <span className="font-semibold amount-num flex-shrink-0 ml-2 truncate" style={{ color: amountColor }}>
                 {isIncome ? '+' : '-'}{formatCurrencyShort(transaction.amount)}
                 {transaction.currency && transaction.currency !== 'CNY' && transaction.originalAmount !== undefined && (
@@ -108,8 +110,8 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled }: T
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDelete}
-        title="确认删除交易"
-        itemName={`${transaction.type === 'income' ? '收入' : '支出'} ¥${transaction.amount}`}
+        title={t('common.deleteTransactionTitle')}
+        itemName={`${isIncome ? t('common.income') : t('common.expense')} ¥${transaction.amount}`}
       />
     </div>
   );

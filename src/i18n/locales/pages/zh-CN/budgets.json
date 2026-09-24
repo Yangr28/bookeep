@@ -1,0 +1,23 @@
+{
+  "back": "返回",
+  "title": "预算管理",
+  "monthFormat": "{{year}}年{{month}}月",
+  "totalUsage": "总预算使用",
+  "used": "已使用 {{percent}}%",
+  "overCount": "{{count}} 项超支",
+  "selectMonth": "选择月份",
+  "overBudget": "超支",
+  "amountPlaceholder": "输入预算金额",
+  "editBudget": "修改预算",
+  "deleteBudget": "删除预算",
+  "setBudget": "设置预算",
+  "alertTitle": "预算超支提醒",
+  "alertMessage": "以下分类已超过预算：{{categories}}",
+  "listSeparator": "、",
+  "tipsTitle": "预算小贴士",
+  "tipsBody": "合理规划预算有助于控制开支，建议每月初设置各项预算目标。当某项支出超过预算的80%时，系统会提醒您注意控制。",
+  "toast": {
+    "invalidAmount": "请输入有效金额",
+    "saved": "预算已保存"
+  }
+}

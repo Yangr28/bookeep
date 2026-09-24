@@ -1,0 +1,10 @@
+{
+  "back": "返回",
+  "title": "转账",
+  "subtitle": "在账户之间划转资金",
+  "amountLabel": "转账金额",
+  "fromAccount": "转出账户",
+  "toAccount": "转入账户",
+  "notePlaceholder": "添加备注（可选）",
+  "confirm": "确认转账"
+}

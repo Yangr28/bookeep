@@ -1,0 +1,23 @@
+{
+  "back": "Back",
+  "title": "Budgets",
+  "monthFormat": "{{month}}/{{year}}",
+  "totalUsage": "Total budget used",
+  "used": "{{percent}}% used",
+  "overCount": "{{count}} over budget",
+  "selectMonth": "Select month",
+  "overBudget": "Over",
+  "amountPlaceholder": "Enter budget amount",
+  "editBudget": "Edit budget",
+  "deleteBudget": "Delete budget",
+  "setBudget": "Set budget",
+  "alertTitle": "Over-budget alert",
+  "alertMessage": "These categories are over budget: {{categories}}",
+  "listSeparator": ", ",
+  "tipsTitle": "Budget tips",
+  "tipsBody": "Planning budgets helps keep spending in check. Set a target for each category at the start of the month. When spending reaches 80% of a budget, we'll remind you to slow down.",
+  "toast": {
+    "invalidAmount": "Please enter a valid amount",
+    "saved": "Budget saved"
+  }
+}

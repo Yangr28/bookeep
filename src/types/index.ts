@@ -97,14 +97,6 @@ export interface Loan {
   status: 'active' | 'paid';
 }
 
-export const AccountTypeNames: Record<string, string> = {
-  bank: '银行',
-  alipay: '支付宝',
-  wechat: '微信',
-  cash: '现金',
-  other: '其他'
-};
-
 export const AccountIcons: Record<string, string> = {
   bank: 'Building2',
   alipay: 'Wallet',

@@ -8,8 +8,11 @@ import { Sparkline, StackedBar, ProgressRing } from '../components/MiniCharts';
 import { formatCurrencyShort } from '../utils/format';
 import { getMonthKey } from '../utils/date';
 import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle } from 'lucide-react';
+import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle, Mic, History } from 'lucide-react';
 import Empty from '../components/Empty';
+import { SpeechSheet } from '../components/SpeechSheet';
+import { getNoteSuggestions } from '../utils/recommender';
+import { useSpeechToText } from '../hooks/useSpeechToText';
 import { TransactionType, Transaction } from '../types';
 
 // 仅首次启动进入首页时自动聚焦智能记账输入框；返回首页时不再弹出键盘
@@ -144,6 +147,59 @@ const DashboardComponent = ({
 
   const [smartInput, setSmartInput] = useState('');
   const smartInputRef = useRef<HTMLInputElement>(null);
+
+  // 历史备注前缀补全候选（250ms 防抖，最多 5 条；无候选不显示）
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const smartAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const q = smartInput.trim();
+    if (!q) {
+      setSuggestions([]);
+      setSuggestionsOpen(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      // 过滤与当前输入完全相同的候选（点击无变化）
+      const list = getNoteSuggestions(transactions, q, 5).filter(
+        (s) => s.trim().toLowerCase() !== q.toLowerCase(),
+      );
+      setSuggestions(list);
+      setSuggestionsOpen(list.length > 0);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [smartInput, transactions]);
+
+  // 点击候选区外部或按 Esc 关闭下拉
+  useEffect(() => {
+    if (!suggestionsOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (smartAreaRef.current && !smartAreaRef.current.contains(e.target as Node)) {
+        setSuggestionsOpen(false);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSuggestionsOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [suggestionsOpen]);
+
+  const pickSuggestion = useCallback((text: string) => {
+    setSmartInput(text);
+    setSuggestionsOpen(false);
+    smartInputRef.current?.focus();
+  }, []);
+
+  // 语音记账：仅探测设备能力以决定是否渲染麦克风；识别过程在 SpeechSheet 浮层内进行，
+  // 确认后文本回填智能输入框（走 parseSmartInput 预填管道，不自动入账）
+  const { available: speechAvailable } = useSpeechToText();
+  const [speechSheetOpen, setSpeechSheetOpen] = useState(false);
 
   // 实时解析预览（轻量 parseSmartInput + 账户/分类反查，不走历史匹配避免输入卡顿）
   const [preview, setPreview] = useState<null | {
@@ -399,33 +455,76 @@ const DashboardComponent = ({
       {/* 记账区域（快捷入口，完整记账在独立页面） */}
       <div className="px-4 mt-4">
         <div className="card p-4">
-          {/* 智能输入 */}
-          <div
-            className="flex items-center rounded-button px-3 py-2.5 border-2 transition-colors mb-3"
-            style={{ background: 'var(--paper)', borderColor: 'transparent' }}
-          >
-            <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: 'var(--primary-ink)' }} />
-            <input
-              ref={smartInputRef}
-              type="text"
-              value={smartInput}
-              onChange={(e) => setSmartInput(e.target.value)}
-              onKeyPress={(e) => { if (e.key === 'Enter') handleSmartSubmit(); }}
-              placeholder={t('dashboard.smartInputPlaceholder')}
-              className="flex-1 bg-transparent outline-none text-sm"
-              style={{ color: 'var(--ink)' }}
-            />
-            <button
-              onClick={() => handleSmartSubmit()}
-              className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0"
-              style={
-                smartInput.trim()
-                  ? { background: 'var(--primary)', color: '#fff' }
-                  : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }
-              }
+          {/* 智能输入（含历史备注补全候选与语音入口） */}
+          <div ref={smartAreaRef}>
+            <div
+              className="flex items-center rounded-button px-3 py-2.5 border-2 transition-colors"
+              style={{ background: 'var(--paper)', borderColor: 'transparent' }}
             >
-              <Plus size={16} />
-            </button>
+              <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: 'var(--primary-ink)' }} />
+              <input
+                ref={smartInputRef}
+                type="text"
+                value={smartInput}
+                onChange={(e) => setSmartInput(e.target.value)}
+                onKeyPress={(e) => { if (e.key === 'Enter') handleSmartSubmit(); }}
+                placeholder={t('dashboard.smartInputPlaceholder')}
+                className="flex-1 bg-transparent outline-none text-sm"
+                style={{ color: 'var(--ink)' }}
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={suggestionsOpen}
+                aria-controls="smart-suggestion-list"
+              />
+              {speechAvailable === true && (
+                <button
+                  type="button"
+                  onClick={() => setSpeechSheetOpen(true)}
+                  aria-label={t('speech.tapToSpeak')}
+                  className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0 card-press"
+                  style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
+                >
+                  <Mic size={15} />
+                </button>
+              )}
+              <button
+                onClick={() => handleSmartSubmit()}
+                aria-label={t('dashboard.save')}
+                className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0"
+                style={
+                  smartInput.trim()
+                    ? { background: 'var(--primary)', color: '#fff' }
+                    : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }
+                }
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+
+            {/* 历史备注前缀补全候选 */}
+            {suggestionsOpen && suggestions.length > 0 && (
+              <div
+                id="smart-suggestion-list"
+                role="listbox"
+                className="mt-1.5 mb-3 rounded-button overflow-hidden animate-fade-in divide-y divide-[color:var(--line)]"
+                style={{ background: 'var(--card)', border: '1px solid var(--line)', boxShadow: 'var(--shadow-card)' }}
+              >
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    role="option"
+                    aria-selected={false}
+                    onClick={() => pickSuggestion(s)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-left transition-colors card-press hover:brightness-95"
+                    style={{ color: 'var(--ink)' }}
+                  >
+                    <History size={14} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+                    <span className="truncate">{s}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 智能解析预览：输入时实时显示识别到的金额/分类/账户，可直接保存 */}
@@ -581,18 +680,25 @@ const DashboardComponent = ({
         {recentTransactions.length === 0 ? (
           <Empty icon={Wallet} title={t('dashboard.noRecords')} description={t('dashboard.noRecordsHint')} />
         ) : (
-          <div className="space-y-2">
-            {recentTransactions.map((transaction) => (
-              <TransactionCard
-                key={transaction.id}
-                transaction={transaction}
-                onDelete={() => deleteTransaction(transaction.id)}
-                onEdit={() => onEditTransaction?.(transaction)}
-              />
+          <div>
+            {recentTransactions.map((transaction, index) => (
+              <div key={transaction.id} className="animate-stagger-in" style={{ animationDelay: `${index * 50}ms` }}>
+                <TransactionCard
+                  transaction={transaction}
+                  onDelete={() => deleteTransaction(transaction.id)}
+                  onEdit={() => onEditTransaction?.(transaction)}
+                />
+              </div>
             ))}
           </div>
         )}
       </div>
+
+      <SpeechSheet
+        open={speechSheetOpen}
+        onClose={() => setSpeechSheetOpen(false)}
+        onResult={(text) => setSmartInput(text)}
+      />
     </div>
   );
 };

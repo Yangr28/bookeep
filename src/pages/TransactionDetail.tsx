@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { toDateKey } from '../utils/date';
 import { useStore } from '../store/useStore';
@@ -18,6 +19,7 @@ interface TransactionDetailProps {
 }
 
 export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransaction }: TransactionDetailProps) => {
+  const { t } = useTranslation();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -123,12 +125,12 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
   const totalAmount = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
 
   const pageConfig = {
-    'today-income': { title: '今日收入', type: 'income' as const, period: '今日', color: 'emerald' },
-    'today-expense': { title: '今日支出', type: 'expense' as const, period: '今日', color: 'red' },
-    'month-income': { title: '本月收入', type: 'income' as const, period: '本月', color: 'emerald' },
-    'month-expense': { title: '本月支出', type: 'expense' as const, period: '本月', color: 'red' },
-    'month-balance': { title: '本月余额', type: 'income' as const, period: '本月', color: 'emerald' },
-    'total-balance': { title: '总资产', type: 'income' as const, period: '全部', color: 'purple' },
+    'today-income': { titleKey: 'transactionDetail.todayIncome', periodKey: 'transactionDetail.periodToday', type: 'income' as const, color: 'emerald' },
+    'today-expense': { titleKey: 'transactionDetail.todayExpense', periodKey: 'transactionDetail.periodToday', type: 'expense' as const, color: 'red' },
+    'month-income': { titleKey: 'transactionDetail.monthIncome', periodKey: 'transactionDetail.periodThisMonth', type: 'income' as const, color: 'emerald' },
+    'month-expense': { titleKey: 'transactionDetail.monthExpense', periodKey: 'transactionDetail.periodThisMonth', type: 'expense' as const, color: 'red' },
+    'month-balance': { titleKey: 'transactionDetail.monthBalance', periodKey: 'transactionDetail.periodThisMonth', type: 'income' as const, color: 'emerald' },
+    'total-balance': { titleKey: 'transactionDetail.totalAssets', periodKey: 'transactionDetail.periodAll', type: 'income' as const, color: 'purple' },
   };
 
   const config = pageConfig[filterType];
@@ -138,25 +140,25 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
   const isCategoryDetail = !!selectedCategory;
 
   const pageTitle = isCategoryDetail && selectedCategory
-    ? `${selectedCategory.name}明细`
-    : config.title;
+    ? t('transactionDetail.categoryDetail', { name: selectedCategory.name })
+    : t(config.titleKey);
 
   const categoryFilterChips = [
-    { value: 'all', label: '全部' },
+    { value: 'all', label: t('transactionDetail.filterAll') },
     ...categories.map((c) => ({ value: c.id, label: c.name, color: c.color })),
-    { value: 'uncategorized', label: '未分类' },
+    { value: 'uncategorized', label: t('common.unclassified') },
   ];
 
   return (
     <div className="page-root pb-6">
       {/* 页头 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
-        <button onClick={onBack} className="icon-btn flex-shrink-0" aria-label="返回">
+        <button onClick={onBack} className="icon-btn flex-shrink-0" aria-label={t('transactionDetail.back')}>
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1 min-w-0">
           <h1 className="page-title truncate">{pageTitle}</h1>
-          <p className="page-subtitle">共 {filteredTransactions.length} 笔记录</p>
+          <p className="page-subtitle">{t('transactionDetail.recordCount', { count: filteredTransactions.length })}</p>
         </div>
       </div>
 
@@ -165,7 +167,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
         {isCategoryDetail && selectedCategory ? (
           <div className="card p-5">
             <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>
-              累计{selectedCategory.type === 'income' ? '收入' : '支出'}
+              {t('transactionDetail.totalByType', { type: t(`common.${selectedCategory.type}`) })}
             </p>
             <p
               className="text-3xl font-bold amount-num mt-1.5"
@@ -173,28 +175,28 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
             >
               {selectedCategory.type === 'income' ? '+' : ''}{formatCurrencyShort(totalAmount)}
             </p>
-            <p className="text-sm mt-2" style={{ color: 'var(--ink-2)' }}>共{filteredTransactions.length}笔记录</p>
+            <p className="text-sm mt-2" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.recordCountCompact', { count: filteredTransactions.length })}</p>
           </div>
         ) : isTotalBalance ? (
           <div className="card p-5">
-            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>资产总计</p>
+            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.assetsTotal')}</p>
             <p className="text-3xl font-bold amount-num mt-1.5" style={{ color: 'var(--ink)' }}>
               {formatCurrencyShort(totalIncome - totalExpense)}
             </p>
             <div className="flex justify-between mt-4 pt-3 text-sm" style={{ borderTop: '1px solid var(--line)' }}>
               <div>
-                <p style={{ color: 'var(--ink-2)' }}>总收入</p>
+                <p style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.totalIncome')}</p>
                 <p className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>+{formatCurrencyShort(totalIncome)}</p>
               </div>
               <div className="text-right">
-                <p style={{ color: 'var(--ink-2)' }}>总支出</p>
+                <p style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.totalExpense')}</p>
                 <p className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(-totalExpense)}</p>
               </div>
             </div>
           </div>
         ) : isMonthBalance ? (
           <div className="card p-5">
-            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>本月余额</p>
+            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.monthBalance')}</p>
             <p
               className="text-3xl font-bold amount-num mt-1.5"
               style={{ color: monthIncome - monthExpense >= 0 ? 'var(--primary)' : 'var(--expense)' }}
@@ -203,18 +205,18 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
             </p>
             <div className="flex justify-between mt-4 pt-3 text-sm" style={{ borderTop: '1px solid var(--line)' }}>
               <div>
-                <p style={{ color: 'var(--ink-2)' }}>本月收入</p>
+                <p style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.monthIncome')}</p>
                 <p className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>+{formatCurrencyShort(monthIncome)}</p>
               </div>
               <div className="text-right">
-                <p style={{ color: 'var(--ink-2)' }}>本月支出</p>
+                <p style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.monthExpense')}</p>
                 <p className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(-monthExpense)}</p>
               </div>
             </div>
           </div>
         ) : (
           <div className="card p-5">
-            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{config.period}总计</p>
+            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.periodTotal', { period: t(config.periodKey) })}</p>
             <p
               className="text-3xl font-bold amount-num mt-1.5"
               style={{ color: isIncome ? 'var(--primary)' : 'var(--expense)' }}
@@ -230,25 +232,25 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
         <div className="card p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={18} style={{ color: 'var(--ink-2)' }} />
-            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>日期筛选</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t('transactionDetail.dateFilter')}</span>
             {(startDate || endDate) && (
               <button
                 onClick={resetDateFilter}
                 className="ml-auto text-xs font-medium"
                 style={{ color: 'var(--expense)' }}
               >
-                重置
+                {t('transactionDetail.reset')}
               </button>
             )}
           </div>
           {(filterType === 'total-balance' || categoryId) && (
             <div className="flex flex-wrap gap-2 mb-3">
               {[
-                { label: '今日', days: 0 },
-                { label: '近7天', days: 7 },
-                { label: '近30天', days: 30 },
-                { label: '本月', days: 'month' },
-                { label: '上月', days: 'lastMonth' },
+                { label: t('transactionDetail.presetToday'), days: 0 },
+                { label: t('transactionDetail.presetLast7'), days: 7 },
+                { label: t('transactionDetail.presetLast30'), days: 30 },
+                { label: t('transactionDetail.presetThisMonth'), days: 'month' },
+                { label: t('transactionDetail.presetLastMonth'), days: 'lastMonth' },
               ].map((preset) => (
                 <button
                   key={preset.label}
@@ -280,24 +282,24 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
           )}
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>开始日期</label>
+              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.startDate')}</label>
               <button
                 onClick={() => setShowPicker('start')}
                 className="input-field py-2 px-3 text-left text-sm w-full"
               >
                 <span className="amount-num" style={{ color: startDate ? 'var(--ink)' : 'var(--ink-2)' }}>
-                  {startDate || '选择日期'}
+                  {startDate || t('transactionDetail.selectDate')}
                 </span>
               </button>
             </div>
             <div className="flex-1">
-              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>结束日期</label>
+              <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.endDate')}</label>
               <button
                 onClick={() => setShowPicker('end')}
                 className="input-field py-2 px-3 text-left text-sm w-full"
               >
                 <span className="amount-num" style={{ color: endDate ? 'var(--ink)' : 'var(--ink-2)' }}>
-                  {endDate || '选择日期'}
+                  {endDate || t('transactionDetail.selectDate')}
                 </span>
               </button>
             </div>
@@ -305,7 +307,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
 
           {!categoryId && (
             <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
-              <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>分类</span>
+              <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('common.category')}</span>
               <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
                 {categoryFilterChips.map((chip) => {
                   const active = categoryFilter === chip.value;
@@ -345,8 +347,8 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
                 <TrendingDown size={18} />
               )}
             </div>
-            <h2 className="font-semibold text-base" style={{ color: 'var(--ink)' }}>交易明细</h2>
-            <span className="text-sm" style={{ color: 'var(--ink-2)' }}>({filteredTransactions.length}笔)</span>
+            <h2 className="font-semibold text-base" style={{ color: 'var(--ink)' }}>{t('transactionDetail.transactionDetails')}</h2>
+            <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.countParen', { count: filteredTransactions.length })}</span>
           </div>
           <button
             onClick={() => setIsMultiSelect(!isMultiSelect)}
@@ -356,15 +358,15 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
               : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
           >
             {isMultiSelect ? <CheckSquare size={15} /> : <Square size={15} />}
-            {isMultiSelect ? '退出多选' : '批量选择'}
+            {isMultiSelect ? t('transactionDetail.exitMultiSelect') : t('transactionDetail.batchSelect')}
           </button>
         </div>
 
         {filteredTransactions.length === 0 ? (
           <Empty
             icon={Wallet}
-            title={`暂无${config.period}${isIncome ? '收入' : '支出'}记录`}
-            description={`点击下方按钮添加您的${isIncome ? '第一笔收入' : '第一笔支出'}吧`}
+            title={t('transactionDetail.emptyTitle', { period: t(config.periodKey), type: t(isIncome ? 'common.income' : 'common.expense') })}
+            description={t(isIncome ? 'transactionDetail.emptyAddIncome' : 'transactionDetail.emptyAddExpense')}
           />
         ) : (
           <>
@@ -380,10 +382,10 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
                   ) : (
                     <Square size={18} />
                   )}
-                  全选
+                  {t('transactionDetail.selectAll')}
                 </button>
                 <span className="text-sm" style={{ color: 'var(--ink-2)' }}>
-                  已选 {selectedIds.length} 项
+                  {t('transactionDetail.selectedCount', { count: selectedIds.length })}
                 </span>
               </div>
             )}
@@ -398,7 +400,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
                     <button
                       onClick={() => toggleSelect(transaction.id)}
                       className="mt-2 flex-shrink-0"
-                      aria-label="选择记录"
+                      aria-label={t('transactionDetail.ariaSelectRecord')}
                     >
                       {selectedIds.includes(transaction.id) ? (
                         <CheckSquare size={20} style={{ color: 'var(--primary)' }} />
@@ -430,14 +432,14 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, onEditTransa
         >
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm amount-num" style={{ color: 'var(--ink-2)' }}>
-              已选择 {selectedIds.length} 条记录
+              {t('transactionDetail.selectedRecords', { count: selectedIds.length })}
             </span>
             <button
               onClick={handleBatchDelete}
               className="btn-danger px-5 py-2.5 text-sm"
             >
               <Trash2 size={16} />
-              批量删除
+              {t('transactionDetail.batchDelete')}
             </button>
           </div>
         </div>

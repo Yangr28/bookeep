@@ -13,7 +13,33 @@
     "time": "时间",
     "note": "备注",
     "unknownDate": "未知日期",
-    "unknown": "未知"
+    "unknown": "未知",
+    "loading": "加载中…",
+    "retry": "重试",
+    "delete": "删除",
+    "deleteConfirmTitle": "确认删除",
+    "deleteConfirmMessage": "删除后无法恢复，确定要继续吗？",
+    "deleteTransactionTitle": "确认删除交易",
+    "unclassified": "未分类"
+  },
+  "speech": {
+    "tapToSpeak": "点击说话",
+    "listening": "正在聆听…",
+    "stop": "停止",
+    "preparing": "正在准备…",
+    "sheetTitle": "语音记账",
+    "hint": "说一句话，例如「午餐花了 30 元」",
+    "retry": "重说",
+    "useText": "填入输入框",
+    "emptyResult": "没有识别到内容，请重说",
+    "gotIt": "我知道了",
+    "error": {
+      "unavailable": "当前设备不支持语音识别",
+      "permissionDenied": "麦克风权限未开启，请到系统设置打开",
+      "noSpeech": "没有检测到语音，请重试",
+      "serviceUnavailable": "语音服务不可用，请稍后重试",
+      "generic": "语音识别失败，请重试"
+    }
   },
   "nav": {
     "home": "首页",
@@ -27,6 +53,7 @@
       "storageError": "存储空间不足，请尽快导出数据备份",
       "edited": "修改成功",
       "saved": "记账成功",
+      "savedContinue": "已保存，继续记一笔",
       "latestVersion": "当前已是最新版本",
       "checkUpdateFailed": "检查更新失败"
     },
@@ -87,6 +114,7 @@
     "expense": "支出",
     "income": "收入",
     "selectCategory": "选择分类",
+    "frequentBadge": "常用",
     "categoryRequired": "请选择一个分类",
     "amountInvalid": "金额必须大于 0",
     "account": "账户",
@@ -97,7 +125,43 @@
     "notePlaceholder": "添加备注",
     "saveEdit": "保存修改",
     "confirm": "确认记账",
+    "continueToggle": "保存后继续记一笔",
+    "saveAndContinue": "保存并继续",
     "back": "返回"
+  },
+  "insights": {
+    "title": "智能洞察",
+    "empty": "本月暂无特别洞察，继续保持～",
+    "directionUp": "上升",
+    "directionDown": "下降",
+    "anomaly_mom": {
+      "title": "支出环比{{direction}} {{pct}}%",
+      "description": "本月支出 ¥{{current}}，上月 ¥{{prev}}"
+    },
+    "budget_overrun": {
+      "title": "{{category}}预算已超支",
+      "description": "已花 ¥{{spent}}，预算 ¥{{budget}}（{{pct}}%）"
+    },
+    "budget_warning": {
+      "title": "{{category}}预算接近上限",
+      "description": "已花 ¥{{spent}}，预算 ¥{{budget}}（{{pct}}%）"
+    },
+    "forecast_overrun": {
+      "title": "{{category}}预计月末超支",
+      "description": "按当前节奏月末约花 ¥{{forecast}}，预算 ¥{{budget}}"
+    },
+    "large_expense": {
+      "title": "{{count}} 笔大额支出",
+      "description": "最大一笔 ¥{{amount}}"
+    },
+    "recurring": {
+      "title": "{{category}}疑似固定支出",
+      "description": "近 {{months}} 个月每月约 ¥{{amount}}"
+    },
+    "frequent": {
+      "title": "{{category}}消费 {{count}} 笔",
+      "description": "本月已记 {{count}} 笔，看看有没有可以优化的"
+    }
   },
   "calendar": {
     "title": "选择日期",

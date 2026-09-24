@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowDownUp, Globe, RefreshCw, Search as SearchIcon, X as XIcon, Check as CheckIcon, Edit3 } from 'lucide-react';
 import {
   currencies, getRate, getCurrencySymbol, convertToCNY, convertFromCNY,
   getCustomRates, saveCustomRates, fetchLiveRates, getLastUpdateTime, getRateSource, isZeroDecimalCurrency
 } from '../utils/currency';
+import i18n from '../i18n';
 
 interface CurrencyConverterProps {
   onBack: () => void;
@@ -20,6 +22,7 @@ interface CurrencyPickerModalProps {
 }
 
 const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange, onClose, onSelect }: CurrencyPickerModalProps) => {
+  const { t } = useTranslation();
   if (!open) return null;
 
   const q = searchValue.toLowerCase();
@@ -45,8 +48,8 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--line)' }}>
-          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>选择货币</h3>
-          <button onClick={handleClose} className="icon-btn" aria-label="关闭">
+          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('currencyConverter.pickerTitle')}</h3>
+          <button onClick={handleClose} className="icon-btn" aria-label={t('currencyConverter.ariaClose')}>
             <XIcon size={18} />
           </button>
         </div>
@@ -57,7 +60,7 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
               type="text"
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="搜索货币名称或代码"
+              placeholder={t('currencyConverter.searchPlaceholder')}
               className="flex-1 bg-transparent outline-none text-sm"
               style={{ color: 'var(--ink)' }}
             />
@@ -70,7 +73,7 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
         </div>
         <div className="flex-1 overflow-y-auto p-3 pb-8">
           {filtered.length === 0 ? (
-            <p className="text-center text-sm py-8" style={{ color: 'var(--ink-2)' }}>未找到匹配的货币</p>
+            <p className="text-center text-sm py-8" style={{ color: 'var(--ink-2)' }}>{t('currencyConverter.noMatch')}</p>
           ) : (
             filtered.map((currency) => (
               <button
@@ -105,6 +108,7 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
 CurrencyPickerModal.displayName = 'CurrencyPickerModal';
 
 export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
+  const { t } = useTranslation();
   const [fromCurrency, setFromCurrency] = useState('CNY');
   const [toCurrency, setToCurrency] = useState('USD');
   const [amount, setAmount] = useState('100');
@@ -210,26 +214,27 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
   }, [fromCurrency, toCurrency]);
 
   const lastUpdateText = useMemo(() => {
-    if (!lastUpdate) return '未更新';
+    if (!lastUpdate) return t('currencyConverter.notUpdated');
     const date = new Date(lastUpdate);
     const now = new Date();
     const diffMin = Math.floor((now.getTime() - lastUpdate) / 60000);
-    if (diffMin < 1) return '刚刚更新';
-    if (diffMin < 60) return `${diffMin}分钟前更新`;
+    if (diffMin < 1) return t('currencyConverter.updatedJustNow');
+    if (diffMin < 60) return t('currencyConverter.updatedMinutesAgo', { count: diffMin });
     const diffHour = Math.floor(diffMin / 60);
-    if (diffHour < 24) return `${diffHour}小时前更新`;
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }) + '更新';
-  }, [lastUpdate, rateVersion]);
+    if (diffHour < 24) return t('currencyConverter.updatedHoursAgo', { count: diffHour });
+    const dateText = date.toLocaleDateString(i18n.language.startsWith('en') ? 'en-US' : 'zh-CN', { month: 'short', day: 'numeric' });
+    return t('currencyConverter.updatedOnDate', { date: dateText });
+  }, [lastUpdate, rateVersion, t]);
 
   const renderRateSourceBadge = (code: string) => {
     const source = getRateSource(code);
     if (source === 'custom') {
-      return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}>自定义</span>;
+      return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}>{t('currencyConverter.badgeCustom')}</span>;
     }
     if (source === 'live') {
-      return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>实时</span>;
+      return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>{t('currencyConverter.badgeLive')}</span>;
     }
-    return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}>默认</span>;
+    return <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}>{t('currencyConverter.badgeDefault')}</span>;
   };
 
   return (
@@ -238,11 +243,11 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
       <div className="safe-top px-4 pt-2 pb-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={onBack} className="icon-btn" aria-label="返回">
+            <button onClick={onBack} className="icon-btn" aria-label={t('currencyConverter.ariaBack')}>
               <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="page-title">汇率转换</h1>
+              <h1 className="page-title">{t('currencyConverter.title')}</h1>
               <p className="page-subtitle">{lastUpdateText}</p>
             </div>
           </div>
@@ -251,7 +256,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
             disabled={isRefreshing}
             className="icon-btn disabled:opacity-50"
             style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
-            aria-label="刷新汇率"
+            aria-label={t('currencyConverter.ariaRefresh')}
           >
             <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
@@ -275,7 +280,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               onClick={(e) => e.stopPropagation()}
-              placeholder="输入金额"
+              placeholder={t('currencyConverter.amountPlaceholder')}
               className="text-right text-lg font-bold rounded-button px-3 py-1.5 w-32 outline-none"
               style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
             />
@@ -287,7 +292,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
               onClick={handleSwap}
               className="p-2 rounded-full active:rotate-180 transition-all"
               style={{ background: 'var(--primary)', color: '#fff', boxShadow: 'var(--shadow-fab)' }}
-              aria-label="交换货币"
+              aria-label={t('currencyConverter.ariaSwap')}
             >
               <ArrowDownUp size={18} />
             </button>
@@ -314,7 +319,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
 
           {/* 汇率说明 */}
           <div className="mt-3 text-center text-xs" style={{ color: 'var(--primary-ink)' }}>
-            1 {fromCurrency} = {rateText} {toCurrency}
+            {t('currencyConverter.rateEquality', { from: fromCurrency, rate: rateText, to: toCurrency })}
           </div>
         </div>
       </div>
@@ -324,8 +329,8 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Globe size={18} style={{ color: 'var(--ink-2)' }} />
-            <h2 className="section-title">各货币对人民币汇率</h2>
-            <span className="text-xs" style={{ color: 'var(--ink-2)' }}>({currencies.length}种)</span>
+            <h2 className="section-title">{t('currencyConverter.ratesTitle')}</h2>
+            <span className="text-xs" style={{ color: 'var(--ink-2)' }}>({t('currencyConverter.currencyCount', { count: currencies.length })})</span>
           </div>
           <button
             onClick={() => setShowRateEditor(!showRateEditor)}
@@ -335,7 +340,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
               : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
           >
             <Edit3 size={12} />
-            {showRateEditor ? '完成' : '编辑'}
+            {showRateEditor ? t('currencyConverter.done') : t('common.edit')}
           </button>
         </div>
 
@@ -425,7 +430,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
         ))}
 
         <p className="text-xs mt-3 text-center pb-4" style={{ color: 'var(--ink-2)' }}>
-          实时汇率来自开放API，每6小时自动更新。点击右上角刷新按钮手动更新。可点击"编辑"自定义汇率。
+          {t('currencyConverter.footerHint', { edit: t('common.edit') })}
         </p>
       </div>
 

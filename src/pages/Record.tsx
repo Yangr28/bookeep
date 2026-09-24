@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, memo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/useStore';
 import { CategoryCard } from '../components/CategoryCard';
@@ -6,8 +6,11 @@ import { TransactionType, Transaction } from '../types';
 import { formatDateTime } from '../utils/format';
 import { isSameLocalDate } from '../utils/date';
 import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
+import { getFrequentCategories, getFrequentAmounts, predictCategory, recommendAccount } from '../utils/recommender';
+import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ArrowLeft, Circle, CheckCircle2, Mic } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
+import { useSpeechToText } from '../hooks/useSpeechToText';
+import { SpeechSheet } from '../components/SpeechSheet';
 
 interface RecordProps {
   editTransaction?: Transaction | null;
@@ -27,12 +30,20 @@ interface RecordProps {
   onTypeChange: (type: TransactionType) => void;
   onAccountChange: (accountId: string | null) => void;
   onSubmit: () => void;
+  /** 连续记账开关（仅新增态生效） */
+  continueMode: boolean;
+  onContinueModeChange: (value: boolean) => void;
+  /** 连续保存后自增，触发为下一笔重新预选分类 */
+  resetSignal: number;
 }
 
-const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, onSubmit }: RecordProps) => {
+const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, onSubmit, continueMode, onContinueModeChange, resetSignal }: RecordProps) => {
   const { t } = useTranslation();
   const [smartInput, setSmartInput] = useState('');
   const [showSmartResult, setShowSmartResult] = useState(false);
+  // 语音记账：仅探测能力决定麦克风渲染；识别在 SpeechSheet 内完成后回填输入框
+  const { available: speechAvailable } = useSpeechToText();
+  const [speechSheetOpen, setSpeechSheetOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -47,10 +58,82 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
 
   const categories = useStore((state) => state.categories);
   const accounts = useStore((state) => state.accounts);
+  const transactions = useStore((state) => state.transactions);
 
   const selectedAccount = accounts.find(a => a.id === selectedAccountId);
 
   const filteredCategories = categories.filter((c) => c.type === type);
+
+  /**
+   * 分类智能排序：近 30 天有使用频次的分类按加权得分排前，其余维持用户配置原序在后；
+   * 前 3 名带"常用"角标。无历史时结果等于原序、无角标。
+   */
+  const { orderedCategories, frequentBadgeIds } = useMemo(() => {
+    const rankedIds = getFrequentCategories(transactions, type)
+      .map((r) => r.categoryId)
+      .filter((id) => filteredCategories.some((c) => c.id === id));
+    const rankIndex = new Map(rankedIds.map((id, i) => [id, i]));
+    const ordered = [...filteredCategories].sort((a, b) => {
+      const ia = rankIndex.get(a.id);
+      const ib = rankIndex.get(b.id);
+      if (ia === undefined && ib === undefined) return 0; // 均无历史：保持配置原序
+      if (ia === undefined) return 1;
+      if (ib === undefined) return -1;
+      return ia - ib;
+    });
+    return { orderedCategories: ordered, frequentBadgeIds: new Set(rankedIds.slice(0, 3)) };
+    // filteredCategories 派生自 categories + type
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions, categories, type]);
+
+  // 常用金额（重复金额优先、最近补位），最多 4 个；当前已输入的金额不重复展示
+  const frequentAmounts = useMemo(
+    () => getFrequentAmounts(transactions, type, 4).filter((a) => a.toString() !== amount),
+    [transactions, type, amount],
+  );
+
+  // 进入新增页且入口未预填（FAB 空进入）时做一次智能预选；
+  // 编辑模式、首页智能输入带预填进入均不覆盖。
+  // 预选只发生在"页面挂载"与"切换类型"两个重置点；网格手选/智能解析是离散事件，
+  // 之后没有任何 effect 重跑预选，因此用户选择天然不会被覆盖。
+  useEffect(() => {
+    if (editTransaction) return;
+    if (!categoryId) {
+      const validIds = new Set(categories.filter((c) => c.type === type).map((c) => c.id));
+      const prediction = predictCategory({ transactions, type, validCategoryIds: validIds, note });
+      if (prediction.categoryId) onCategoryChange(prediction.categoryId);
+    }
+    if (!selectedAccountId) {
+      const recommended = recommendAccount(transactions, accounts);
+      if (recommended) onAccountChange(recommended.id);
+    }
+    // 仅在页面挂载时执行一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 连续记账保存后：App 侧已清空金额/备注/分类并把日期重置为现在，
+  // 这里按包含新流水在内的最新历史为下一笔重新预选分类（账户/类型已保留）
+  const firstResetSignalRef = useRef(true);
+  useEffect(() => {
+    if (firstResetSignalRef.current) {
+      firstResetSignalRef.current = false;
+      return;
+    }
+    const validIds = new Set(categories.filter((c) => c.type === type).map((c) => c.id));
+    const prediction = predictCategory({ transactions, type, validCategoryIds: validIds });
+    if (prediction.categoryId) onCategoryChange(prediction.categoryId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetSignal]);
+
+  const handleTypeChange = (next: TransactionType) => {
+    onTypeChange(next);
+    onCategoryChange(null);
+    if (isEditMode) return;
+    // 切换类型即重置点：为新类型预选高频分类（无历史则留空，由用户手选）
+    const validIds = new Set(categories.filter((c) => c.type === next).map((c) => c.id));
+    const prediction = predictCategory({ transactions, type: next, validCategoryIds: validIds });
+    if (prediction.categoryId) onCategoryChange(prediction.categoryId);
+  };
 
   const isToday = () => {
     return isSameLocalDate(selectedDateTime, new Date());
@@ -136,6 +219,17 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
                 className="flex-1 bg-transparent outline-none text-sm"
                 style={{ color: 'var(--ink)' }}
               />
+              {speechAvailable === true && (
+                <button
+                  type="button"
+                  onClick={() => setSpeechSheetOpen(true)}
+                  aria-label={t('speech.tapToSpeak')}
+                  className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0 card-press"
+                  style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
+                >
+                  <Mic size={15} />
+                </button>
+              )}
               <button
                 onClick={handleSmartSubmit}
                 disabled={!smartInput.trim()}
@@ -158,10 +252,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
         {/* 支出/收入切换 */}
         <div className="seg">
           <button
-            onClick={() => {
-              onTypeChange('expense');
-              onCategoryChange(null);
-            }}
+            onClick={() => handleTypeChange('expense')}
             className="seg-item"
             style={type === 'expense'
               ? { background: 'var(--expense)', color: '#fff', fontWeight: 600, boxShadow: '0 4px 12px rgba(224,104,79,0.3)' }
@@ -170,10 +261,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
             {t('record.expense')}
           </button>
           <button
-            onClick={() => {
-              onTypeChange('income');
-              onCategoryChange(null);
-            }}
+            onClick={() => handleTypeChange('income')}
             className="seg-item"
             style={type === 'income'
               ? { background: 'var(--primary)', color: '#fff', fontWeight: 600, boxShadow: '0 4px 12px rgba(46,133,222,0.3)' }
@@ -187,11 +275,13 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
         <div className="card p-4">
           <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>{t('record.selectCategory')}</p>
           <div className="grid grid-cols-4 gap-2">
-            {filteredCategories.map((category) => (
+            {orderedCategories.map((category) => (
               <CategoryCard
                 key={category.id}
                 category={category}
                 isSelected={categoryId === category.id}
+                isFrequent={frequentBadgeIds.has(category.id)}
+                frequentLabel={t('record.frequentBadge')}
                 onClick={() => onCategoryChange(category.id)}
               />
             ))}
@@ -224,6 +314,24 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
           </div>
           {hasAmountError && (
             <p className="text-xs mt-2 text-center" style={{ color: 'var(--expense)' }}>{t('record.amountInvalid')}</p>
+          )}
+          {!isEditMode && frequentAmounts.length > 0 && (
+            <div
+              className="flex gap-2 mt-3 overflow-x-auto -mx-1 px-1 [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {frequentAmounts.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => onAmountChange(value.toString())}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium card-press amount-num"
+                  style={{ background: 'var(--paper)', color: 'var(--ink-2)', border: '1px solid var(--line)' }}
+                >
+                  ¥{value}
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
@@ -300,9 +408,28 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
           disabled={!canSubmit}
           className="btn-primary w-full text-base py-3.5"
         >
-          {isEditMode ? t('record.saveEdit') : t('record.confirm')}
+          {isEditMode ? t('record.saveEdit') : continueMode ? t('record.saveAndContinue') : t('record.confirm')}
         </button>
+        {!isEditMode && (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={continueMode}
+            onClick={() => onContinueModeChange(!continueMode)}
+            className="mt-2 w-full flex items-center justify-center gap-1.5 text-xs py-1"
+            style={{ color: continueMode ? 'var(--primary)' : 'var(--ink-2)' }}
+          >
+            {continueMode ? <CheckCircle2 size={13} /> : <Circle size={13} />}
+            {t('record.continueToggle')}
+          </button>
+        )}
       </div>
+
+      <SpeechSheet
+        open={speechSheetOpen}
+        onClose={() => setSpeechSheetOpen(false)}
+        onResult={(text) => setSmartInput(text)}
+      />
     </div>
   );
 };

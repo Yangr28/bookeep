@@ -1,0 +1,8 @@
+{
+  "back": "返回",
+  "placeholder": "搜索备注、金额、分类...",
+  "filterAll": "全部",
+  "emptyTitle": "未找到相关记录",
+  "emptyHintActive": "尝试使用其他关键词搜索",
+  "emptyHintIdle": "输入关键词开始搜索"
+}

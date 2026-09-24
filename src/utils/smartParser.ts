@@ -1,6 +1,7 @@
 import { TransactionType, Transaction, Account } from '../types';
 
 import { toDateKey, addDays } from './date';
+import { predictCategoryFromHistory } from './recommender';
 
 export interface ParseResult {
   amount: string;
@@ -652,45 +653,27 @@ export const parseSmartInputWithHistory = (
   const result = parseSmartInput(input, userAccounts, userCategories);
   let confidence = result.categoryKeyword ? 0.6 : 0.3;
 
-  const note = result.note.toLowerCase();
-  const merchant = result.merchant.toLowerCase();
+  // 历史商家/备注词 → 分类预测（修复旧实现：统计了频次却从未把命中分类写回结果）
+  const validCategoryIds = new Set(
+    userCategories.filter((c) => c.type === result.type).map((c) => c.id),
+  );
+  const history = predictCategoryFromHistory(
+    transactions,
+    result.type,
+    validCategoryIds,
+    result.note,
+    result.merchant,
+  );
 
-  const merchantCategoryCount: Record<string, Record<string, number>> = {};
-  const noteKeywordCategory: Record<string, Record<string, number>> = {};
-
-  for (const tx of transactions.slice().sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  ).slice(0, 500)) {
-    const txNote = tx.note?.toLowerCase() || '';
-    const txCategory = tx.categoryId;
-    
-    if (merchant && txNote.includes(merchant)) {
-      if (!merchantCategoryCount[txCategory]) {
-        merchantCategoryCount[txCategory] = { count: 0, total: 0 };
-      }
-      merchantCategoryCount[txCategory].count++;
-      merchantCategoryCount[txCategory].total++;
-    }
-
-    if (note && txNote) {
-      const words = note.split(/\s+/).filter(w => w.length >= 2);
-      for (const word of words) {
-        if (txNote.includes(word)) {
-          if (!noteKeywordCategory[word]) {
-            noteKeywordCategory[word] = {};
-          }
-          noteKeywordCategory[word][txCategory] = (noteKeywordCategory[word][txCategory] || 0) + 1;
-        }
-      }
-    }
-  }
-
-  if (Object.keys(merchantCategoryCount).length > 0) {
-    const topCategory = Object.entries(merchantCategoryCount)
-      .sort((a, b) => b[1].count - a[1].count)[0];
-    if (topCategory && topCategory[1].count >= 2) {
-      confidence = Math.min(0.95, confidence + 0.3);
-      return { ...result, confidence };
+  if (history.categoryId) {
+    const historyCategoryName = userCategories.find((c) => c.id === history.categoryId)?.name;
+    if (!result.categoryKeyword && historyCategoryName) {
+      // 文本未显式命中分类关键词：用历史预测补上
+      result.categoryKeyword = historyCategoryName;
+      confidence = history.confidence;
+    } else if (result.categoryKeyword) {
+      // 文本已命中：历史信号仅用于增强置信度，不覆盖用户显式表达
+      confidence = Math.min(0.95, confidence + 0.15);
     }
   }
 

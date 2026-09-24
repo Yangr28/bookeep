@@ -1,0 +1,10 @@
+{
+  "back": "Back",
+  "title": "Transfer",
+  "subtitle": "Move money between accounts",
+  "amountLabel": "Transfer amount",
+  "fromAccount": "From account",
+  "toAccount": "To account",
+  "notePlaceholder": "Add a note (optional)",
+  "confirm": "Confirm transfer"
+}

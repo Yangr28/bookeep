@@ -1,0 +1,18 @@
+{
+  "back": "Back",
+  "title": "Templates",
+  "subtitle": "Save frequent entries for one-tap bookkeeping",
+  "newTemplate": "New template",
+  "close": "Close",
+  "savedCount": "Saved templates",
+  "empty": "No templates saved yet",
+  "create": "Create template",
+  "newTitle": "New template",
+  "editTitle": "Edit template",
+  "nameLabel": "Template name",
+  "namePlaceholder": "e.g. Breakfast, Metro fare",
+  "icon": "Icon",
+  "color": "Color",
+  "notePlaceholder": "Add note...",
+  "saveEdit": "Save changes"
+}

@@ -29,12 +29,13 @@ import { App as CapApp } from '@capacitor/app';
 import { useStore } from './store/useStore';
 import { setStorageErrorCallback } from './utils/storage';
 import { getIcon } from './utils/iconMap';
-import { AccountTypeNames } from './types';
 import { useHistory } from './hooks/useHistory';
 import { useModal } from './hooks/useModal';
 import { useSwipeBack } from './hooks/useSwipeBack';
 import { useTheme } from './hooks/useTheme';
 import { useUpdateCheck } from './hooks/useUpdateCheck';
+import { useToast } from './hooks/useToast';
+import Toast from './components/Toast';
 import { convertToCNY, getRate } from './utils/currency';
 import WidgetLaunch from './plugins/widgetLaunch';
 
@@ -67,18 +68,20 @@ export default function App() {
   const [showQuickRecordTimePicker, setShowQuickRecordTimePicker] = useState(false);
   const [showOCRModal, setShowOCRModal] = useState(false);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { toast, show: showToast } = useToast();
   const [widgetQuickInput, setWidgetQuickInput] = useState('');
   const [appUnlocked, setAppUnlocked] = useState(!isAppLocked());
+  // 连续记账（保存并继续）：开关在新增会话内保持；resetSignal 自增通知 Record 重新预选分类
+  const [recordContinueMode, setRecordContinueMode] = useState(false);
+  const [recordResetSignal, setRecordResetSignal] = useState(0);
 
   // 存储写入失败时提示用户导出备份（防止数据丢失）
   useEffect(() => {
     setStorageErrorCallback(() => {
-      setToastMessage(t('app.toast.storageError'));
-      setTimeout(() => setToastMessage(null), 5000);
+      showToast(t('app.toast.storageError'), 'error', 5000);
     });
     return () => setStorageErrorCallback(() => {});
-  }, [t]);
+  }, [t, showToast]);
   
   const { 
     currentPage, 
@@ -176,15 +179,14 @@ export default function App() {
     } else {
       resetHistory('/');
     }
-    setToastMessage(editTransaction ? t('app.toast.edited') : t('app.toast.saved'));
-    setTimeout(() => setToastMessage(null), 2000);
+    showToast(editTransaction ? t('app.toast.edited') : t('app.toast.saved'));
     setEditTransaction(null);
     setRecordAmount('');
-    setRecordCategoryId(null);
+    setRecordCategoryId('');
     setRecordNote('');
     setRecordType('expense');
     setShowKeypad(false);
-  }, [resetHistory, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setShowKeypad, editTransaction, t]);
+  }, [resetHistory, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setShowKeypad, editTransaction, t, showToast]);
 
   const handleViewDetail = useCallback((filterType: FilterType) => {
     setDetailFilter(filterType);
@@ -196,6 +198,13 @@ export default function App() {
     setSelectedCategoryId(categoryId);
     handlePageChange('/detail');
   }, [handlePageChange, setSelectedCategoryId]);
+
+  // 智能洞察跳转：带分类→该分类当月支出明细；否则→全部当月支出明细
+  const handleInsightClick = useCallback((payload: { categoryId?: string; transactionIds?: string[]; month?: string }) => {
+    setDetailFilter('month-expense');
+    setSelectedCategoryId(payload.categoryId ?? null);
+    handlePageChange('/detail');
+  }, [handlePageChange, setDetailFilter, setSelectedCategoryId]);
 
   const handleEditTransaction = useCallback((transaction: Transaction) => {
     setEditTransaction(transaction);
@@ -335,14 +344,12 @@ export default function App() {
     try {
       const result = await checkUpdate(true);
       if (result === 'latest') {
-        setToastMessage(t('app.toast.latestVersion'));
-        setTimeout(() => setToastMessage(null), 2000);
+        showToast(t('app.toast.latestVersion'), 'info');
       }
     } catch (e) {
-      setToastMessage(e instanceof Error ? e.message : t('app.toast.checkUpdateFailed'));
-      setTimeout(() => setToastMessage(null), 2500);
+      showToast(e instanceof Error ? e.message : t('app.toast.checkUpdateFailed'), 'error', 2500);
     }
-  }, [checkUpdate, setToastMessage, t]);
+  }, [checkUpdate, showToast, t]);
 
   useEffect(() => {
     if (!appUnlocked) return;
@@ -399,19 +406,32 @@ export default function App() {
         note: recordNote,
         createdAt: recordDateTime.toISOString(),
       });
-    } else {
-      addTransaction({
-        type: recordType,
-        amount: parseFloat(recordAmount),
-        categoryId: recordCategoryId,
-        accountId: recordAccountId,
-        note: recordNote,
-        createdAt: recordDateTime.toISOString(),
-      });
+      handleRecordSuccess();
+      return;
     }
 
-    handleRecordSuccess();
-  }, [recordAmount, recordCategoryId, recordAccountId, recordType, recordNote, recordDateTime, editTransaction, updateTransaction, addTransaction, handleRecordSuccess]);
+    addTransaction({
+      type: recordType,
+      amount: parseFloat(recordAmount),
+      categoryId: recordCategoryId,
+      accountId: recordAccountId,
+      note: recordNote,
+      createdAt: recordDateTime.toISOString(),
+    });
+
+    if (recordContinueMode) {
+      // 连续记账：留在本页；清空金额/备注，保留账户与收支类型，日期重置为现在；
+      // 分类置空并发出信号，由 Record 按最新历史重新预选
+      setRecordAmount('');
+      setRecordNote('');
+      setRecordCategoryId(null);
+      setRecordDateTime(new Date());
+      setRecordResetSignal((n) => n + 1);
+      showToast(t('app.toast.savedContinue'));
+    } else {
+      handleRecordSuccess();
+    }
+  }, [recordAmount, recordCategoryId, recordAccountId, recordType, recordNote, recordDateTime, editTransaction, recordContinueMode, updateTransaction, addTransaction, setRecordAmount, setRecordNote, setRecordCategoryId, setRecordDateTime, setRecordResetSignal, showToast, t, handleRecordSuccess]);
 
   const handleQuickRecordSubmit = useCallback(() => {
     if (!quickRecordAmount || !quickRecordCategoryId || !quickRecordAccountId) return;
@@ -445,9 +465,8 @@ export default function App() {
     // 记账成功后回到页面顶部，确保余额卡片在可视区域内
     window.scrollTo(0, 0);
 
-    setToastMessage(t('app.toast.saved'));
-    setTimeout(() => setToastMessage(null), 2000);
-  }, [quickRecordAmount, quickRecordCategoryId, quickRecordAccountId, quickRecordType, quickRecordNote, quickRecordDateTime, quickRecordCurrency, addTransaction, setToastMessage, t]);
+    showToast(t('app.toast.saved'));
+  }, [quickRecordAmount, quickRecordCategoryId, quickRecordAccountId, quickRecordType, quickRecordNote, quickRecordDateTime, quickRecordCurrency, addTransaction, showToast, t]);
 
   // 首页智能输入「快速保存」：绕过 quickRecord state，直接用解析结果完成记账
   const handleSmartQuickSave = useCallback((parsed: {
@@ -480,9 +499,8 @@ export default function App() {
       }),
     });
     window.scrollTo(0, 0);
-    setToastMessage(t('app.toast.saved'));
-    setTimeout(() => setToastMessage(null), 2000);
-  }, [addTransaction, setToastMessage, t]);
+    showToast(t('app.toast.saved'));
+  }, [addTransaction, showToast, t]);
 
   const handleQuickRecordDateChange = useCallback((date: Date) => {
     const time = quickRecordDateTime;
@@ -556,6 +574,9 @@ export default function App() {
             onTypeChange={setRecordType}
             onAccountChange={setRecordAccountId}
             onSubmit={handleRecordSubmit}
+            continueMode={recordContinueMode}
+            onContinueModeChange={setRecordContinueMode}
+            resetSignal={recordResetSignal}
           />
         );
       case '/categories':
@@ -621,6 +642,7 @@ export default function App() {
             isDark={isDark}
             onToggleTheme={toggleTheme}
             selectedDate={calendarSelectedDate}
+            onInsightClick={handleInsightClick}
           />
         );
       case '/settings':
@@ -628,7 +650,7 @@ export default function App() {
       case '/search':
         return <Search onBack={handleBack} onEditTransaction={handleEditTransaction} />;
       case '/budgets':
-        return <Budgets onBack={handleBack} onToast={(msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(null), 2000); }} />;
+        return <Budgets onBack={handleBack} onToast={(msg) => showToast(msg, 'info')} />;
       case '/stats':
         return <Stats onBack={handleBack} />;
       case '/recurring':
@@ -779,7 +801,7 @@ export default function App() {
                       </div>
                       <div className="flex-1 text-left min-w-0">
                         <p className="font-medium" style={{ color: 'var(--ink)' }}>{account.name}</p>
-                        <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{AccountTypeNames[account.type]}</p>
+                        <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('accounts.type.' + account.type)}</p>
                       </div>
                       <p className="font-semibold amount-num flex-shrink-0" style={{ color: 'var(--ink)' }}>
                         ¥{account.balance.toLocaleString()}
@@ -831,21 +853,7 @@ export default function App() {
         />
       )}
 
-      {toastMessage && (
-        <div
-          className="fixed top-1/2 left-1/2 z-[110] flex items-center gap-3 px-6 py-4 rounded-card animate-bounce-in"
-          style={{
-            transform: 'translate(-50%, -50%)',
-            background: 'var(--card)',
-            boxShadow: 'var(--shadow-card-hover)',
-            minWidth: 180,
-            justifyContent: 'center',
-          }}
-        >
-          <CheckCircle size={24} style={{ color: 'var(--primary)' }} />
-          <span className="font-bold" style={{ color: 'var(--ink)' }}>{toastMessage}</span>
-        </div>
-      )}
+      {toast && <Toast message={toast.message} variant={toast.variant} />}
     </div>
   );
 }

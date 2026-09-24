@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/useStore';
 import { TransactionType, Category } from '../types';
 import { Plus, X, Palette } from 'lucide-react';
@@ -45,6 +46,8 @@ interface CategoriesProps {
 }
 
 export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: CategoriesProps) => {
+  const { t } = useTranslation();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -106,6 +109,19 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
   const expenseCategories = categories.filter((c) => c.type === 'expense');
 
   // 图标分组展示
+  const GROUP_KEY: Record<string, string> = {
+    '全部': 'all',
+    '收入': 'income',
+    '餐饮': 'food',
+    '交通': 'transport',
+    '购物': 'shopping',
+    '居住': 'housing',
+    '生活': 'life',
+    '娱乐': 'entertainment',
+    '教育': 'education',
+    '通讯': 'communication',
+    '其他': 'other',
+  };
   const iconGroups: { [key: string]: string[] } = {
     全部: CATEGORY_ICONS,
     收入: ['Wallet', 'TrendingUp', 'Briefcase', 'Gift', 'Award', 'Banknote', 'CreditCard', 'Landmark', 'PiggyBank', 'Coins', 'Receipt', 'FileText'],
@@ -147,8 +163,8 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
       {/* 页头 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
         <div className="flex-1">
-          <h1 className="page-title">分类管理</h1>
-          <p className="page-subtitle">管理您的收支分类</p>
+          <h1 className="page-title">{t('categories.title')}</h1>
+          <p className="page-subtitle">{t('categories.subtitle')}</p>
         </div>
       </div>
 
@@ -158,7 +174,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
           <div className="flex items-center justify-between mb-4">
             <h2 className="section-title mb-0 flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--expense)' }} />
-              支出分类
+              {t('categories.expenseTitle')}
             </h2>
             <button
               onClick={() => {
@@ -166,7 +182,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
                 setShowAddModal(true);
               }}
               className="icon-btn w-9 h-9"
-              aria-label="添加支出分类"
+              aria-label={t('categories.addExpense')}
             >
               <Plus size={18} />
             </button>
@@ -188,7 +204,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
                     }}
                     className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     style={{ background: 'var(--expense)', color: '#fff' }}
-                    aria-label="删除分类"
+                    aria-label={t('categories.deleteCategory')}
                   >
                     <X size={12} />
                   </button>
@@ -212,7 +228,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
           <div className="flex items-center justify-between mb-4">
             <h2 className="section-title mb-0 flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--primary)' }} />
-              收入分类
+              {t('categories.incomeTitle')}
             </h2>
             <button
               onClick={() => {
@@ -220,7 +236,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
                 setShowAddModal(true);
               }}
               className="icon-btn w-9 h-9"
-              aria-label="添加收入分类"
+              aria-label={t('categories.addIncome')}
             >
               <Plus size={18} />
             </button>
@@ -242,7 +258,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
                     }}
                     className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     style={{ background: 'var(--expense)', color: '#fff' }}
-                    aria-label="删除分类"
+                    aria-label={t('categories.deleteCategory')}
                   >
                     <X size={12} />
                   </button>
@@ -277,11 +293,11 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
               className="sticky top-0 z-10 px-5 py-4 flex items-center justify-between"
               style={{ background: 'var(--card)', borderBottom: '1px solid var(--line)' }}
             >
-              <h2 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>添加分类</h2>
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>{t('categories.addTitle')}</h2>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="icon-btn w-9 h-9"
-                aria-label="关闭"
+                aria-label={t('categories.close')}
               >
                 <X size={18} />
               </button>
@@ -289,12 +305,12 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
 
             <div className="p-5 pb-8 space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>分类名称</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('categories.nameLabel')}</label>
                 <input
                   type="text"
                   value={newCategory.name}
                   onChange={(e) => setNewCategory((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="输入分类名称"
+                  placeholder={t('categories.namePlaceholder')}
                   maxLength={10}
                   className="input-field"
                 />
@@ -302,7 +318,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
 
               {/* 图标选择 - 带分组标签 */}
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>选择图标</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('categories.iconLabel')}</label>
                 <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
                   {Object.keys(iconGroups).map((group) => (
                     <button
@@ -315,7 +331,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
                           : { background: 'var(--paper)', color: 'var(--ink-2)' }
                       }
                     >
-                      {group}
+                      {t('categories.groups.' + (GROUP_KEY[group] ?? 'other'))}
                     </button>
                   ))}
                 </div>
@@ -343,7 +359,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
 
               {/* 颜色选择 - 推荐色 + 无极调色板 */}
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>选择颜色</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('categories.colorLabel')}</label>
                 <div className="flex flex-wrap gap-2">
                   {presetColors.map((color) => {
                     const selected = newCategory.color === color;
@@ -358,7 +374,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
                           outlineOffset: 2,
                           transform: selected ? 'scale(1.1)' : undefined,
                         }}
-                        aria-label={`颜色 ${color}`}
+                        aria-label={t('categories.colorOption', { color })}
                       />
                     );
                   })}
@@ -369,7 +385,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
                       borderColor: showColorPicker ? 'var(--primary)' : 'var(--line)',
                       background: showColorPicker ? 'var(--primary-soft)' : 'transparent',
                     }}
-                    aria-label="自定义颜色"
+                    aria-label={t('categories.customColor')}
                   >
                     <Palette size={16} style={{ color: showColorPicker ? 'var(--primary)' : 'var(--ink-2)' }} />
                   </button>
@@ -379,7 +395,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
                 {showColorPicker && (
                   <div ref={colorPickerRef} className="mt-4 p-4 rounded-button animate-fade-in" style={{ background: 'var(--paper)' }}>
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>无极调色板</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t('categories.colorPicker')}</p>
                       <div
                         className="w-8 h-8 rounded-full border-2 shadow"
                         style={{ backgroundColor: newCategory.color, borderColor: 'var(--card)' }}
@@ -415,7 +431,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
                 disabled={!newCategory.name.trim()}
                 className="btn-primary w-full mt-2"
               >
-                添加分类
+                {t('categories.addTitle')}
               </button>
             </div>
           </div>
@@ -433,25 +449,25 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
             className="card w-full max-w-sm p-6 animate-bounce-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>删除分类</h3>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>{t('categories.deleteCategory')}</h3>
             <p className="mt-3 text-sm" style={{ color: 'var(--ink-2)' }}>
-              确定删除分类「{categoryToDelete.name}」吗？
+              {t('categories.deleteConfirm', { name: categoryToDelete.name })}
             </p>
             <p className="text-sm mt-2" style={{ color: 'var(--expense)' }}>
-              该分类下有 {recordCountOf(categoryToDelete.id)} 条记录，删除后这些记录将归入「未分类」。
+              {t('categories.deleteWarning', { count: recordCountOf(categoryToDelete.id), unclassified: t('categories.unclassified') })}
             </p>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setCategoryToDelete(null)}
                 className="btn-ghost flex-1"
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={confirmDeleteCategory}
                 className="btn-danger flex-1"
               >
-                删除
+                {t('common.delete')}
               </button>
             </div>
           </div>
@@ -464,13 +480,13 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
           className="fixed bottom-24 left-1/2 -translate-x-1/2 pl-5 pr-2 py-2.5 rounded-full z-[95] flex items-center gap-3 animate-slide-up"
           style={{ background: 'var(--ink)', color: 'var(--paper)', boxShadow: 'var(--shadow-card-hover)' }}
         >
-          <span className="text-sm whitespace-nowrap">已删除「{recentDeleted.category.name}」</span>
+          <span className="text-sm whitespace-nowrap">{t('categories.deletedToast', { name: recentDeleted.category.name })}</span>
           <button
             onClick={handleUndoDelete}
             className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap"
             style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
           >
-            撤销
+            {t('categories.undo')}
           </button>
         </div>
       )}
