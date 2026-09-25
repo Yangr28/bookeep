@@ -40,7 +40,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
   };
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // 滚动位置由 App.tsx 统一管理
     if (accountId) {
       const account = getAccount(accountId);
       setCurrentAccount(account || null);

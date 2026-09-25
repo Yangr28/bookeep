@@ -80,7 +80,7 @@ export const Accounts = ({
       : t('accounts.term.years', { count: months / 12 });
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // 滚动位置由 App.tsx 统一管理
   }, []);
 
   const { 

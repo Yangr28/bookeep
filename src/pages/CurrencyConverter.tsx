@@ -135,7 +135,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
   }, []);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // 滚动位置由 App.tsx 统一管理
     setCustomRates(getCustomRates());
     setLastUpdate(getLastUpdateTime());
     // 如果没有缓存或缓存过期，自动获取

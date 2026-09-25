@@ -33,7 +33,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
   const [showDatePicker, setShowDatePicker] = useState<null | 'start' | 'end'>(null);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // App.tsx 的页面切换逻辑会恢复保存的滚动位置；这里不再强制归零
   }, []);
 
   const getAccountById = (id: string) => accounts.find((a) => a.id === id);

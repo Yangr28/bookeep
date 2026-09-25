@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dashboard } from './pages/Dashboard';
 import { Record } from './pages/Record';
@@ -133,6 +133,25 @@ export default function App() {
   const updateTransaction = useStore((state) => state.updateTransaction);
   // 智能洞察精准定位：携带具体交易 id 列表时，明细页仅显示这些记录
   const [insightTransactionIds, setInsightTransactionIds] = useState<string[] | null>(null);
+
+  // === 页面滚动位置保存/恢复：返回上一页时恢复到离开时的位置 ===
+  const scrollPositions = useRef<Map<string, number>>(new Map());
+  const prevPageRef = useRef(currentPage);
+
+  useEffect(() => {
+    const prev = prevPageRef.current;
+    if (prev === currentPage) return;
+    // 离开页面时保存其滚动位置
+    scrollPositions.current.set(prev, window.scrollY);
+    prevPageRef.current = currentPage;
+    // 进入页面时：有记录则恢复，否则滚动到顶部
+    const saved = scrollPositions.current.get(currentPage);
+    if (saved !== undefined && saved > 0) {
+      window.scrollTo(0, saved);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [currentPage]);
 
   const handleBack = useCallback(() => {
     // 更新弹窗打开时优先处理：强制更新/下载中拦截返回键，其余情况关闭弹窗

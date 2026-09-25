@@ -119,7 +119,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate, onInsightClick }: Prof
   const { t } = useTranslation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // 滚动位置由 App.tsx 统一管理
   }, []);
 
   const selectedMonth = selectedDate.getMonth();

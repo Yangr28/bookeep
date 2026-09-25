@@ -27,7 +27,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
   const calculateBudgetUsage = useStore((state) => state.calculateBudgetUsage);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // 滚动位置由 App.tsx 统一管理
   }, []);
 
   const expenseCategories = categories.filter((c) => c.type === 'expense');

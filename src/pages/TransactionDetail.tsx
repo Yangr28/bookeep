@@ -50,7 +50,9 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
   };
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // 滚动位置由 App.tsx 统一管理；这里仅清除多选状态
+    setSelectedIds([]);
+    setIsMultiSelect(false);
   }, []);
 
   const transactions = useStore((state) => state.transactions);

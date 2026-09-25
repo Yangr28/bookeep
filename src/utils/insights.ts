@@ -4,15 +4,15 @@
  * 输入当月流水 + 历史流水（环比/近 3 月固定订阅识别） + 预算 + 分类映射，
  * 输出结构化 Insight[]，由 UI 层翻译为 i18n 文案与跳转。
  *
- * 六类规则（首版经验阈值在常量集中，便于调参）：
- *  1. 支出环比异常   |Δ| ≥ 30%（上月为 0 跳过，方向决定 severity）
+ * 六类规则（经验阈值在常量集中，便于调参）：
+ *  1. 支出环比异常   |Δ| ≥ 50%（上月为 0 跳过，方向决定 severity，上升 ≥80% 为 danger）
  *  2. 预算超支/临超支 ≥ 100% danger / ≥ 80% warning
  *  3. 预计月末超支   日均 × 当月天数 > 预算（仅在未超支时报告，避免与规则 2 重复）
  *  4. 大额支出       单笔 ≥ 当月支出日均的 5 倍，最多列 3 笔
- *  5. 固定/订阅支出  同分类 + 金额 ±5% + 近 3 月至少 2 月出现
- *  6. 高频消费       单分类当月笔数 ≥ 8
+ *  5. 固定/订阅支出  同分类 + 金额 ±10% + 近 3 月每月都出现
+ *  6. 高频消费       单分类当月笔数 ≥ 12
  *
- * 数据不足保护：当月支出笔数 < 5 时，环比 / 大额 / 高频 / 预计超支静默；
+ * 数据不足保护：当月支出笔数 < 8 时，环比 / 大额 / 高频 / 预计超支静默；
  * 无预算时预算类与预计超支静默；上月支出为 0 时环比静默。
  *
  * 所有时间派生（月份键、当月天数、已过天数）一律走 `src/utils/date.ts` 本地时区工具。
@@ -79,16 +79,16 @@ export interface InsightContext {
 }
 
 // ───────── 阈值常量（首版经验值，便于调参） ─────────
-export const ANOMALY_THRESHOLD = 0.30;
-export const ANOMALY_DANGER_THRESHOLD = 0.50;
+export const ANOMALY_THRESHOLD = 0.50;
+export const ANOMALY_DANGER_THRESHOLD = 0.80;
 export const BUDGET_WARNING_RATIO = 0.80;
 export const BUDGET_DANGER_RATIO = 1.00;
 export const LARGE_EXPENSE_MULTIPLE = 5;
-export const RECURRING_AMOUNT_TOLERANCE = 0.05;
+export const RECURRING_AMOUNT_TOLERANCE = 0.10;
 export const RECURRING_WINDOW_MONTHS = 3;
-export const RECURRING_MIN_MONTHS = 2;
-export const FREQUENT_TX_THRESHOLD = 8;
-export const MIN_TX_FOR_RULES = 5;
+export const RECURRING_MIN_MONTHS = 3;
+export const FREQUENT_TX_THRESHOLD = 12;
+export const MIN_TX_FOR_RULES = 8;
 export const LARGE_EXPENSE_MAX_ITEMS = 3;
 
 const txMonth = (tx: Transaction): string => getMonthKey(new Date(tx.createdAt));
@@ -128,7 +128,7 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
       const pct = Math.round(Math.abs(change) * 100);
       insights.push({
         type: 'anomaly_mom',
-        // 上升超 50% danger，30-50% warning；下降一律 info（少花钱不算坏）
+        // 上升 ≥80% danger，50-80% warning；下降一律 info（少花钱不算坏）
         severity: up
           ? Math.abs(change) >= ANOMALY_DANGER_THRESHOLD
             ? 'danger'
@@ -254,7 +254,7 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
   }
 
   recurring: for (const [categoryId, txs] of recentByCategory) {
-    // 同分类按金额升序，贪心聚类：与簇首金额相差 ±5% 视为同一订阅
+    // 同分类按金额升序，贪心聚类：与簇首金额相差 ±10% 视为同一订阅
     const sorted = txs.slice().sort((a, b) => a.amount - b.amount);
     const clusters: { amount: number; months: Set<string>; count: number; ids: string[] }[] = [];
     for (const tx of sorted) {

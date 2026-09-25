@@ -57,12 +57,12 @@ const baseCategories: InsightCategory[] = [
 ];
 
 describe('insights - anomaly_mom', () => {
-  it('上升 ≥30% 触发 warning，>50% 触发 danger', () => {
-    // 当月 5 笔 1400（vs 上月 1000 → +40%）
-    const current = Array.from({ length: 5 }, (_, i) =>
+  it('上升 ≥50% 触发 warning，>80% 触发 danger', () => {
+    // 当月 8 笔 ×200 = 1600（vs 上月 1000 → +60%）
+    const current = Array.from({ length: 8 }, (_, i) =>
       makeTx({
         id: `c${i}`,
-        amount: 280,
+        amount: 200,
         categoryId: 'food',
         createdAt: onDate(`2026-06-${10 + i}`),
       }),
@@ -87,12 +87,12 @@ describe('insights - anomaly_mom', () => {
     const anomaly = r.filter((x) => x.type === 'anomaly_mom');
     expect(anomaly).toHaveLength(1);
     expect(anomaly[0].severity).toBe('warning');
-    expect(anomaly[0].titleParams!.pct).toBe(40);
+    expect(anomaly[0].titleParams!.pct).toBe(60);
     expect(anomaly[0].titleParams!.direction).toBe('up');
   });
 
-  it('上升 ≥50% 触发 danger', () => {
-    const current = Array.from({ length: 5 }, (_, i) =>
+  it('上升 ≥80% 触发 danger', () => {
+    const current = Array.from({ length: 8 }, (_, i) =>
       makeTx({
         id: `c${i}`,
         amount: 60,
@@ -100,7 +100,7 @@ describe('insights - anomaly_mom', () => {
         createdAt: onDate(`2026-06-${10 + i}`),
       }),
     );
-    // 5 笔 60 = 300，上月 5 笔 tr 分类各 20 = 100 → +200%
+    // 8 笔 60 = 480，上月 5 笔 tr 分类各 20 = 100 → +380%
     const prev = Array.from({ length: 5 }, () =>
       makeTx({
         amount: 20,
@@ -119,9 +119,9 @@ describe('insights - anomaly_mom', () => {
     expect(anomaly[0].severity).toBe('danger');
   });
 
-  it('下降 ≥30% 触发 info', () => {
-    // 当月 5 笔 100 vs 上月 1000 → -90%
-    const current = Array.from({ length: 5 }, () =>
+  it('下降 ≥50% 触发 info', () => {
+    // 当月 8 笔 ×20 = 160 vs 上月 1000 → -84%
+    const current = Array.from({ length: 8 }, () =>
       makeTx({
         amount: 20,
         categoryId: 'food',
@@ -149,8 +149,8 @@ describe('insights - anomaly_mom', () => {
     expect(anomaly[0].titleParams!.direction).toBe('down');
   });
 
-  it('数据不足（当月支出 < 5 笔）静默', () => {
-    const current = Array.from({ length: 4 }, () =>
+  it('数据不足（当月支出 < 8 笔）静默', () => {
+    const current = Array.from({ length: 7 }, () =>
       makeTx({ amount: 1000, createdAt: onDate('2026-06-10') }),
     );
     const prev = Array.from({ length: 5 }, () =>
@@ -166,7 +166,7 @@ describe('insights - anomaly_mom', () => {
   });
 
   it('上月支出为 0 静默', () => {
-    const current = Array.from({ length: 5 }, () =>
+    const current = Array.from({ length: 8 }, () =>
       makeTx({ amount: 100, createdAt: onDate('2026-06-10') }),
     );
     const r = generateInsights({
@@ -178,15 +178,15 @@ describe('insights - anomaly_mom', () => {
     expect(r.filter((x) => x.type === 'anomaly_mom')).toHaveLength(0);
   });
 
-  it('变化 < 30% 不触发', () => {
-    const current = Array.from({ length: 5 }, (_, i) =>
+  it('变化 < 50% 不触发', () => {
+    const current = Array.from({ length: 8 }, (_, i) =>
       makeTx({
         amount: 100,
         categoryId: 'food',
         createdAt: onDate(`2026-06-${10 + i}`),
       }),
     );
-    const prev = Array.from({ length: 5 }, (_, i) =>
+    const prev = Array.from({ length: 8 }, (_, i) =>
       makeTx({
         amount: 110,
         categoryId: 'tr',
@@ -194,8 +194,8 @@ describe('insights - anomaly_mom', () => {
       }),
     );
     const r = generateInsights({
-      currentMonthTransactions: current, // 500
-      allTransactions: prev, // 550 → -9%
+      currentMonthTransactions: current, // 800
+      allTransactions: prev, // 880 → -9%
       categories: baseCategories,
       now: NOW,
     });
@@ -275,13 +275,13 @@ describe('insights - budget_overrun / budget_warning', () => {
 
 describe('insights - forecast_overrun', () => {
   it('预计月末超支触发 warning（且未超支不重复报）', () => {
-    // 5 笔 120 = 600，预算 1000，elapsedDays=15/totalDays=30
-    // catDailyAvg=40，forecast=1200 > 1000 → 触发；ratio=0.6 未超支
-    const current = Array.from({ length: 5 }, (_, i) =>
+    // 8 笔 90 = 720，预算 1000，elapsedDays=15/totalDays=30
+    // catDailyAvg=48，forecast=1440 > 1000 → 触发；ratio=0.72 < 0.8 不触发临超支
+    const current = Array.from({ length: 8 }, (_, i) =>
       makeTx({
-        amount: 120,
+        amount: 90,
         categoryId: 'food',
-        createdAt: onDate(`2026-06-${10 + i}`),
+        createdAt: onDate(`2026-06-${(i % 14) + 1}`),
       }),
     );
     const r = generateInsights({
@@ -299,8 +299,8 @@ describe('insights - forecast_overrun', () => {
     expect(r.filter((x) => x.type === 'budget_overrun' || x.type === 'budget_warning')).toHaveLength(0);
   });
 
-  it('数据不足（<5 笔）静默 forecast', () => {
-    const current = Array.from({ length: 4 }, () =>
+  it('数据不足（<8 笔）静默 forecast', () => {
+    const current = Array.from({ length: 7 }, () =>
       makeTx({ amount: 200, categoryId: 'food', createdAt: onDate('2026-06-10') }),
     );
     const r = generateInsights({
@@ -314,8 +314,8 @@ describe('insights - forecast_overrun', () => {
   });
 
   it('预计未超支不触发', () => {
-    // 5 笔 100 = 500，预算 2000，forecast=1000 < 2000
-    const current = Array.from({ length: 5 }, () =>
+    // 8 笔 100 = 800，预算 2000，forecast=1600 < 2000
+    const current = Array.from({ length: 8 }, () =>
       makeTx({ amount: 100, categoryId: 'food', createdAt: onDate('2026-06-10') }),
     );
     const r = generateInsights({
@@ -331,10 +331,10 @@ describe('insights - forecast_overrun', () => {
 
 describe('insights - large_expense', () => {
   it('单笔 ≥ 日均 5 倍触发，列出最多 3 笔', () => {
-    // 4 笔 50 = 200 + 1 笔 300 = 500；dailyAvg=500/15≈33.3；threshold≈166.7
-    // 300 ≥ 166.7 → 触发；300 < 166.7*2=333.3 → warning
+    // 7 笔 50 = 350 + 1 笔 300 = 650；dailyAvg=650/15≈43.3；threshold≈216.7
+    // 300 ≥ 216.7 → 触发；300 < 216.7*2≈433.3 → warning
     const current = [
-      ...Array.from({ length: 4 }, () =>
+      ...Array.from({ length: 7 }, () =>
         makeTx({ amount: 50, categoryId: 'food', createdAt: onDate('2026-06-10') }),
       ),
       makeTx({ id: 'big1', amount: 300, categoryId: 'food', createdAt: onDate('2026-06-11') }),
@@ -353,10 +353,10 @@ describe('insights - large_expense', () => {
   });
 
   it('≥ 日均 10 倍触发 danger', () => {
-    // 5 笔 10 = 50 + 1 笔 200 = 250；dailyAvg=250/15≈16.67；threshold≈83.3
-    // 200 ≥ 83.3 → 触发；200 ≥ 166.7 → danger
+    // 7 笔 10 = 70 + 1 笔 200 = 270；dailyAvg=270/15=18；threshold=90
+    // 200 ≥ 90 → 触发；200 ≥ 180 → danger
     const current = [
-      ...Array.from({ length: 5 }, () =>
+      ...Array.from({ length: 7 }, () =>
         makeTx({ amount: 10, categoryId: 'food', createdAt: onDate('2026-06-10') }),
       ),
       makeTx({ id: 'big1', amount: 200, categoryId: 'food', createdAt: onDate('2026-06-11') }),
@@ -372,8 +372,8 @@ describe('insights - large_expense', () => {
     expect(large[0].severity).toBe('danger');
   });
 
-  it('数据不足（<5 笔）静默', () => {
-    // 4 笔（<5）→ sufficient=false，即使有大额也不触发
+  it('数据不足（<8 笔）静默', () => {
+    // 4 笔（<8）→ sufficient=false，即使有大额也不触发
     const current = [
       ...Array.from({ length: 3 }, () =>
         makeTx({ amount: 10, categoryId: 'food', createdAt: onDate('2026-06-10') }),
@@ -390,8 +390,8 @@ describe('insights - large_expense', () => {
   });
 
   it('无大额支出时不触发', () => {
-    // 5 笔 50 = 250；dailyAvg=250/15≈16.67；threshold≈83.3 → 50 < 83.3
-    const current = Array.from({ length: 5 }, () =>
+    // 8 笔 50 = 400；dailyAvg=400/15≈26.7；threshold≈133.3 → 50 < 133.3
+    const current = Array.from({ length: 8 }, () =>
       makeTx({ amount: 50, categoryId: 'food', createdAt: onDate('2026-06-10') }),
     );
     const r = generateInsights({
@@ -476,8 +476,8 @@ describe('insights - recurring', () => {
 });
 
 describe('insights - frequent', () => {
-  it('单分类当月 ≥8 笔触发 info', () => {
-    const current = Array.from({ length: 8 }, (_, i) =>
+  it('单分类当月 ≥12 笔触发 info', () => {
+    const current = Array.from({ length: 12 }, (_, i) =>
       makeTx({
         id: `f${i}`,
         amount: 20,
@@ -495,11 +495,11 @@ describe('insights - frequent', () => {
     expect(freq).toHaveLength(1);
     expect(freq[0].severity).toBe('info');
     expect(freq[0].titleParams!.category).toBe('餐饮');
-    expect(freq[0].titleParams!.count).toBe(8);
+    expect(freq[0].titleParams!.count).toBe(12);
   });
 
-  it('单分类当月 7 笔不触发', () => {
-    const current = Array.from({ length: 7 }, (_, i) =>
+  it('单分类当月 11 笔不触发', () => {
+    const current = Array.from({ length: 11 }, (_, i) =>
       makeTx({
         id: `f${i}`,
         amount: 20,
@@ -516,7 +516,7 @@ describe('insights - frequent', () => {
     expect(r.filter((x) => x.type === 'frequent')).toHaveLength(0);
   });
 
-  it('数据不足（<5 笔）静默', () => {
+  it('数据不足（<8 笔）静默', () => {
     const current = Array.from({ length: 4 }, (_, i) =>
       makeTx({
         id: `f${i}`,

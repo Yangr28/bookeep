@@ -46,7 +46,7 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
   const [speechSheetOpen, setSpeechSheetOpen] = useState(false);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // 滚动位置由 App.tsx 统一管理
     if (editTransaction) {
       onTypeChange(editTransaction.type);
       onCategoryChange(editTransaction.categoryId);
@@ -219,7 +219,8 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
                 className="flex-1 min-w-0 bg-transparent outline-none text-sm"
                 style={{ color: 'var(--ink)' }}
               />
-              {speechAvailable === true && (
+              {/* 原生环境降级显示：仅明确探测不可用时隐藏，避免整包后仍看不到入口 */}
+              {speechAvailable !== false && (
                 <button
                   type="button"
                   onClick={() => setSpeechSheetOpen(true)}

@@ -239,8 +239,7 @@ const DashboardComponent = ({
   }, [smartInput, accounts, categories]);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-    // 仅首次启动时自动聚焦，返回首页不弹键盘
+    // 滚动位置由 App.tsx 统一管理；仅首次启动时自动聚焦，返回首页不弹键盘
     const shouldFocus = !hasAutoFocusedOnLaunch;
     hasAutoFocusedOnLaunch = true;
     const timer = setTimeout(() => {
@@ -456,7 +455,7 @@ const DashboardComponent = ({
       <div className="px-4 mt-4">
         <div className="card p-4">
           {/* 智能输入（含历史备注补全候选与语音入口） */}
-          <div ref={smartAreaRef}>
+          <div ref={smartAreaRef} className="mb-3">
             <div
               className="flex items-center rounded-button px-3 py-2.5 border-2 transition-colors"
               style={{ background: 'var(--paper)', borderColor: 'transparent' }}
@@ -476,7 +475,8 @@ const DashboardComponent = ({
                 aria-expanded={suggestionsOpen}
                 aria-controls="smart-suggestion-list"
               />
-              {speechAvailable === true && (
+              {/* 原生环境降级显示：仅明确探测不可用（Web/旧基座）时隐藏；null=未探测完成也显示，避免用户看不到入口 */}
+              {speechAvailable !== false && (
                 <button
                   type="button"
                   onClick={() => setSpeechSheetOpen(true)}
@@ -530,7 +530,7 @@ const DashboardComponent = ({
           {/* 智能解析预览：输入时实时显示识别到的金额/分类/账户，可直接保存 */}
           {preview && (preview.amount || preview.categoryName || preview.accountName) && (
             <div
-              className="rounded-button px-3 py-2.5 mb-3 animate-stagger-in"
+              className="rounded-button px-3 py-2.5 mb-4 animate-stagger-in"
               style={{ background: 'var(--paper-deep)', border: '1px solid var(--line)' }}
             >
               <div className="flex items-center gap-2 flex-wrap text-xs">

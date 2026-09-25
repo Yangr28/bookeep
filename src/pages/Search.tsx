@@ -21,7 +21,7 @@ export const Search = ({ onBack, onEditTransaction, initialQuery }: SearchProps)
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // 滚动位置由 App.tsx 统一管理
     const timer = setTimeout(() => {
       inputRef.current?.focus();
     }, 300);

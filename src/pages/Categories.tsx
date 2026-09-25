@@ -49,7 +49,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
   const { t } = useTranslation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // 滚动位置由 App.tsx 统一管理
   }, []);
 
   const [showAddModal, setShowAddModal] = useState(false);
