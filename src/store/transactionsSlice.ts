@@ -7,6 +7,8 @@ export interface TransactionsSlice {
   transactions: Transaction[];
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   updateTransaction: (id: string, transaction: Omit<Transaction, 'id'>) => void;
+  /** 批量把多条记录移动到指定分类（仅改分类，不影响账户余额） */
+  moveTransactionsToCategory: (ids: string[], categoryId: string) => void;
   deleteTransaction: (id: string) => void;
   reorderTransactions: (fromIndex: number, toIndex: number) => void;
   setTransactions: (transactions: Transaction[]) => void;
@@ -98,6 +100,18 @@ export const createTransactionsSlice: StateCreator<
       }
 
       return { transactions: updatedTransactions, accounts: updatedAccounts };
+    });
+  },
+
+  moveTransactionsToCategory: (ids, categoryId) => {
+    if (ids.length === 0) return;
+    set((state) => {
+      const idSet = new Set(ids);
+      const updatedTransactions = state.transactions.map((t) =>
+        idSet.has(t.id) ? { ...t, categoryId } : t
+      );
+      saveTransactions(updatedTransactions);
+      return { transactions: updatedTransactions };
     });
   },
 

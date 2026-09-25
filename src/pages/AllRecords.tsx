@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
@@ -6,16 +6,18 @@ import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { formatCurrencyShort, formatDateTime } from '../utils/format';
-import { ArrowLeft, Calendar, ArrowRightLeft, Wallet, X, ChevronDown } from 'lucide-react';
-import { Transaction, Transfer } from '../types';
+import { ArrowLeft, Calendar, ArrowRightLeft, Wallet, X, ChevronDown, ListChecks, FolderInput } from 'lucide-react';
+import { Transaction, Transfer, Category } from '../types';
+import { CategoryCard } from '../components/CategoryCard';
 
 interface AllRecordsProps {
   isTab?: boolean;
   onBack?: () => void;
   onEditTransaction?: (transaction: Transaction) => void;
+  onToast?: (message: string) => void;
 }
 
-export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllRecordsProps) => {
+export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onToast }: AllRecordsProps) => {
   const { t } = useTranslation();
 
   const transactions = useStore((state) => state.transactions);
@@ -24,6 +26,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
   const categories = useStore((state) => state.categories);
   const deleteTransaction = useStore((state) => state.deleteTransaction);
   const deleteTransfer = useStore((state) => state.deleteTransfer);
+  const moveTransactionsToCategory = useStore((state) => state.moveTransactionsToCategory);
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -32,9 +35,10 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
   // 日期选择弹窗
   const [showDatePicker, setShowDatePicker] = useState<null | 'start' | 'end'>(null);
 
-  useEffect(() => {
-    // App.tsx 的页面切换逻辑会恢复保存的滚动位置；这里不再强制归零
-  }, []);
+  // 批量管理：多选记录并批量移动到其他分类（转账无分类，不参与）
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
   const getAccountById = (id: string) => accounts.find((a) => a.id === id);
 
@@ -123,6 +127,47 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
     setCategoryFilter('all');
   };
 
+  // 当前筛选结果中可参与批量操作的记录（仅收支记录，转账无分类）
+  const selectableIds = sortedRecords
+    .filter((r) => r.type === 'transaction')
+    .map((r) => r.id);
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+
+  const enterBatchMode = () => {
+    setBatchMode(true);
+    setSelectedIds(new Set());
+  };
+
+  const exitBatchMode = () => {
+    setBatchMode(false);
+    setSelectedIds(new Set());
+    setShowCategoryPicker(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(selectableIds));
+    }
+  };
+
+  const handleMoveToCategory = (category: Category) => {
+    const ids = [...selectedIds];
+    moveTransactionsToCategory(ids, category.id);
+    onToast?.(t('app.toast.batchMoved', { count: ids.length, category: category.name }));
+    exitBatchMode();
+  };
+
   const categoryFilterChips = [
     { value: 'all', label: t('allRecords.filterAll') },
     ...categories.map((c) => ({ value: c.id, label: c.name, color: c.color })),
@@ -133,15 +178,39 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
     <div className={`page-root ${isTab ? 'pb-nav' : 'pb-24'}`}>
       {/* 头部 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
-        {!isTab && onBack && (
+        {batchMode ? (
+          <button onClick={exitBatchMode} className="icon-btn" aria-label={t('allRecords.batchExit')}>
+            <X size={20} />
+          </button>
+        ) : !isTab && onBack ? (
           <button onClick={onBack} className="icon-btn" aria-label={t('allRecords.back')}>
             <ArrowLeft size={20} />
           </button>
-        )}
+        ) : null}
         <div className="flex-1">
-          <h1 className="page-title">{isTab ? t('nav.records') : t('allRecords.title')}</h1>
-          <p className="page-subtitle">{t('allRecords.recordCount', { count: sortedRecords.length })}</p>
+          <h1 className="page-title">
+            {batchMode
+              ? t('allRecords.selectedCount', { count: selectedIds.size })
+              : isTab ? t('nav.records') : t('allRecords.title')}
+          </h1>
+          {!batchMode && (
+            <p className="page-subtitle">{t('allRecords.recordCount', { count: sortedRecords.length })}</p>
+          )}
         </div>
+        {batchMode ? (
+          <button
+            onClick={toggleSelectAll}
+            disabled={selectableIds.length === 0}
+            className="text-sm font-medium px-1 py-1 disabled:opacity-40"
+            style={{ color: 'var(--primary)' }}
+          >
+            {allSelected ? t('allRecords.deselectAll') : t('allRecords.selectAll')}
+          </button>
+        ) : (
+          <button onClick={enterBatchMode} className="icon-btn" aria-label={t('allRecords.batchManage')}>
+            <ListChecks size={20} />
+          </button>
+        )}
       </div>
 
       {/* 收支概览 */}
@@ -280,12 +349,19 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
                     transaction={record.transaction}
                     onDelete={() => deleteTransaction(record.id)}
                     onEdit={onEditTransaction ? () => onEditTransaction(record.transaction!) : undefined}
+                    selectMode={batchMode}
+                    selected={selectedIds.has(record.id)}
+                    onToggleSelect={() => toggleSelect(record.id)}
                   />
                 );
               }
 
               return (
-                <div key={record.id} className="card p-3 mb-2">
+                <div
+                  key={record.id}
+                  className="card p-3 mb-2"
+                  style={batchMode ? { opacity: 0.45 } : undefined}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
@@ -309,13 +385,15 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
                       <p className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>
                         {formatCurrencyShort(record.amount)}
                       </p>
-                      <button
-                        onClick={() => deleteTransfer(record.id)}
-                        className="text-xs px-2 py-1 rounded-button"
-                        style={{ color: 'var(--expense)', background: 'var(--expense-soft)' }}
-                      >
-                        {t('common.delete')}
-                      </button>
+                      {!batchMode && (
+                        <button
+                          onClick={() => deleteTransfer(record.id)}
+                          className="text-xs px-2 py-1 rounded-button"
+                          style={{ color: 'var(--expense)', background: 'var(--expense-soft)' }}
+                        >
+                          {t('common.delete')}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -331,6 +409,81 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction }: AllReco
           </div>
         )}
       </div>
+
+      {/* 批量操作底栏：覆盖在底部导航之上 */}
+      {batchMode && createPortal(
+        <div
+          className="fixed bottom-0 left-0 right-0 z-[60] animate-slide-up"
+          style={{ background: 'var(--card)', boxShadow: '0 -2px 12px rgba(0,0,0,0.10)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          <div className="px-4 py-3 flex items-center gap-3">
+            <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink-2)' }}>
+              {t('allRecords.selectedCount', { count: selectedIds.size })}
+            </span>
+            <button
+              onClick={() => setShowCategoryPicker(true)}
+              disabled={selectedIds.size === 0}
+              className="ml-auto flex items-center gap-1.5 px-4 py-2.5 rounded-button text-sm font-medium text-white disabled:opacity-40 active:scale-95 transition-transform"
+              style={{ background: 'var(--primary)' }}
+            >
+              <FolderInput size={16} />
+              {t('allRecords.moveToCategory')}
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* 目标分类选择弹层 */}
+      {showCategoryPicker && createPortal(
+        <>
+          <div
+            className="fixed inset-0 z-[70]"
+            style={{ background: 'rgba(0,0,0,0.45)' }}
+            onClick={() => setShowCategoryPicker(false)}
+          />
+          <div
+            className="fixed left-0 right-0 bottom-0 z-[71] animate-slide-up rounded-t-card p-4"
+            style={{
+              background: 'var(--card)',
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)',
+              maxHeight: '75vh',
+              overflowY: 'auto',
+            }}
+          >
+            <div className="flex items-center mb-4">
+              <h2 className="text-base font-semibold flex-1" style={{ color: 'var(--ink)' }}>
+                {t('allRecords.pickCategoryTitle')}
+              </h2>
+              <button onClick={() => setShowCategoryPicker(false)} className="icon-btn" aria-label={t('allRecords.batchExit')}>
+                <X size={20} />
+              </button>
+            </div>
+            {([
+              { type: 'expense' as const, label: t('common.expense') },
+              { type: 'income' as const, label: t('common.income') },
+            ]).map((group) => {
+              const groupCategories = categories.filter((c) => c.type === group.type);
+              if (groupCategories.length === 0) return null;
+              return (
+                <div key={group.type} className="mb-4">
+                  <p className="text-xs font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{group.label}</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {groupCategories.map((category) => (
+                      <CategoryCard
+                        key={category.id}
+                        category={category}
+                        onClick={() => handleMoveToCategory(category)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* 日期选择弹窗 */}
       {showDatePicker && createPortal(

@@ -16,5 +16,12 @@
   "transactionDetails": "交易明细",
   "transfer": "转账",
   "transferPath": "{{from}} → {{to}}",
-  "noRecords": "暂无记录"
+  "noRecords": "暂无记录",
+  "batchManage": "批量管理",
+  "batchExit": "退出多选",
+  "selectedCount": "已选 {{count}} 项",
+  "selectAll": "全选",
+  "deselectAll": "取消全选",
+  "moveToCategory": "移动到分类",
+  "pickCategoryTitle": "选择目标分类"
 }

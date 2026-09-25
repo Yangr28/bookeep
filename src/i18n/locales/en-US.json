@@ -55,7 +55,8 @@
       "saved": "Transaction saved",
       "savedContinue": "Saved. Add another",
       "latestVersion": "You're on the latest version",
-      "checkUpdateFailed": "Update check failed"
+      "checkUpdateFailed": "Update check failed",
+      "batchMoved": "Moved {{count}} records to \"{{category}}\""
     },
     "accountPicker": {
       "title": "Select Account",

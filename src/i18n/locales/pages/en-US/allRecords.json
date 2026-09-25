@@ -16,5 +16,12 @@
   "transactionDetails": "Transactions",
   "transfer": "Transfer",
   "transferPath": "{{from}} → {{to}}",
-  "noRecords": "No records"
+  "noRecords": "No records",
+  "batchManage": "Manage",
+  "batchExit": "Exit selection",
+  "selectedCount": "{{count}} selected",
+  "selectAll": "Select all",
+  "deselectAll": "Clear",
+  "moveToCategory": "Move to category",
+  "pickCategoryTitle": "Select category"
 }

@@ -55,7 +55,8 @@
       "saved": "记账成功",
       "savedContinue": "已保存，继续记一笔",
       "latestVersion": "当前已是最新版本",
-      "checkUpdateFailed": "检查更新失败"
+      "checkUpdateFailed": "检查更新失败",
+      "batchMoved": "已移动 {{count}} 条记录到「{{category}}」"
     },
     "accountPicker": {
       "title": "选择账户",

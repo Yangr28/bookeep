@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dashboard } from './pages/Dashboard';
 import { Record } from './pages/Record';
@@ -135,22 +135,37 @@ export default function App() {
   const [insightTransactionIds, setInsightTransactionIds] = useState<string[] | null>(null);
 
   // === 页面滚动位置保存/恢复：返回上一页时恢复到离开时的位置 ===
+  // 注意：不能在页面切换瞬间读 window.scrollY——旧页卸载、新页（如记账页）内容变短后，
+  // 浏览器会在绘制前把滚动位置钳制为 0，被动 effect 读到的永远是 0。
+  // 因此用 scroll 监听持续记录「当前页」的最新滚动位置，切换时只负责恢复。
   const scrollPositions = useRef<Map<string, number>>(new Map());
-  const prevPageRef = useRef(currentPage);
+  const currentPageRef = useRef(currentPage);
+  const scrollRafRef = useRef<number | null>(null);
+  const pendingScrollYRef = useRef(0);
 
   useEffect(() => {
-    const prev = prevPageRef.current;
-    if (prev === currentPage) return;
-    // 离开页面时保存其滚动位置
-    scrollPositions.current.set(prev, window.scrollY);
-    prevPageRef.current = currentPage;
-    // 进入页面时：有记录则恢复，否则滚动到顶部
-    const saved = scrollPositions.current.get(currentPage);
-    if (saved !== undefined && saved > 0) {
-      window.scrollTo(0, saved);
-    } else {
-      window.scrollTo(0, 0);
-    }
+    const onScroll = () => {
+      pendingScrollYRef.current = window.scrollY;
+      if (scrollRafRef.current != null) return;
+      scrollRafRef.current = requestAnimationFrame(() => {
+        scrollRafRef.current = null;
+        scrollPositions.current.set(currentPageRef.current, pendingScrollYRef.current);
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (scrollRafRef.current != null) cancelAnimationFrame(scrollRafRef.current);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    currentPageRef.current = currentPage;
+    const target = scrollPositions.current.get(currentPage) ?? 0;
+    // 立即恢复一次避免白闪；下一帧再补一次，兼容首帧后高度才撑开的列表
+    window.scrollTo(0, target);
+    const raf = requestAnimationFrame(() => window.scrollTo(0, target));
+    return () => cancelAnimationFrame(raf);
   }, [currentPage]);
 
   const handleBack = useCallback(() => {
@@ -620,6 +635,7 @@ export default function App() {
             isTab
             onBack={handleBack}
             onEditTransaction={handleEditTransaction}
+            onToast={(msg) => showToast(msg)}
           />
         );
       case '/accounts':
@@ -655,9 +671,10 @@ export default function App() {
         );
       case '/all-records':
         return (
-          <AllRecords 
+          <AllRecords
             onBack={handleBack}
             onEditTransaction={handleEditTransaction}
+            onToast={(msg) => showToast(msg)}
           />
         );
       case '/profile':
