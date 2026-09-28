@@ -20,7 +20,9 @@
     "deleteConfirmTitle": "确认删除",
     "deleteConfirmMessage": "删除后无法恢复，确定要继续吗？",
     "deleteTransactionTitle": "确认删除交易",
-    "unclassified": "未分类"
+    "unclassified": "未分类",
+    "undo": "撤销",
+    "copyRecord": "复制"
   },
   "nav": {
     "home": "首页",
@@ -37,7 +39,10 @@
       "savedContinue": "已保存，继续记一笔",
       "latestVersion": "当前已是最新版本",
       "checkUpdateFailed": "检查更新失败",
-      "batchMoved": "已移动 {{count}} 条记录到「{{category}}」"
+      "batchMoved": "已移动 {{count}} 条记录到「{{category}}」",
+      "recurringGenerated": "已自动生成 {{count}} 条周期记账",
+      "deleted": "已删除",
+      "batchDeleted": "已删除 {{count}} 条记录"
     },
     "accountPicker": {
       "title": "选择账户",
@@ -48,6 +53,22 @@
       "message": "确定要退出 Bookeep 吗？",
       "confirm": "退出"
     }
+  },
+  "onboarding": {
+    "title": "欢迎使用 Bookeep",
+    "subtitle": "简洁高效的记账助手，帮你轻松管理收支",
+    "featureRecordTitle": "快速记账",
+    "featureRecordDesc": "首页智能输入「午餐30」自动识别，几秒完成记账",
+    "featureAccountTitle": "多账户管理",
+    "featureAccountDesc": "银行、支付宝、微信、现金统一追踪资产",
+    "featureStatsTitle": "可视化统计",
+    "featureStatsDesc": "饼图柱状图洞察消费结构与趋势",
+    "featureBudgetTitle": "预算与对账",
+    "featureBudgetDesc": "按月按分类设预算，账户余额自动核对",
+    "loadSample": "加载示例数据",
+    "startEmpty": "先逛逛",
+    "skipAria": "跳过引导",
+    "sampleLoaded": "已加载示例数据，可以开始记账啦"
   },
   "dashboard": {
     "greeting": {

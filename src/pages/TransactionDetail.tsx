@@ -8,6 +8,7 @@ import { formatCurrencyShort } from '../utils/format';
 import { ArrowLeft, Wallet, TrendingUp, TrendingDown, Calendar, CheckSquare, Square, Trash2 } from 'lucide-react';
 import { Transaction } from '../types';
 import { CalendarPicker } from '../components/CalendarPicker';
+import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 
 import Empty from '../components/Empty';
 
@@ -18,15 +19,20 @@ interface TransactionDetailProps {
   /** 智能洞察精准定位：非空时仅显示这些 id 对应的记录（优先于其他筛选） */
   insightTransactionIds?: string[] | null;
   onEditTransaction?: (transaction: Transaction) => void;
+  onCopyTransaction?: (transaction: Transaction) => void;
+  onDeleteTransaction?: (transaction: Transaction) => void;
+  onDeleteBatch?: (transactions: Transaction[]) => void;
 }
 
-export const TransactionDetail = ({ onBack, filterType, categoryId, insightTransactionIds, onEditTransaction }: TransactionDetailProps) => {
+export const TransactionDetail = ({ onBack, filterType, categoryId, insightTransactionIds, onEditTransaction, onCopyTransaction, onDeleteTransaction, onDeleteBatch }: TransactionDetailProps) => {
   const { t } = useTranslation();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [showPicker, setShowPicker] = useState<'start' | 'end' | null>(null);
+  // 批量删除确认弹窗
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -44,9 +50,24 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
 
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) return;
-    selectedIds.forEach((id) => deleteTransaction(id));
+    // 批量删除前先弹确认弹窗（project_memory：批量删除需确认）
+    setShowBatchDeleteConfirm(true);
+  };
+
+  const confirmBatchDelete = () => {
+    const toDelete = filteredTransactions.filter((t) => selectedIds.includes(t.id));
+    if (toDelete.length === 0) {
+      setShowBatchDeleteConfirm(false);
+      return;
+    }
+    if (onDeleteBatch) {
+      onDeleteBatch(toDelete);
+    } else {
+      toDelete.forEach((t) => deleteTransaction(t.id));
+    }
     setSelectedIds([]);
     setIsMultiSelect(false);
+    setShowBatchDeleteConfirm(false);
   };
 
   useEffect(() => {
@@ -59,6 +80,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
   const deleteTransaction = useStore((state) => state.deleteTransaction);
   const getCategoryById = useStore((state) => state.getCategoryById);
   const categories = useStore((state) => state.categories);
+  const accounts = useStore((state) => state.accounts);
   const totalIncome = useStore((state) => state.getTotalIncome());
   const totalExpense = useStore((state) => state.getTotalExpense());
   const monthIncome = useStore((state) => state.getMonthIncome());
@@ -66,6 +88,11 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
 
   // 分类筛选：'all' 全部 | 'uncategorized' 未分类 | 分类 id（分类明细页内不再重复筛选）
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  // 账户筛选：'all' 全部 | 账户 id
+  const [accountFilter, setAccountFilter] = useState<string>('all');
+  // 金额范围筛选（空字符串表示不限）
+  const [amountMin, setAmountMin] = useState('');
+  const [amountMax, setAmountMax] = useState('');
 
   const today = new Date();
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -77,6 +104,9 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
     setStartDate('');
     setEndDate('');
     setCategoryFilter('all');
+    setAccountFilter('all');
+    setAmountMin('');
+    setAmountMax('');
   };
 
   const filteredTransactions = [...transactions]
@@ -100,6 +130,16 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
           return false;
         }
       }
+
+      // 账户筛选
+      if (accountFilter !== 'all' && t.accountId !== accountFilter) {
+        return false;
+      }
+
+      // 金额范围筛选
+      const amount = t.amount;
+      if (amountMin && amount < parseFloat(amountMin)) return false;
+      if (amountMax && amount > parseFloat(amountMax)) return false;
 
       if (categoryId) {
         return isCategoryMatch;
@@ -341,6 +381,61 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
               </div>
             </div>
           )}
+
+          {/* 账户筛选 */}
+          <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+            <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('common.account')}</span>
+            <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
+              <button
+                onClick={() => setAccountFilter('all')}
+                className={`chip flex-shrink-0 text-xs ${accountFilter === 'all' ? 'chip-active' : 'chip-inactive'}`}
+              >
+                {t('transactionDetail.filterAll')}
+              </button>
+              {accounts.map((account) => {
+                const active = accountFilter === account.id;
+                return (
+                  <button
+                    key={account.id}
+                    onClick={() => setAccountFilter(account.id)}
+                    className={`chip flex-shrink-0 text-xs ${active ? 'chip-active' : 'chip-inactive'}`}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: account.color }}
+                    />
+                    {account.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 金额范围 */}
+          <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+            <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('common.amount')}</span>
+            <div className="flex-1 flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="decimal"
+                value={amountMin}
+                onChange={(e) => setAmountMin(e.target.value)}
+                placeholder={t('transactionDetail.amountMin')}
+                className="input-field py-1.5 px-2 text-sm w-full amount-num"
+                style={{ color: 'var(--ink)' }}
+              />
+              <span className="text-xs flex-shrink-0" style={{ color: 'var(--ink-2)' }}>—</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={amountMax}
+                onChange={(e) => setAmountMax(e.target.value)}
+                placeholder={t('transactionDetail.amountMax')}
+                className="input-field py-1.5 px-2 text-sm w-full amount-num"
+                style={{ color: 'var(--ink)' }}
+              />
+            </div>
+          </div>
         </div>
 
         {/* 明细标题 + 多选 */}
@@ -423,8 +518,9 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
                   <div className="flex-1">
                     <TransactionCard
                       transaction={transaction}
-                      onDelete={() => deleteTransaction(transaction.id)}
+                      onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
                       onEdit={() => onEditTransaction?.(transaction)}
+                      onCopy={onCopyTransaction ? () => onCopyTransaction(transaction) : undefined}
                       disabled={isMultiSelect}
                     />
                   </div>
@@ -476,6 +572,16 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
         />,
         document.body
       )}
+
+      {/* 批量删除二次确认 */}
+      <DeleteConfirmModal
+        isOpen={showBatchDeleteConfirm}
+        onClose={() => setShowBatchDeleteConfirm(false)}
+        onConfirm={confirmBatchDelete}
+        title={t('transactionDetail.batchDeleteConfirmTitle')}
+        message={t('transactionDetail.batchDeleteConfirmMessage', { count: selectedIds.length })}
+        itemName={t('transactionDetail.batchDeleteConfirmItem', { count: selectedIds.length })}
+      />
     </div>
   );
 };

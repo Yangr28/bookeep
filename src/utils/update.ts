@@ -33,6 +33,8 @@ export interface UpdateCheckResult {
   minNativeVersion?: string;
   /** 该版本必须整包更新（包含原生改动），热更新无法覆盖 */
   requireApk?: boolean;
+  /** 热更新包 SHA-256 哈希（下载后校验完整性，防篡改/损坏） */
+  sha256?: string;
 }
 
 /**
@@ -74,6 +76,8 @@ interface UpdateMeta {
   mandatory?: boolean;
   /** 该版本必须整包更新（包含原生改动：图标、权限、插件等），热更新无法覆盖 */
   requireApk?: boolean;
+  /** 热更新包 SHA-256 哈希，原生层下载后校验 */
+  sha256?: string;
 }
 
 /** 获取本地版本信息（原生环境取插件数据，Web 环境降级到构建版本号） */
@@ -165,6 +169,7 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
     changelog: (release.body || '').trim(),
     mandatory: !!meta.mandatory,
     requireApk: !!meta.requireApk,
+    sha256: meta.sha256,
   };
 
   // 1. 原生版本落后且有整包资产 → 直接整包更新（一次到位）
@@ -184,6 +189,7 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
       result.type = 'hot';
       result.hotUrl = zipAsset.browser_download_url;
       result.minNativeVersion = minNative || undefined;
+      result.sha256 = meta.sha256;
       return result;
     }
   }

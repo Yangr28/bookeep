@@ -6,6 +6,29 @@ const LOANS_KEY = 'bookeep_loans';
 const TRANSFERS_KEY = 'bookeep_transfers';
 const BUDGETS_KEY = 'bookeep_budgets';
 const PREFERENCES_KEY = 'bookeep_preferences';
+/** 首次启动引导完成标记：用户选「加载示例」或「先逛逛」后写入 */
+export const ONBOARDED_KEY = 'bookeep_onboarded';
+
+/** 是否首次启动（无引导完成标记 + 无已保存交易） */
+export const isFirstLaunch = (): boolean => {
+  try {
+    if (localStorage.getItem(ONBOARDED_KEY)) return false;
+    // 已有交易记录说明用户使用过，也视为非首次
+    if (localStorage.getItem(TRANSACTIONS_KEY)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** 标记引导已完成（无论用户选哪个选项都写入） */
+export const markOnboarded = (): void => {
+  try {
+    localStorage.setItem(ONBOARDED_KEY, 'true');
+  } catch {
+    // 忽略写入失败
+  }
+};
 
 /** 存储写入失败时的全局回调（由 App 层设置，用于提示用户导出备份） */
 let onStorageError: ((key: string) => void) | null = null;

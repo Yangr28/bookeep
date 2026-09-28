@@ -14,10 +14,12 @@ interface AllRecordsProps {
   isTab?: boolean;
   onBack?: () => void;
   onEditTransaction?: (transaction: Transaction) => void;
+  onCopyTransaction?: (transaction: Transaction) => void;
+  onDeleteTransaction?: (transaction: Transaction) => void;
   onToast?: (message: string) => void;
 }
 
-export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onToast }: AllRecordsProps) => {
+export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onCopyTransaction, onDeleteTransaction, onToast }: AllRecordsProps) => {
   const { t } = useTranslation();
 
   const transactions = useStore((state) => state.transactions);
@@ -32,6 +34,11 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onToast }
   const [endDate, setEndDate] = useState('');
   // 分类筛选：'all' 全部 | 'uncategorized' 未分类 | 分类 id
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  // 账户筛选：'all' 全部 | 账户 id
+  const [accountFilter, setAccountFilter] = useState<string>('all');
+  // 金额范围筛选
+  const [amountMin, setAmountMin] = useState('');
+  const [amountMax, setAmountMax] = useState('');
   // 日期选择弹窗
   const [showDatePicker, setShowDatePicker] = useState<null | 'start' | 'end'>(null);
 
@@ -104,6 +111,23 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onToast }
         return false;
       }
     }
+
+    // 账户筛选：转账按 from/to 任一匹配
+    if (accountFilter !== 'all') {
+      if (record.type === 'transaction' && record.transaction) {
+        if (record.transaction.accountId !== accountFilter) return false;
+      } else if (record.type === 'transfer' && record.transfer) {
+        const tr = record.transfer;
+        if (tr.fromAccountId !== accountFilter && tr.toAccountId !== accountFilter) return false;
+      } else {
+        return false;
+      }
+    }
+
+    // 金额范围筛选
+    if (amountMin && record.amount < parseFloat(amountMin)) return false;
+    if (amountMax && record.amount > parseFloat(amountMax)) return false;
+
     return true;
   });
 
@@ -119,12 +143,15 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onToast }
     .filter((r) => r.type === 'transaction' && r.direction === 'out')
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const hasFilter = !!(startDate || endDate || categoryFilter !== 'all');
+  const hasFilter = !!(startDate || endDate || categoryFilter !== 'all' || accountFilter !== 'all' || amountMin || amountMax);
 
   const handleResetFilter = () => {
     setStartDate('');
     setEndDate('');
     setCategoryFilter('all');
+    setAccountFilter('all');
+    setAmountMin('');
+    setAmountMax('');
   };
 
   // 当前筛选结果中可参与批量操作的记录（仅收支记录，转账无分类）
@@ -333,6 +360,61 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onToast }
               })}
             </div>
           </div>
+
+          {/* 账户筛选 */}
+          <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+            <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('common.account')}</span>
+            <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
+              <button
+                onClick={() => setAccountFilter('all')}
+                className={`chip flex-shrink-0 ${accountFilter === 'all' ? 'chip-active' : 'chip-inactive'}`}
+              >
+                {t('allRecords.filterAll')}
+              </button>
+              {accounts.map((account) => {
+                const active = accountFilter === account.id;
+                return (
+                  <button
+                    key={account.id}
+                    onClick={() => setAccountFilter(account.id)}
+                    className={`chip flex-shrink-0 ${active ? 'chip-active' : 'chip-inactive'}`}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: account.color }}
+                    />
+                    {account.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 金额范围 */}
+          <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+            <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('common.amount')}</span>
+            <div className="flex-1 flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="decimal"
+                value={amountMin}
+                onChange={(e) => setAmountMin(e.target.value)}
+                placeholder={t('allRecords.amountMin')}
+                className="input-field py-1.5 px-2 text-sm w-full amount-num"
+                style={{ color: 'var(--ink)' }}
+              />
+              <span className="text-xs flex-shrink-0" style={{ color: 'var(--ink-2)' }}>—</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={amountMax}
+                onChange={(e) => setAmountMax(e.target.value)}
+                placeholder={t('allRecords.amountMax')}
+                className="input-field py-1.5 px-2 text-sm w-full amount-num"
+                style={{ color: 'var(--ink)' }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -347,8 +429,9 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onToast }
                   <TransactionCard
                     key={record.id}
                     transaction={record.transaction}
-                    onDelete={() => deleteTransaction(record.id)}
+                    onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(record.transaction!)}
                     onEdit={onEditTransaction ? () => onEditTransaction(record.transaction!) : undefined}
+                    onCopy={onCopyTransaction ? () => onCopyTransaction(record.transaction!) : undefined}
                     selectMode={batchMode}
                     selected={selectedIds.has(record.id)}
                     onToggleSelect={() => toggleSelect(record.id)}

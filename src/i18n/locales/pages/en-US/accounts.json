@@ -113,6 +113,14 @@
     "selectDate": "Select date",
     "monthlyPayment": "Monthly payment",
     "submit": "Add loan",
+    "editFormTitle": "Edit loan",
+    "edit": "Edit",
+    "repayTitle": "Record a payment",
+    "repayAccountLabel": "Debit account",
+    "repayAmountLabel": "Payment amount",
+    "repayConfirm": "Confirm payment",
+    "repaySuccess": "Payment recorded",
+    "repayNoAccounts": "Please add an account first",
     "deleteConfirm": "Delete this loan?"
   }
 }

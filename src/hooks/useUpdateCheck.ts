@@ -98,7 +98,7 @@ export function useUpdateCheck() {
 
       if (kind === 'hot') {
         const hotCandidates = getDownloadCandidates(result.hotUrl!);
-        await AppUpdate.downloadHotUpdate({ url: result.hotUrl!, urls: hotCandidates, version: result.version });
+        await AppUpdate.downloadHotUpdate({ url: result.hotUrl!, urls: hotCandidates, version: result.version, sha256: result.sha256 });
         // 激活后原生端会让 WebView 重新加载新版本，本页面上下文随即销毁
         await AppUpdate.activateHotUpdate({ version: result.version });
         setFlow({ phase: 'done', kind, percent: 100, error: '' });

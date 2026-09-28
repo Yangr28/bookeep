@@ -4,7 +4,7 @@ import { todayKey, toDateKey, addMonths, parseDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
 import { Building2, Wallet, MessageCircle, Banknote, CreditCard, Plus, X, ChevronRight, Trash2, Edit3, Calendar, Clock, Percent, Palette, ArrowUpDown, Landmark, ArrowRight, ArrowRightLeft, AlertCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { Account, AccountIcons } from '../types';
+import { Account, AccountIcons, Loan } from '../types';
 import { formatCurrencyShort } from '../utils/format';
 import { CalendarPicker } from '../components/CalendarPicker';
 
@@ -97,7 +97,10 @@ export const Accounts = ({
     loans,
     addLoan,
     deleteLoan,
+    updateLoan,
+    recordLoanPayment,
     getTotalLoans,
+    addTransaction,
     addTransfer,
     transfers,
     deleteTransfer
@@ -109,6 +112,11 @@ export const Accounts = ({
   const [transferAmount, setTransferAmount] = useState('');
   const [transferNote, setTransferNote] = useState('');
   const [showLoanModal, setShowLoanModal] = useState(false);
+  const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
+  const [showRepaymentModal, setShowRepaymentModal] = useState(false);
+  const [repaymentLoan, setRepaymentLoan] = useState<Loan | null>(null);
+  const [repaymentAccountId, setRepaymentAccountId] = useState('');
+  const [repaymentAmount, setRepaymentAmount] = useState('');
   const [showDepositDatePicker, setShowDepositDatePicker] = useState(false);
   const [showLoanDatePicker, setShowLoanDatePicker] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -248,22 +256,79 @@ export const Accounts = ({
 
   const handleLoanSubmit = () => {
     if (!loanFormData.name.trim() || !loanFormData.principal || !loanFormData.rate) return;
-    
+
     const principal = parseFloat(loanFormData.principal);
     const rate = parseFloat(loanFormData.rate);
     const term = loanFormData.term;
     const monthlyPayment = calculateMonthlyPayment(principal, rate, term);
 
-    addLoan({
-      ...loanFormData,
-      principal,
-      rate,
-      monthlyPayment,
-      paidAmount: 0,
-      remainingAmount: principal,
-      status: 'active'
-    });
+    if (editingLoan) {
+      // 编辑贷款：保留已还金额，仅当本金变化时调整剩余本金
+      const principalDelta = principal - editingLoan.principal;
+      updateLoan(editingLoan.id, {
+        ...loanFormData,
+        principal,
+        rate,
+        monthlyPayment,
+        remainingAmount: Math.max(0, editingLoan.remainingAmount + principalDelta),
+        paidAmount: Math.min(editingLoan.paidAmount, principal),
+        status: editingLoan.remainingAmount + principalDelta <= 0 ? 'paid' : editingLoan.status,
+      });
+      setEditingLoan(null);
+    } else {
+      addLoan({
+        ...loanFormData,
+        principal,
+        rate,
+        monthlyPayment,
+        paidAmount: 0,
+        remainingAmount: principal,
+        status: 'active'
+      });
+    }
     setShowLoanModal(false);
+  };
+
+  const openEditLoanModal = (loan: Loan) => {
+    setEditingLoan(loan);
+    setLoanFormData({
+      name: loan.name,
+      bank: loan.bank,
+      principal: loan.principal.toString(),
+      rate: loan.rate.toString(),
+      term: loan.term,
+      startDate: loan.startDate
+    });
+    setShowLoanModal(true);
+  };
+
+  const openRepaymentModal = (loan: Loan) => {
+    if (loan.status === 'paid') return;
+    setRepaymentLoan(loan);
+    setRepaymentAccountId(accounts[0]?.id || '');
+    setRepaymentAmount(loan.monthlyPayment.toFixed(2));
+    setShowRepaymentModal(true);
+  };
+
+  const handleLoanRepayment = () => {
+    if (!repaymentLoan || !repaymentAccountId || !repaymentAmount) return;
+    const amount = parseFloat(repaymentAmount);
+    if (isNaN(amount) || amount <= 0) return;
+
+    // 从指定账户扣款（记一笔支出交易）
+    addTransaction({
+      type: 'expense',
+      amount,
+      categoryId: '',
+      note: `${t('accounts.loan.repayTitle')} - ${repaymentLoan.name}`,
+      accountId: repaymentAccountId,
+      createdAt: new Date().toISOString(),
+    });
+    // 更新贷款还款进度
+    recordLoanPayment(repaymentLoan.id, amount);
+    setShowRepaymentModal(false);
+    setRepaymentLoan(null);
+    setRepaymentAmount('');
   };
 
   const handleLoanDelete = (id: string) => {
@@ -824,13 +889,31 @@ export const Accounts = ({
                       </div>
                       <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>{bankLabel(loan.bank)}</p>
                     </div>
-                    <button
-                      onClick={() => handleLoanDelete(loan.id)}
-                      className="p-2 rounded-full transition-colors flex-shrink-0 hover:bg-[color:var(--expense-soft)] hover:text-[color:var(--expense)]"
-                      style={{ color: 'var(--ink-2)' }}
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {loan.status === 'active' && (
+                        <button
+                          onClick={() => openRepaymentModal(loan)}
+                          className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+                          style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}
+                        >
+                          {t('accounts.loan.repayTitle')}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => openEditLoanModal(loan)}
+                        className="p-2 rounded-full transition-colors hover:bg-[color:var(--primary-soft)] hover:text-[color:var(--primary)]"
+                        style={{ color: 'var(--ink-2)' }}
+                      >
+                        <Edit3 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleLoanDelete(loan.id)}
+                        className="p-2 rounded-full transition-colors hover:bg-[color:var(--expense-soft)] hover:text-[color:var(--expense)]"
+                        style={{ color: 'var(--ink-2)' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3 mb-3">
@@ -896,7 +979,7 @@ export const Accounts = ({
             <div className="h-24" />
 
             <button
-              onClick={() => setShowLoanModal(true)}
+              onClick={() => { setEditingLoan(null); setShowLoanModal(true); }}
               className="fixed bottom-24 right-6 w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-all z-40"
               style={{ background: 'var(--card)', color: 'var(--expense)', border: '2px solid var(--expense)', boxShadow: 'var(--shadow-card)' }}
               aria-label={t('accounts.loan.ariaAdd')}
@@ -1279,7 +1362,7 @@ export const Accounts = ({
         <div className="fixed inset-0 z-[90] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowLoanModal(false)}>
           <div className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 z-10 p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', background: 'var(--card)' }}>
-              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('accounts.loan.formTitle')}</h3>
+              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{editingLoan ? t('accounts.loan.editFormTitle') : t('accounts.loan.formTitle')}</h3>
               <button onClick={() => setShowLoanModal(false)} className="icon-btn w-9 h-9">
                 <X size={18} />
               </button>
@@ -1424,12 +1507,92 @@ export const Accounts = ({
                   disabled={!loanFormData.name.trim() || !loanFormData.principal || !loanFormData.rate}
                   className="btn-danger w-full"
                 >
-                  {t('accounts.loan.submit')}
+                  {editingLoan ? t('common.save') : t('accounts.loan.submit')}
                 </button>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* 贷款还款弹层 */}
+      {showRepaymentModal && repaymentLoan && createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center animate-fade-in"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => setShowRepaymentModal(false)}
+        >
+          <div
+            className="sheet w-full max-w-md animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('accounts.loan.repayTitle')}</h3>
+              <button onClick={() => setShowRepaymentModal(false)} className="icon-btn w-9 h-9">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              <div className="rounded-button p-3" style={{ background: 'var(--paper)' }}>
+                <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{repaymentLoan.name}</p>
+                <p className="text-lg font-bold amount-num" style={{ color: 'var(--expense)' }}>
+                  {t('accounts.loan.remainingPrincipal')}: ¥{repaymentLoan.remainingAmount.toFixed(2)}
+                </p>
+              </div>
+
+              {accounts.length === 0 ? (
+                <p className="text-center text-sm py-4" style={{ color: 'var(--ink-2)' }}>
+                  {t('accounts.loan.repayNoAccounts')}
+                </p>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.repayAccountLabel')}</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {accounts.map((acc) => (
+                        <button
+                          key={acc.id}
+                          onClick={() => setRepaymentAccountId(acc.id)}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-button transition-all"
+                          style={repaymentAccountId === acc.id
+                            ? { background: 'var(--expense)', color: '#fff' }
+                            : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
+                        >
+                          <span className="text-xs font-medium">{acc.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.repayAmountLabel')}</label>
+                    <input
+                      type="number"
+                      value={repaymentAmount}
+                      onChange={(e) => setRepaymentAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-4 py-3 rounded-card text-xl font-bold outline-none"
+                      style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]" style={{ borderTop: '1px solid var(--line)' }}>
+              <button
+                onClick={handleLoanRepayment}
+                disabled={!repaymentAccountId || !repaymentAmount || accounts.length === 0}
+                className="btn-danger w-full"
+                style={(!repaymentAccountId || !repaymentAmount || accounts.length === 0) ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+              >
+                {t('accounts.loan.repayConfirm')}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* 自定义颜色弹层 */}

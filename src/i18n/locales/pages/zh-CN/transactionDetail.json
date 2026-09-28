@@ -29,6 +29,8 @@
   "endDate": "结束日期",
   "selectDate": "选择日期",
   "filterAll": "全部",
+  "amountMin": "最小",
+  "amountMax": "最大",
   "transactionDetails": "交易明细",
   "countParen": "({{count}}笔)",
   "exitMultiSelect": "退出多选",
@@ -40,5 +42,8 @@
   "selectedCount": "已选 {{count}} 项",
   "ariaSelectRecord": "选择记录",
   "selectedRecords": "已选择 {{count}} 条记录",
-  "batchDelete": "批量删除"
+  "batchDelete": "批量删除",
+  "batchDeleteConfirmTitle": "确认批量删除",
+  "batchDeleteConfirmMessage": "将删除 {{count}} 条记录，5 秒内可点击撤销恢复",
+  "batchDeleteConfirmItem": "{{count}} 条记录"
 }

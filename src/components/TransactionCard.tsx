@@ -3,15 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { Transaction } from '../types';
 import { useStore } from '../store/useStore';
 import { formatCurrencyShort, formatDateTime } from '../utils/format';
-import { Trash2, Edit3, Check } from 'lucide-react';
+import { Trash2, Edit3, Check, Copy } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
+import { ActionBottomSheet } from './ActionBottomSheet';
 import { getCurrencySymbol } from '../utils/currency';
 
 interface TransactionCardProps {
   transaction: Transaction;
   onDelete?: () => void;
   onEdit?: () => void;
+  /** 复制：以本流水为模板新建一笔（默认跳转记账页预填） */
+  onCopy?: () => void;
   disabled?: boolean;
   /** 多选模式：禁用滑动/编辑，整卡点击切换选中，左侧显示勾选圈 */
   selectMode?: boolean;
@@ -19,14 +22,17 @@ interface TransactionCardProps {
   onToggleSelect?: () => void;
 }
 
-const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, selectMode = false, selected = false, onToggleSelect }: TransactionCardProps) => {
+const TransactionCardComponent = ({ transaction, onDelete, onEdit, onCopy, disabled, selectMode = false, selected = false, onToggleSelect }: TransactionCardProps) => {
   const { t } = useTranslation();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const [translateX, setTranslateX] = useState(0);
   const startX = useRef(0);
   const startY = useRef(0);
   const currentX = useRef(0);
   const axis = useRef<'x' | 'y' | null>(null);
+  // 区分滑动与点击：touchmove 超过阈值则置 true，click 时若为 true 则不触发 BottomSheet
+  const hasMovedRef = useRef(false);
 
   // 多选模式下禁用滑动手势
   const gestureDisabled = disabled || selectMode;
@@ -40,6 +46,7 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
     startY.current = e.touches[0].clientY;
     currentX.current = translateX;
     axis.current = null;
+    hasMovedRef.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -51,6 +58,7 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
       else if (Math.abs(dx) > 8) { axis.current = 'x'; }
     }
     if (axis.current !== 'x') return;
+    hasMovedRef.current = true;
     let newTranslate = currentX.current + dx;
     newTranslate = Math.max(-64, Math.min(64, newTranslate));
     setTranslateX(newTranslate);
@@ -64,10 +72,30 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
     axis.current = null;
   };
 
+  // 点击卡片本身：未发生滑动且非多选时弹出操作菜单（鼠标环境友好）
+  const handleClick = () => {
+    if (selectMode) {
+      onToggleSelect?.();
+      return;
+    }
+    if (disabled) return;
+    if (hasMovedRef.current) {
+      // 滑动刚结束，重置标记不触发点击
+      hasMovedRef.current = false;
+      return;
+    }
+    setShowActions(true);
+  };
+
   const category = useStore((state) => state.getCategoryById(transaction.categoryId));
   const IconComponent = getIcon(category?.icon || 'Circle');
   const isIncome = transaction.type === 'income';
   const amountColor = isIncome ? 'var(--primary)' : 'var(--expense)';
+
+  // ActionBottomSheet 标题信息
+  const sheetSubtitle = `${isIncome ? '+' : '-'}${formatCurrencyShort(transaction.amount)}${
+    transaction.note ? ` · ${transaction.note}` : ''
+  }`;
 
   return (
     <div className="relative overflow-hidden rounded-card mb-2">
@@ -88,10 +116,16 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
         </div>
       )}
       <div
-        role={selectMode ? 'button' : undefined}
-        aria-pressed={selectMode ? selected : undefined}
-        onClick={selectMode ? onToggleSelect : undefined}
-        className={`relative p-3 transition-transform duration-200 ease-out ${selectMode ? 'cursor-pointer active:opacity-80' : ''}`}
+        role="button"
+        tabIndex={0}
+        onClick={handleClick}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !selectMode && !disabled) {
+            e.preventDefault();
+            setShowActions(true);
+          }
+        }}
+        className={`relative p-3 transition-transform duration-200 ease-out ${selectMode ? 'cursor-pointer active:opacity-80' : 'cursor-pointer active:opacity-90'}`}
         style={{
           transform: `translateX(${selectMode ? 0 : translateX}px)`,
           // 侧滑操作按钮在本层正下方，必须用不透明面，否则编辑/删除会透过玻璃卡面叠在图标与金额上
@@ -134,12 +168,25 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
           </div>
         </div>
       </div>
+
       <DeleteConfirmModal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDelete}
         title={t('common.deleteTransactionTitle')}
         itemName={`${isIncome ? t('common.income') : t('common.expense')} ¥${transaction.amount}`}
+      />
+
+      <ActionBottomSheet
+        isOpen={showActions}
+        onClose={() => setShowActions(false)}
+        title={category?.name || t('common.unclassified')}
+        subtitle={sheetSubtitle}
+        items={[
+          { key: 'edit', label: t('common.edit'), icon: Edit3, tone: 'primary', onClick: () => onEdit?.() },
+          { key: 'copy', label: t('common.copyRecord'), icon: Copy, tone: 'ghost', onClick: () => onCopy?.() },
+          { key: 'delete', label: t('common.delete'), icon: Trash2, tone: 'danger', onClick: () => setShowDeleteConfirm(true) },
+        ]}
       />
     </div>
   );

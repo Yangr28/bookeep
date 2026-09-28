@@ -168,12 +168,13 @@ public class AppUpdatePlugin extends Plugin {
 
     /**
      * 下载热更新 zip 并解压到 filesDir/hot-updates/<version>/
-     * 参数：url, version
+     * 参数：url, version, sha256（可选，提供时下载后校验完整性）
      * 进度事件：downloadProgress { kind: "hot", percent, loaded, total }
      */
     @PluginMethod
     public void downloadHotUpdate(PluginCall call) {
         String version = call.getString("version");
+        String expectedSha256 = call.getString("sha256");
         java.util.List<String> urls = resolveUrlCandidates(call);
         if (urls.isEmpty() || version == null) {
             call.reject("url and version required");
@@ -186,6 +187,15 @@ public class AppUpdatePlugin extends Plugin {
             File zip = new File(downloadsDir(), "dist_" + version + ".zip");
             try {
                 downloadFile(urls, zip, "hot");
+                // SHA-256 完整性校验：防止下载损坏或被篡改导致白屏
+                if (expectedSha256 != null && !expectedSha256.isEmpty()) {
+                    String actual = sha256OfFile(zip);
+                    if (!actual.equalsIgnoreCase(expectedSha256)) {
+                        zip.delete();
+                        throw new Exception("哈希校验失败：期望 " + expectedSha256 + "，实际 " + actual);
+                    }
+                    Log.i(TAG, "Hot update sha256 verified: " + actual);
+                }
                 File target = hotVersionDir(version);
                 if (target.exists()) deleteRecursively(target);
                 target.mkdirs();
@@ -735,5 +745,23 @@ public class AppUpdatePlugin extends Plugin {
             }
         }
         f.delete();
+    }
+
+    /** 计算文件 SHA-256 哈希（小写十六进制），用于热更新包完整性校验 */
+    private String sha256OfFile(File file) throws Exception {
+        java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+        try (FileInputStream fis = new FileInputStream(file)) {
+            byte[] buffer = new byte[65536];
+            int n;
+            while ((n = fis.read(buffer)) != -1) {
+                digest.update(buffer, 0, n);
+            }
+        }
+        byte[] hash = digest.digest();
+        StringBuilder sb = new StringBuilder(hash.length * 2);
+        for (byte b : hash) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 }

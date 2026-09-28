@@ -24,8 +24,8 @@ export interface AppUpdatePlugin {
   getVersionInfo(): Promise<VersionInfo>;
   /** 新版本页面加载成功后调用，确认本次更新可用（用于失败回滚） */
   markReady(): Promise<void>;
-  /** 下载并解压热更新包。urls 为下载候选地址（镜像加速优先），url 为兼容旧版的单个地址 */
-  downloadHotUpdate(options: { url?: string; urls?: string[]; version: string }): Promise<{ version: string; path: string }>;
+  /** 下载并解压热更新包。urls 为下载候选地址（镜像加速优先），url 为兼容旧版的单个地址。sha256 可选校验 */
+  downloadHotUpdate(options: { url?: string; urls?: string[]; version: string; sha256?: string }): Promise<{ version: string; path: string }>;
   /** 激活热更新版本（WebView 自动重载到新版本） */
   activateHotUpdate(options: { version: string }): Promise<void>;
   /** 下载整包 APK。urls 为下载候选地址（镜像加速优先），url 为兼容旧版的单个地址 */

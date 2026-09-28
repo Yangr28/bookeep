@@ -35,7 +35,11 @@ import { useSwipeBack } from './hooks/useSwipeBack';
 import { useTheme } from './hooks/useTheme';
 import { useUpdateCheck } from './hooks/useUpdateCheck';
 import { useToast } from './hooks/useToast';
+import { useUndoableDelete } from './hooks/useUndoableDelete';
 import Toast from './components/Toast';
+import { OnboardingModal } from './components/OnboardingModal';
+import { isFirstLaunch, markOnboarded } from './utils/storage';
+import { initialTransactions } from './data/initialData';
 import { convertToCNY, getRate } from './utils/currency';
 import WidgetLaunch from './plugins/widgetLaunch';
 
@@ -68,7 +72,9 @@ export default function App() {
   const [showQuickRecordTimePicker, setShowQuickRecordTimePicker] = useState(false);
   const [showOCRModal, setShowOCRModal] = useState(false);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
-  const { toast, show: showToast } = useToast();
+  // 首次启动新手引导（应用锁解锁后才显示，避免在锁屏期间弹出）
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const { toast, show: showToast, showWithAction, triggerAction } = useToast();
   const [widgetQuickInput, setWidgetQuickInput] = useState('');
   const [appUnlocked, setAppUnlocked] = useState(!isAppLocked());
   // 连续记账（保存并继续）：开关在新增会话内保持；resetSignal 自增通知 Record 重新预选分类
@@ -131,6 +137,8 @@ export default function App() {
   const accounts = useStore((state) => state.accounts);
   const addTransaction = useStore((state) => state.addTransaction);
   const updateTransaction = useStore((state) => state.updateTransaction);
+  const setTransactions = useStore((state) => state.setTransactions);
+  const generateRecurringTransactions = useStore((state) => state.generateRecurringTransactions);
   // 智能洞察精准定位：携带具体交易 id 列表时，明细页仅显示这些记录
   const [insightTransactionIds, setInsightTransactionIds] = useState<string[] | null>(null);
 
@@ -258,6 +266,30 @@ export default function App() {
     handlePageChange('/record');
   }, [handlePageChange, setEditTransaction, setRecordDateTime, setRecordAccountId, setRecordAmount, setRecordNote, setRecordCategoryId, setRecordType]);
 
+  // 复制流水：以现有交易为模板新建一笔，时间为当前（保留分类/账户/金额/备注）
+  const handleCopyTransaction = useCallback((transaction: Transaction) => {
+    setEditTransaction(null);
+    setRecordType(transaction.type);
+    setRecordAmount(transaction.amount.toString());
+    setRecordCategoryId(transaction.categoryId);
+    setRecordNote(transaction.note || '');
+    setRecordAccountId(transaction.accountId);
+    setRecordDateTime(new Date());
+    handlePageChange('/record');
+  }, [handlePageChange, setEditTransaction, setRecordType, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordAccountId, setRecordDateTime]);
+
+  // 可撤销删除：交易删除后 5 秒内可点击 Toast 撤销，恢复原 ID 与账户余额
+  // toastController 传入 App 的 showWithAction，确保撤销 Toast 与其它 Toast 共用同一队列
+  const undoableDelete = useUndoableDelete({ showWithAction });
+  // 暴露给子页面：单条删除走撤销流程
+  const handleDeleteTransactionWithUndo = useCallback((transaction: Transaction) => {
+    undoableDelete.deleteOne(transaction);
+  }, [undoableDelete]);
+  // 批量删除走撤销流程（先确认再批量删除 + 撤销 Toast）
+  const handleDeleteTransactionsBatchWithUndo = useCallback((transactions: Transaction[]) => {
+    undoableDelete.deleteBatch(transactions);
+  }, [undoableDelete]);
+
   const handleViewAccountDetail = useCallback((accountId: string) => {
     setSelectedAccountId(accountId);
     setTimeout(() => {
@@ -360,6 +392,27 @@ export default function App() {
     ensureInitialBalances();
   }, [ensureInitialBalances]);
 
+  // 周期记账生成：App 启动及回到前台时检查到期/错过的周期规则，自动生成交易
+  const processRecurring = useCallback(() => {
+    try {
+      const generated = generateRecurringTransactions();
+      if (generated.length === 0) return;
+      generated.forEach((txn) => {
+        addTransaction({
+          type: txn.type,
+          amount: txn.amount,
+          categoryId: txn.categoryId,
+          note: txn.note,
+          accountId: txn.accountId,
+          createdAt: txn.createdAt,
+        });
+      });
+      showToast(t('app.toast.recurringGenerated', { count: generated.length }), 'info', 3000);
+    } catch {
+      // 生成失败不阻断正常启动
+    }
+  }, [generateRecurringTransactions, addTransaction, showToast, t]);
+
   // 启动解锁后延迟自动检查更新（5 分钟节流；api.github.com 国内不稳定，失败自动重试 3 次）
   useEffect(() => {
     if (!appUnlocked) return;
@@ -395,12 +448,20 @@ export default function App() {
   useEffect(() => {
     if (!appUnlocked) return;
     checkWidgetAction();
+    // 启动时处理周期记账（到期/错过的周期规则自动生成交易）
+    processRecurring();
+    // 首次启动：解锁后弹出新手指引（不写入示例流水）
+    if (isFirstLaunch()) {
+      setShowOnboarding(true);
+    }
 
     let resumeListener: Awaited<ReturnType<typeof CapApp.addListener>> | undefined;
     const setupResume = async () => {
       resumeListener = await CapApp.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
           setTimeout(() => checkWidgetAction(), 200);
+          // 回到前台时重新检查周期记账（可能错过了若干天）
+          setTimeout(() => processRecurring(), 300);
         }
       });
     };
@@ -411,7 +472,7 @@ export default function App() {
         resumeListener.remove();
       }
     };
-  }, [appUnlocked, checkWidgetAction]);
+  }, [appUnlocked, checkWidgetAction, processRecurring]);
 
   const handleStatisticsDateChange = (date: Date) => {
     setCalendarSelectedDate(date);
@@ -569,6 +630,8 @@ export default function App() {
             onGoToTemplates={() => handlePageChange('/templates')}
             onGoToCurrencyConverter={() => handlePageChange('/currency-converter')}
             onEditTransaction={handleEditTransaction}
+            onCopyTransaction={handleCopyTransaction}
+            onDeleteTransaction={handleDeleteTransactionWithUndo}
             onGoToSettings={() => handlePageChange('/settings')}
             onGoToSearch={() => handlePageChange('/search')}
             onShowOCRModal={() => setShowOCRModal(true)}
@@ -635,6 +698,8 @@ export default function App() {
             isTab
             onBack={handleBack}
             onEditTransaction={handleEditTransaction}
+            onCopyTransaction={handleCopyTransaction}
+            onDeleteTransaction={handleDeleteTransactionWithUndo}
             onToast={(msg) => showToast(msg)}
           />
         );
@@ -667,6 +732,9 @@ export default function App() {
             categoryId={selectedCategoryId}
             insightTransactionIds={insightTransactionIds}
             onEditTransaction={handleEditTransaction}
+            onCopyTransaction={handleCopyTransaction}
+            onDeleteTransaction={handleDeleteTransactionWithUndo}
+            onDeleteBatch={handleDeleteTransactionsBatchWithUndo}
           />
         );
       case '/all-records':
@@ -674,6 +742,8 @@ export default function App() {
           <AllRecords
             onBack={handleBack}
             onEditTransaction={handleEditTransaction}
+            onCopyTransaction={handleCopyTransaction}
+            onDeleteTransaction={handleDeleteTransactionWithUndo}
             onToast={(msg) => showToast(msg)}
           />
         );
@@ -692,7 +762,7 @@ export default function App() {
       case '/settings':
         return <Settings onBack={handleBack} theme={theme} isDark={isDark} onToggleTheme={toggleTheme} onCheckUpdate={handleManualCheckUpdate} onRollback={rollback} rollbackFlow={updateFlow} onGoToCategories={() => handlePageChange('/categories')} />;
       case '/search':
-        return <Search onBack={handleBack} onEditTransaction={handleEditTransaction} />;
+        return <Search onBack={handleBack} onEditTransaction={handleEditTransaction} onCopyTransaction={handleCopyTransaction} onDeleteTransaction={handleDeleteTransactionWithUndo} />;
       case '/budgets':
         return <Budgets onBack={handleBack} onToast={(msg) => showToast(msg, 'info')} />;
       case '/stats':
@@ -901,7 +971,29 @@ export default function App() {
         />
       )}
 
-      {toast && <Toast message={toast.message} variant={toast.variant} />}
+      {toast && (
+        <Toast
+          message={toast.message}
+          variant={toast.variant}
+          actionLabel={toast.actionLabel}
+          onAction={toast.actionLabel ? triggerAction : undefined}
+        />
+      )}
+
+      {/* 首次启动新手引导 */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onLoadSample={() => {
+          setTransactions(initialTransactions);
+          markOnboarded();
+          setShowOnboarding(false);
+          showToast(t('onboarding.sampleLoaded'));
+        }}
+        onSkip={() => {
+          markOnboarded();
+          setShowOnboarding(false);
+        }}
+      />
     </div>
   );
 }

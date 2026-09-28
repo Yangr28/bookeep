@@ -20,7 +20,9 @@
     "deleteConfirmTitle": "Confirm deletion",
     "deleteConfirmMessage": "This can't be undone. Continue?",
     "deleteTransactionTitle": "Delete this transaction?",
-    "unclassified": "Uncategorized"
+    "unclassified": "Uncategorized",
+    "undo": "Undo",
+    "copyRecord": "Copy"
   },
   "nav": {
     "home": "Home",
@@ -37,7 +39,10 @@
       "savedContinue": "Saved. Add another",
       "latestVersion": "You're on the latest version",
       "checkUpdateFailed": "Update check failed",
-      "batchMoved": "Moved {{count}} records to \"{{category}}\""
+      "batchMoved": "Moved {{count}} records to \"{{category}}\"",
+      "recurringGenerated": "Generated {{count}} recurring transaction(s)",
+      "deleted": "Deleted",
+      "batchDeleted": "Deleted {{count}} records"
     },
     "accountPicker": {
       "title": "Select Account",
@@ -48,6 +53,22 @@
       "message": "Are you sure you want to exit Bookeep?",
       "confirm": "Exit"
     }
+  },
+  "onboarding": {
+    "title": "Welcome to Bookeep",
+    "subtitle": "A clean, fast way to track your spending",
+    "featureRecordTitle": "Quick entry",
+    "featureRecordDesc": "Type \"Lunch 30\" on the home page and let it auto-parse in seconds",
+    "featureAccountTitle": "Multi-account",
+    "featureAccountDesc": "Track bank, Alipay, WeChat, and cash together",
+    "featureStatsTitle": "Visual stats",
+    "featureStatsDesc": "Charts reveal your spending structure and trends",
+    "featureBudgetTitle": "Budget & reconcile",
+    "featureBudgetDesc": "Set monthly budgets; balances reconcile automatically",
+    "loadSample": "Load sample data",
+    "startEmpty": "Skip for now",
+    "skipAria": "Skip onboarding",
+    "sampleLoaded": "Sample data loaded. Happy tracking!"
   },
   "dashboard": {
     "greeting": {

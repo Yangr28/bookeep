@@ -13,6 +13,8 @@
   "endDate": "End date",
   "pleaseSelect": "Select",
   "filterAll": "All",
+  "amountMin": "Min",
+  "amountMax": "Max",
   "transactionDetails": "Transactions",
   "transfer": "Transfer",
   "transferPath": "{{from}} → {{to}}",

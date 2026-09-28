@@ -113,6 +113,14 @@
     "selectDate": "选择日期",
     "monthlyPayment": "每月还款",
     "submit": "添加贷款",
+    "editFormTitle": "编辑贷款",
+    "edit": "编辑",
+    "repayTitle": "记一期还款",
+    "repayAccountLabel": "扣款账户",
+    "repayAmountLabel": "还款金额",
+    "repayConfirm": "确认还款",
+    "repaySuccess": "还款记录已保存",
+    "repayNoAccounts": "请先添加账户",
     "deleteConfirm": "确定要删除这笔贷款吗？"
   }
 }

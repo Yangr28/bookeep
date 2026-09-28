@@ -21,6 +21,7 @@
 import { readFileSync, existsSync, mkdirSync, rmSync, writeFileSync, readdirSync } from 'fs';
 import { resolve, join } from 'path';
 import { spawnSync } from 'child_process';
+import { createHash } from 'crypto';
 
 const root = process.cwd();
 const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf-8'));
@@ -81,7 +82,7 @@ if (process.platform === 'win32') {
   }
 }
 
-// 4. 生成 update.json（minNativeVersion 取原生版本号）
+// 4. 生成 update.json（minNativeVersion 取原生版本号，sha256 校验热更新包完整性）
 console.log('\n[3/4] 生成 update.json...');
 const gradlePath = resolve(root, 'android/app/build.gradle');
 let minNativeVersion = version;
@@ -90,6 +91,10 @@ if (existsSync(gradlePath)) {
   const m = gradle.match(/versionName\s+"([^"]+)"/);
   if (m) minNativeVersion = m[1];
 }
+
+// 计算热更新包 SHA-256，原生层下载后校验防止损坏/篡改导致白屏
+const zipHash = createHash('sha256').update(readFileSync(zipPath)).digest('hex');
+console.log(`  热更新包 SHA-256: ${zipHash}`);
 
 // --require-apk 参数：标记该版本必须整包更新（包含原生改动：图标、权限、插件等）
 const requireApk = process.argv.includes('--require-apk');
@@ -103,6 +108,8 @@ const meta = {
   // 必须整包更新：true 时即使有热更新包也强制走 APK 安装
   // 用于包含原生改动的版本（图标更换、权限变化、插件更新等）
   requireApk,
+  // 热更新包 SHA-256 哈希，App 下载后校验完整性
+  sha256: zipHash,
 };
 writeFileSync(join(outDir, 'update.json'), JSON.stringify(meta, null, 2), 'utf-8');
 if (requireApk) {

@@ -1,7 +1,7 @@
 import { StateCreator } from 'zustand';
 import { Transaction, Account } from '../types';
 import { initialTransactions } from '../data/initialData';
-import { loadTransactions, saveTransactions, saveAccounts } from '../utils/storage';
+import { loadTransactions, saveTransactions, saveAccounts, isFirstLaunch } from '../utils/storage';
 
 export interface TransactionsSlice {
   transactions: Transaction[];
@@ -10,6 +10,10 @@ export interface TransactionsSlice {
   /** 批量把多条记录移动到指定分类（仅改分类，不影响账户余额） */
   moveTransactionsToCategory: (ids: string[], categoryId: string) => void;
   deleteTransaction: (id: string) => void;
+  /** 撤销删除：用原 ID 与原 createdAt 恢复交易并还原账户余额 */
+  restoreTransaction: (transaction: Transaction) => void;
+  /** 批量删除多条交易并扣减账户余额 */
+  deleteTransactionsBatch: (ids: string[]) => void;
   reorderTransactions: (fromIndex: number, toIndex: number) => void;
   setTransactions: (transactions: Transaction[]) => void;
 }
@@ -29,7 +33,8 @@ export const createTransactionsSlice: StateCreator<
   [],
   TransactionsSlice
 > = (set) => ({
-  transactions: loadTransactions(initialTransactions),
+  // 首次启动不自动写入示例流水（用户可在新手引导中选择"加载示例"）
+  transactions: isFirstLaunch() ? [] : loadTransactions(initialTransactions),
 
   addTransaction: (transaction) => {
     const newTransaction: Transaction = {
@@ -133,6 +138,64 @@ export const createTransactionsSlice: StateCreator<
             };
           }
           return account;
+        });
+        saveAccounts(updatedAccounts);
+      }
+
+      return { transactions: updatedTransactions, accounts: updatedAccounts };
+    });
+  },
+
+  restoreTransaction: (transaction) => {
+    set((state) => {
+      // 已存在同 ID（极少发生）则跳过
+      if (state.transactions.some((t) => t.id === transaction.id)) {
+        return state;
+      }
+      const updatedTransactions = [...state.transactions, transaction];
+      saveTransactions(updatedTransactions);
+
+      let updatedAccounts = state.accounts;
+      if (transaction.accountId) {
+        updatedAccounts = state.accounts.map((account) => {
+          if (account.id === transaction.accountId) {
+            return {
+              ...account,
+              balance: transaction.type === 'income'
+                ? round2(account.balance + transaction.amount)
+                : round2(account.balance - transaction.amount),
+            };
+          }
+          return account;
+        });
+        saveAccounts(updatedAccounts);
+      }
+
+      return { transactions: updatedTransactions, accounts: updatedAccounts };
+    });
+  },
+
+  deleteTransactionsBatch: (ids) => {
+    if (ids.length === 0) return;
+    set((state) => {
+      const idSet = new Set(ids);
+      const toDelete = state.transactions.filter((t) => idSet.has(t.id));
+      const updatedTransactions = state.transactions.filter((t) => !idSet.has(t.id));
+      saveTransactions(updatedTransactions);
+
+      let updatedAccounts = state.accounts;
+      // 累计每账户的净变更（收入减余额，支出加余额）
+      const deltaByAccount = new Map<string, number>();
+      for (const t of toDelete) {
+        if (!t.accountId) continue;
+        const delta = t.type === 'income' ? -t.amount : t.amount;
+        deltaByAccount.set(t.accountId, round2((deltaByAccount.get(t.accountId) ?? 0) + delta));
+      }
+      if (deltaByAccount.size > 0) {
+        updatedAccounts = state.accounts.map((account) => {
+          const delta = deltaByAccount.get(account.id);
+          if (delta === undefined) return account;
+          return { ...account, balance: round2(account.balance + delta) };
         });
         saveAccounts(updatedAccounts);
       }

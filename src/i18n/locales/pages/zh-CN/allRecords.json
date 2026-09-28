@@ -13,6 +13,8 @@
   "endDate": "结束日期",
   "pleaseSelect": "请选择",
   "filterAll": "全部",
+  "amountMin": "最小",
+  "amountMax": "最大",
   "transactionDetails": "交易明细",
   "transfer": "转账",
   "transferPath": "{{from}} → {{to}}",

@@ -29,6 +29,8 @@
   "endDate": "End date",
   "selectDate": "Select date",
   "filterAll": "All",
+  "amountMin": "Min",
+  "amountMax": "Max",
   "transactionDetails": "Transactions",
   "countParen": "({{count}})",
   "exitMultiSelect": "Exit multi-select",
@@ -40,5 +42,8 @@
   "selectedCount": "{{count}} selected",
   "ariaSelectRecord": "Select record",
   "selectedRecords": "{{count}} records selected",
-  "batchDelete": "Delete selected"
+  "batchDelete": "Delete selected",
+  "batchDeleteConfirmTitle": "Confirm batch delete",
+  "batchDeleteConfirmMessage": "{{count}} records will be deleted. Tap Undo within 5s to restore.",
+  "batchDeleteConfirmItem": "{{count}} records"
 }

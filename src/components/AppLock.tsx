@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Lock, Eye, EyeOff, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,12 +11,54 @@ interface AppLockProps {
 const LOCK_KEY = 'bookeep_app_lock';
 const PASSWORD_KEY = 'bookeep_password';
 
+/** 生成 16 字节随机盐（十六进制） */
+function generateSalt(): string {
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** 加盐 SHA-256 哈希（salt$hash 格式存储） */
+async function hashPassword(password: string, salt: string): Promise<string> {
+  const data = new TextEncoder().encode(salt + password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/** 设置密码：加盐哈希后存储 */
+async function storePassword(password: string): Promise<void> {
+  const salt = generateSalt();
+  const hash = await hashPassword(password, salt);
+  localStorage.setItem(PASSWORD_KEY, `${salt}$${hash}`);
+}
+
+/** 校验密码：兼容旧版明文存储（校验成功后自动迁移为加盐哈希） */
+async function verifyPassword(password: string): Promise<boolean> {
+  const stored = localStorage.getItem(PASSWORD_KEY);
+  if (!stored) return false;
+  if (stored.includes('$')) {
+    // 加盐哈希格式 salt$hash
+    const [salt, hash] = stored.split('$');
+    const computed = await hashPassword(password, salt);
+    return computed === hash;
+  }
+  // 旧版明文存储：比对成功后自动迁移为加盐哈希
+  if (password === stored) {
+    await storePassword(password);
+    return true;
+  }
+  return false;
+}
+
 export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppLockProps) => {
   const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [verifying, setVerifying] = useState(false);
 
   const handleInput = (num: string) => {
     if (isSetupMode) {
@@ -46,7 +88,7 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
     setError('');
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(async () => {
     if (isSetupMode) {
       if (password.length < 4 || confirmPassword.length < 4) {
         setError(t('appLock.enter4Digits'));
@@ -58,25 +100,30 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
         setConfirmPassword('');
         return;
       }
-      localStorage.setItem(PASSWORD_KEY, password);
+      await storePassword(password);
       localStorage.setItem(LOCK_KEY, 'true');
       onSetupComplete?.();
     } else {
-      const savedPassword = localStorage.getItem(PASSWORD_KEY);
-      if (password === savedPassword) {
-        onUnlock();
-      } else {
-        setError(t('appLock.wrongPassword'));
-        setPassword('');
+      setVerifying(true);
+      try {
+        const ok = await verifyPassword(password);
+        if (ok) {
+          onUnlock();
+        } else {
+          setError(t('appLock.wrongPassword'));
+          setPassword('');
+        }
+      } finally {
+        setVerifying(false);
       }
     }
-  };
+  }, [password, confirmPassword, isSetupMode, onUnlock, onSetupComplete, t]);
 
   useEffect(() => {
-    if (!isSetupMode && password.length === 4) {
+    if (!isSetupMode && password.length === 4 && !verifying) {
       handleSubmit();
     }
-  }, [password, isSetupMode]);
+  }, [password, isSetupMode, verifying, handleSubmit]);
 
   const renderDots = (text: string) => {
     return Array(4).fill(null).map((_, i) => (
@@ -180,20 +227,6 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
               );
             })}
           </div>
-
-          {!isSetupMode && (
-            <button
-              onClick={() => {
-                localStorage.removeItem(LOCK_KEY);
-                localStorage.removeItem(PASSWORD_KEY);
-                onUnlock();
-              }}
-              className="w-full mt-4 py-2 text-sm"
-              style={{ color: 'var(--ink-2)' }}
-            >
-              {t('appLock.skip')}
-            </button>
-          )}
         </div>
       </div>
     </div>

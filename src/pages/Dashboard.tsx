@@ -28,6 +28,8 @@ interface DashboardProps {
   onGoToTemplates?: () => void;
   onGoToCurrencyConverter?: () => void;
   onEditTransaction?: (transaction: Transaction) => void;
+  onCopyTransaction?: (transaction: Transaction) => void;
+  onDeleteTransaction?: (transaction: Transaction) => void;
   onGoToSettings?: () => void;
   onGoToSearch?: () => void;
   onShowOCRModal?: () => void;
@@ -86,6 +88,8 @@ const DashboardComponent = ({
   onGoToTemplates,
   onGoToCurrencyConverter,
   onEditTransaction,
+  onCopyTransaction,
+  onDeleteTransaction,
   onGoToSettings,
   onGoToSearch,
   onShowOCRModal,
@@ -705,8 +709,9 @@ const DashboardComponent = ({
               <div key={transaction.id} className="animate-stagger-in" style={{ animationDelay: `${index * 50}ms` }}>
                 <TransactionCard
                   transaction={transaction}
-                  onDelete={() => deleteTransaction(transaction.id)}
+                  onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
                   onEdit={() => onEditTransaction?.(transaction)}
+                  onCopy={() => onCopyTransaction?.(transaction)}
                 />
               </div>
             ))}
