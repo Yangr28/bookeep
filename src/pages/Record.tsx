@@ -7,12 +7,14 @@ import { formatDateTime } from '../utils/format';
 import { isSameLocalDate } from '../utils/date';
 import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
 import { getFrequentCategories, getFrequentAmounts, predictCategory, recommendAccount } from '../utils/recommender';
-import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ArrowLeft, Circle, CheckCircle2 } from 'lucide-react';
+import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ArrowLeft, Circle, CheckCircle2, Copy } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
 
 interface RecordProps {
   editTransaction?: Transaction | null;
   onBack?: () => void;
+  /** 复制当前编辑的交易为新流水（编辑模式下展示入口） */
+  onCopyTransaction?: (transaction: Transaction) => void;
   selectedDateTime: Date;
   selectedAccountId: string | null;
   onShowDatePicker: () => void;
@@ -35,7 +37,7 @@ interface RecordProps {
   resetSignal: number;
 }
 
-const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, onSubmit, continueMode, onContinueModeChange, resetSignal }: RecordProps) => {
+const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, onSubmit, continueMode, onContinueModeChange, resetSignal }: RecordProps) => {
   const { t } = useTranslation();
   const [smartInput, setSmartInput] = useState('');
   const [showSmartResult, setShowSmartResult] = useState(false);
@@ -190,9 +192,21 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
             <ArrowLeft size={20} />
           </button>
         )}
-        <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>
+        <h1 className="text-xl font-bold flex-1 truncate" style={{ color: 'var(--ink)' }}>
           {isEditMode ? t('record.titleEdit') : t('record.titleNew')}
         </h1>
+        {/* 编辑模式：复制本条为新流水（时间重置为当前） */}
+        {isEditMode && editTransaction && onCopyTransaction && (
+          <button
+            onClick={() => onCopyTransaction(editTransaction)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-button text-sm font-medium active:opacity-80 transition-opacity"
+            style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
+            aria-label={t('common.copyRecord')}
+          >
+            <Copy size={15} />
+            <span>{t('common.copyRecord')}</span>
+          </button>
+        )}
       </div>
 
       <div className="flex-1 px-4 pb-36 space-y-3">

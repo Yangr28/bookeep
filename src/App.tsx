@@ -630,7 +630,6 @@ export default function App() {
             onGoToTemplates={() => handlePageChange('/templates')}
             onGoToCurrencyConverter={() => handlePageChange('/currency-converter')}
             onEditTransaction={handleEditTransaction}
-            onCopyTransaction={handleCopyTransaction}
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onGoToSettings={() => handlePageChange('/settings')}
             onGoToSearch={() => handlePageChange('/search')}
@@ -663,6 +662,7 @@ export default function App() {
           <Record
             editTransaction={editTransaction}
             onBack={handleBack}
+            onCopyTransaction={handleCopyTransaction}
             selectedDateTime={recordDateTime}
             selectedAccountId={recordAccountId}
             onShowDatePicker={() => setShowRecordDatePicker(true)}
@@ -698,7 +698,6 @@ export default function App() {
             isTab
             onBack={handleBack}
             onEditTransaction={handleEditTransaction}
-            onCopyTransaction={handleCopyTransaction}
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onToast={(msg) => showToast(msg)}
           />
@@ -732,7 +731,6 @@ export default function App() {
             categoryId={selectedCategoryId}
             insightTransactionIds={insightTransactionIds}
             onEditTransaction={handleEditTransaction}
-            onCopyTransaction={handleCopyTransaction}
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onDeleteBatch={handleDeleteTransactionsBatchWithUndo}
           />
@@ -742,7 +740,6 @@ export default function App() {
           <AllRecords
             onBack={handleBack}
             onEditTransaction={handleEditTransaction}
-            onCopyTransaction={handleCopyTransaction}
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onToast={(msg) => showToast(msg)}
           />
@@ -762,7 +759,7 @@ export default function App() {
       case '/settings':
         return <Settings onBack={handleBack} theme={theme} isDark={isDark} onToggleTheme={toggleTheme} onCheckUpdate={handleManualCheckUpdate} onRollback={rollback} rollbackFlow={updateFlow} onGoToCategories={() => handlePageChange('/categories')} />;
       case '/search':
-        return <Search onBack={handleBack} onEditTransaction={handleEditTransaction} onCopyTransaction={handleCopyTransaction} onDeleteTransaction={handleDeleteTransactionWithUndo} />;
+        return <Search onBack={handleBack} onEditTransaction={handleEditTransaction} onDeleteTransaction={handleDeleteTransactionWithUndo} />;
       case '/budgets':
         return <Budgets onBack={handleBack} onToast={(msg) => showToast(msg, 'info')} />;
       case '/stats':

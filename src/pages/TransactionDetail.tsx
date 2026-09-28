@@ -19,12 +19,11 @@ interface TransactionDetailProps {
   /** 智能洞察精准定位：非空时仅显示这些 id 对应的记录（优先于其他筛选） */
   insightTransactionIds?: string[] | null;
   onEditTransaction?: (transaction: Transaction) => void;
-  onCopyTransaction?: (transaction: Transaction) => void;
   onDeleteTransaction?: (transaction: Transaction) => void;
   onDeleteBatch?: (transactions: Transaction[]) => void;
 }
 
-export const TransactionDetail = ({ onBack, filterType, categoryId, insightTransactionIds, onEditTransaction, onCopyTransaction, onDeleteTransaction, onDeleteBatch }: TransactionDetailProps) => {
+export const TransactionDetail = ({ onBack, filterType, categoryId, insightTransactionIds, onEditTransaction, onDeleteTransaction, onDeleteBatch }: TransactionDetailProps) => {
   const { t } = useTranslation();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -520,7 +519,6 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
                       transaction={transaction}
                       onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
                       onEdit={() => onEditTransaction?.(transaction)}
-                      onCopy={onCopyTransaction ? () => onCopyTransaction(transaction) : undefined}
                       disabled={isMultiSelect}
                     />
                   </div>

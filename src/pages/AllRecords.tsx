@@ -14,12 +14,11 @@ interface AllRecordsProps {
   isTab?: boolean;
   onBack?: () => void;
   onEditTransaction?: (transaction: Transaction) => void;
-  onCopyTransaction?: (transaction: Transaction) => void;
   onDeleteTransaction?: (transaction: Transaction) => void;
   onToast?: (message: string) => void;
 }
 
-export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onCopyTransaction, onDeleteTransaction, onToast }: AllRecordsProps) => {
+export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteTransaction, onToast }: AllRecordsProps) => {
   const { t } = useTranslation();
 
   const transactions = useStore((state) => state.transactions);
@@ -431,7 +430,6 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onCopyTra
                     transaction={record.transaction}
                     onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(record.transaction!)}
                     onEdit={onEditTransaction ? () => onEditTransaction(record.transaction!) : undefined}
-                    onCopy={onCopyTransaction ? () => onCopyTransaction(record.transaction!) : undefined}
                     selectMode={batchMode}
                     selected={selectedIds.has(record.id)}
                     onToggleSelect={() => toggleSelect(record.id)}

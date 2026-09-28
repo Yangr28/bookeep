@@ -28,7 +28,6 @@ interface DashboardProps {
   onGoToTemplates?: () => void;
   onGoToCurrencyConverter?: () => void;
   onEditTransaction?: (transaction: Transaction) => void;
-  onCopyTransaction?: (transaction: Transaction) => void;
   onDeleteTransaction?: (transaction: Transaction) => void;
   onGoToSettings?: () => void;
   onGoToSearch?: () => void;
@@ -88,7 +87,6 @@ const DashboardComponent = ({
   onGoToTemplates,
   onGoToCurrencyConverter,
   onEditTransaction,
-  onCopyTransaction,
   onDeleteTransaction,
   onGoToSettings,
   onGoToSearch,
@@ -711,7 +709,6 @@ const DashboardComponent = ({
                   transaction={transaction}
                   onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
                   onEdit={() => onEditTransaction?.(transaction)}
-                  onCopy={() => onCopyTransaction?.(transaction)}
                 />
               </div>
             ))}

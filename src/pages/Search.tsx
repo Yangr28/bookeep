@@ -9,12 +9,11 @@ import { useTranslation } from 'react-i18next';
 interface SearchProps {
   onBack: () => void;
   onEditTransaction: (transaction: Transaction) => void;
-  onCopyTransaction?: (transaction: Transaction) => void;
   onDeleteTransaction?: (transaction: Transaction) => void;
   initialQuery?: string;
 }
 
-export const Search = ({ onBack, onEditTransaction, onCopyTransaction, onDeleteTransaction, initialQuery }: SearchProps) => {
+export const Search = ({ onBack, onEditTransaction, onDeleteTransaction, initialQuery }: SearchProps) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState(initialQuery || '');
   const [filterType, setFilterType] = useState<TransactionType | 'all'>('all');
@@ -124,7 +123,6 @@ export const Search = ({ onBack, onEditTransaction, onCopyTransaction, onDeleteT
                 transaction={transaction}
                 onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
                 onEdit={() => onEditTransaction(transaction)}
-                onCopy={onCopyTransaction ? () => onCopyTransaction(transaction) : undefined}
               />
             ))}
           </div>

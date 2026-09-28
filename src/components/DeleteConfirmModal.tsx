@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { Trash2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -21,14 +22,18 @@ export const DeleteConfirmModal = ({
   const { t } = useTranslation();
   if (!isOpen) return null;
 
-  return (
+  // 必须用 createPortal 渲染到 document.body：
+  // 否则在卡片内部渲染时受父级 transform: translateX() 影响，fixed 定位失效，
+  // 导致底部按钮被 BottomNav 遮挡、遮罩无法覆盖全屏（z-[200] 才能盖过 BottomNav z-50 与 FAB）
+  return createPortal(
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center animate-fade-in"
-      style={{ background: 'rgba(43,41,37,0.45)' }}
+      style={{ background: 'rgba(43,41,37,0.55)' }}
       onClick={onClose}
     >
       <div
         className="card relative w-full max-w-sm mx-4 p-5 animate-bounce-in"
+        style={{ background: 'var(--card-solid)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <button onClick={onClose} className="icon-btn w-9 h-9 absolute top-4 right-4" aria-label={t('common.cancel')}>
@@ -56,6 +61,7 @@ export const DeleteConfirmModal = ({
           <button onClick={onConfirm} className="btn-danger flex-1">{t('common.delete')}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
