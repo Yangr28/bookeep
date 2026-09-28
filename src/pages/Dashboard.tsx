@@ -5,6 +5,8 @@ import { useStore } from '../store/useStore';
 import { StatCard } from '../components/StatCard';
 import { TransactionCard } from '../components/TransactionCard';
 import { Sparkline, StackedBar, ProgressRing } from '../components/MiniCharts';
+import { SmartConfirmSheet, SmartConfirmData } from '../components/SmartConfirmSheet';
+import { TrendDetailSheet } from '../components/TrendDetailSheet';
 import { formatCurrencyShort } from '../utils/format';
 import { getMonthKey } from '../utils/date';
 import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
@@ -250,7 +252,11 @@ const DashboardComponent = ({
     return () => clearTimeout(timer);
   }, []);
 
-  const handleSmartSubmit = useCallback((text?: string) => {
+  // 智能记账核对浮层数据（完全识别时先弹核对，不再直接入账）
+  const [confirmData, setConfirmData] = useState<SmartConfirmData | null>(null);
+  const [trendDetailOpen, setTrendDetailOpen] = useState(false);
+
+  const handleSmartSubmit = useCallback((text?: string, opts?: { forceEdit?: boolean }) => {
     const inputText = text ?? smartInput;
     if (!inputText.trim()) {
       // 空输入直接进入记账页
@@ -285,9 +291,9 @@ const DashboardComponent = ({
       }
     }
 
-    // ★ 快速识别：金额、分类、账户三者齐全且用户提供了金额，直接在首页保存，不跳页
-    if (result.amount && autoCategoryId && autoAccountId) {
-      onSmartQuickSave({
+    // ★ 识别到金额即弹核对浮层（分类/账户缺失时浮层内补选），避免直接记错账
+    if (result.amount && !opts?.forceEdit) {
+      setConfirmData({
         type: result.type,
         amount: result.amount,
         categoryId: autoCategoryId,
@@ -296,12 +302,10 @@ const DashboardComponent = ({
         currency: result.currency || undefined,
         dateTime: parsedDateTime,
       });
-      setSmartInput('');
-      setPreview(null);
       return;
     }
 
-    // 任一关键字段未识别：跳转到记账页并预填已解析结果，继续编辑
+    // 金额无法识别或用户要求再改改：跳转到记账页并预填已解析结果，继续编辑
     onGoToRecord?.({
       type: result.type,
       amount: result.amount,
@@ -313,7 +317,39 @@ const DashboardComponent = ({
 
     setSmartInput('');
     setPreview(null);
-  }, [smartInput, categories, transactions, accounts, onGoToRecord, onFabRecord, onSmartQuickSave]);
+  }, [smartInput, categories, transactions, accounts, onGoToRecord, onFabRecord]);
+
+  // 核对浮层确认：真正入账（浮层已保证分类/账户非空）
+  const handleConfirmSave = useCallback((d: SmartConfirmData) => {
+    if (!d.categoryId || !d.accountId) return;
+    onSmartQuickSave({
+      type: d.type,
+      amount: d.amount,
+      categoryId: d.categoryId,
+      accountId: d.accountId,
+      note: d.note,
+      currency: d.currency,
+      dateTime: d.dateTime,
+    });
+    setConfirmData(null);
+    setSmartInput('');
+    setPreview(null);
+  }, [onSmartQuickSave]);
+
+  // 核对浮层「再改改」：携带（可能已调整的）预填数据跳完整记账页
+  const handleConfirmEdit = useCallback((d: SmartConfirmData) => {
+    onGoToRecord?.({
+      type: d.type,
+      amount: d.amount,
+      categoryId: d.categoryId,
+      note: d.note,
+      accountId: d.accountId,
+      dateTime: d.dateTime,
+    });
+    setConfirmData(null);
+    setSmartInput('');
+    setPreview(null);
+  }, [onGoToRecord]);
 
   // 处理来自桌面小组件的快速输入
   useEffect(() => {
@@ -369,7 +405,13 @@ const DashboardComponent = ({
 
       {/* 本月概览卡 */}
       <div className="px-4 mt-3">
-        <button onClick={() => onViewDetail('month-balance')} className="card card-hover w-full p-5 text-left block">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => onViewDetail('month-balance')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewDetail('month-balance'); } }}
+          className="card card-hover w-full p-5 text-left block cursor-pointer"
+        >
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.monthBalance')}</p>
@@ -377,11 +419,16 @@ const DashboardComponent = ({
                 {formatCurrencyShort(balance)}
               </p>
             </div>
-            {/* 资产趋势 sparkline：近 6 个月总资产 mini 折线 */}
-            <div className="flex flex-col items-end flex-shrink-0 mt-1">
+            {/* 资产趋势 sparkline：点击查看详细趋势明细 */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setTrendDetailOpen(true); }}
+              className="flex flex-col items-end flex-shrink-0 mt-1 -mr-1 px-1 py-0.5 rounded-button card-press"
+              aria-label={t('dashboard.trendTitle')}
+            >
               <Sparkline data={assetsTrend.map(d => d.assets)} width={72} height={24} />
               <span className="text-[10px] mt-1" style={{ color: 'var(--ink-2)' }}>{t('dashboard.trend6m')}</span>
-            </div>
+            </button>
           </div>
           <div className="flex items-center gap-5 mt-3">
             <div className="flex items-center gap-1.5">
@@ -403,7 +450,7 @@ const DashboardComponent = ({
           <div className="mt-3">
             <StackedBar income={monthIncome} expense={monthExpense} height={6} />
           </div>
-        </button>
+        </div>
         {/* 预算进度小条：仅当本月有设置预算时显示 */}
         {budgetSummary.totalBudget > 0 && (
           <button
@@ -601,7 +648,7 @@ const DashboardComponent = ({
                   {preview.amount && preview.categoryId && preview.accountId ? t('dashboard.save') : t('dashboard.incomplete')}
                 </button>
                 <button
-                  onClick={() => handleSmartSubmit()}
+                  onClick={() => handleSmartSubmit(undefined, { forceEdit: true })}
                   className="flex-1 py-1.5 rounded-button text-xs font-medium transition-all flex items-center justify-center gap-1"
                   style={{ background: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--line)' }}
                 >
@@ -612,17 +659,18 @@ const DashboardComponent = ({
             </div>
           )}
 
-          {/* 操作行：拍票 + 记一笔 */}
+          {/* 操作行：拍票 + 语音（完整记账统一走底部中央 +，避免入口重复） */}
           <div className="flex gap-2">
             <button onClick={onShowOCRModal} className="btn-ghost px-4 py-2.5 text-sm flex-1">
               <Image size={16} />
               <span>{t('dashboard.ocrShot')}</span>
             </button>
             <button
-              onClick={onFabRecord}
-              className="btn-primary flex-[2] py-2.5 text-sm"
+              onClick={() => setSpeechSheetOpen(true)}
+              className="btn-ghost px-4 py-2.5 text-sm flex-1"
             >
-              {t('dashboard.record')}
+              <Mic size={16} />
+              <span>{t('dashboard.voice')}</span>
             </button>
           </div>
         </div>
@@ -698,6 +746,24 @@ const DashboardComponent = ({
         open={speechSheetOpen}
         onClose={() => setSpeechSheetOpen(false)}
         onResult={(text) => setSmartInput(text)}
+      />
+
+      {/* 智能记账核对浮层：确认后才入账，或跳完整记账页再改 */}
+      <SmartConfirmSheet
+        open={confirmData !== null}
+        data={confirmData}
+        categories={categories}
+        accounts={accounts}
+        onClose={() => setConfirmData(null)}
+        onConfirm={handleConfirmSave}
+        onEdit={handleConfirmEdit}
+      />
+
+      {/* 近 6 月资产趋势明细 */}
+      <TrendDetailSheet
+        open={trendDetailOpen}
+        data={assetsTrend}
+        onClose={() => setTrendDetailOpen(false)}
       />
     </div>
   );

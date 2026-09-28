@@ -717,8 +717,12 @@ export default function App() {
   return (
     <div
       className={`min-h-screen relative page-enter ${isSwiping || hasModalOpen ? 'overflow-hidden' : ''}`}
-      style={{ background: 'var(--paper)', color: 'var(--ink)' }}
+      style={{ background: 'transparent', color: 'var(--ink)' }}
     >
+      {/* 液态玻璃环境光斑：固定垫底，供半透明卡片折射出色彩 */}
+      <div className="ambient-bg">
+        <div className="ambient-orb" />
+      </div>
       {/* 状态栏遮罩：边到边模式下保证白色状态栏图标在任何页面背景上都可读 */}
       <div className="status-bar-scrim" />
       {canGoBack() && (

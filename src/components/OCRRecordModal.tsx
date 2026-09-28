@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Upload, Check, AlertCircle, Loader2, ChevronRight, Download } from 'lucide-react';
+import { X, Upload, Check, AlertCircle, Loader2, ChevronRight, Download, Calendar, Clock } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { CategoryCard } from './CategoryCard';
+import { CalendarPicker } from './CalendarPicker';
+import { TimePicker } from './TimePicker';
 import { TransactionType } from '../types';
 import { recognizeImage, extractTransactionsFromText, ParsedTransaction } from '../utils/ocrParser';
 import type { OCRCacheStatus } from '../utils/ocrCache';
@@ -21,6 +23,9 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
   const [step, setStep] = useState<'upload' | 'preview' | 'edit'>('upload');
   const [error, setError] = useState('');
   const [successCount, setSuccessCount] = useState(0);
+  // 自定义日期/时间选择器作用于哪一笔（-1 为关闭）
+  const [datePickerIndex, setDatePickerIndex] = useState<number | null>(null);
+  const [timePickerIndex, setTimePickerIndex] = useState<number | null>(null);
 
   const categories = useStore((state) => state.categories);
   const accounts = useStore((state) => state.accounts);
@@ -138,8 +143,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in"
-      style={{ background: 'rgba(43,41,37,0.45)' }}
+      className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in sheet-scrim"
       onClick={onClose}
     >
       <div
@@ -361,27 +365,30 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
 
                     <div className="flex items-center gap-2">
                       <p className="text-xs flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{t('ocr.edit.date')}</p>
-                      <input
-                        type="date"
-                        value={transaction.date.toISOString().slice(0, 10)}
-                        onChange={(e) => {
-                          const newDate = new Date(e.target.value);
-                          newDate.setHours(transaction.date.getHours(), transaction.date.getMinutes(), 0, 0);
-                          handleEditTransaction(index, 'date', newDate);
-                        }}
-                        className="input-field flex-1 py-2 text-xs"
-                      />
-                      <input
-                        type="time"
-                        value={`${String(transaction.date.getHours()).padStart(2, '0')}:${String(transaction.date.getMinutes()).padStart(2, '0')}`}
-                        onChange={(e) => {
-                          const [h, m] = e.target.value.split(':').map(Number);
-                          const newDate = new Date(transaction.date);
-                          newDate.setHours(h, m, 0, 0);
-                          handleEditTransaction(index, 'date', newDate);
-                        }}
-                        className="input-field w-24 py-2 text-xs"
-                      />
+                      {/* 自定义日期/时间选择器（严禁原生 input[type=date/time]：Android WebView 畸形全屏选择器） */}
+                      <button
+                        type="button"
+                        onClick={() => setDatePickerIndex(index)}
+                        className="btn-ghost flex-1 py-2 text-xs"
+                      >
+                        <Calendar size={13} />
+                        <span className="amount-num">
+                          {transaction.date.getFullYear()}-
+                          {String(transaction.date.getMonth() + 1).padStart(2, '0')}-
+                          {String(transaction.date.getDate()).padStart(2, '0')}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTimePickerIndex(index)}
+                        className="btn-ghost py-2 px-3 text-xs"
+                      >
+                        <Clock size={13} />
+                        <span className="amount-num">
+                          {String(transaction.date.getHours()).padStart(2, '0')}:
+                          {String(transaction.date.getMinutes()).padStart(2, '0')}
+                        </span>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -412,8 +419,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
         {/* 识别中 / 引擎下载中 */}
         {isLoading && (
           <div
-            className="absolute inset-0 flex items-center justify-center animate-fade-in"
-            style={{ background: 'rgba(43,41,37,0.45)' }}
+            className="absolute inset-0 flex items-center justify-center animate-fade-in sheet-scrim"
           >
             <div className="card p-6 flex flex-col items-center min-w-[240px] mx-4">
               {downloadStatus?.isDownloading ? (
@@ -448,6 +454,34 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
           </div>
         )}
       </div>
+
+      {/* 自定义日期/时间选择器（作用于当前编辑的那一笔） */}
+      {datePickerIndex !== null && parsedTransactions[datePickerIndex] && (
+        <CalendarPicker
+          selectedDate={parsedTransactions[datePickerIndex].date}
+          onDateChange={(d) => {
+            const old = parsedTransactions[datePickerIndex].date;
+            const next = new Date(d);
+            next.setHours(old.getHours(), old.getMinutes(), 0, 0);
+            handleEditTransaction(datePickerIndex, 'date', next);
+          }}
+          onClose={() => setDatePickerIndex(null)}
+        />
+      )}
+      {timePickerIndex !== null && parsedTransactions[timePickerIndex] && (
+        <TimePicker
+          selectedTime={{
+            hours: parsedTransactions[timePickerIndex].date.getHours(),
+            minutes: parsedTransactions[timePickerIndex].date.getMinutes(),
+          }}
+          onTimeChange={(h, m) => {
+            const next = new Date(parsedTransactions[timePickerIndex].date);
+            next.setHours(h, m, 0, 0);
+            handleEditTransaction(timePickerIndex, 'date', next);
+          }}
+          onClose={() => setTimePickerIndex(null)}
+        />
+      )}
     </div>
   );
 };

@@ -41,7 +41,10 @@ export default function Toast({ message, variant = 'success', className }: Toast
       )}
       style={{
         transform: 'translate(-50%, -50%)',
-        background: 'var(--card)',
+        background: 'var(--glass-strong)',
+        WebkitBackdropFilter: 'blur(24px) saturate(1.8)',
+        backdropFilter: 'blur(24px) saturate(1.8)',
+        border: '1px solid var(--glass-border)',
         boxShadow: 'var(--shadow-card-hover)',
         minWidth: 180,
         justifyContent: 'center',

@@ -52,14 +52,14 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
     }
     if (axis.current !== 'x') return;
     let newTranslate = currentX.current + dx;
-    newTranslate = Math.max(-60, Math.min(60, newTranslate));
+    newTranslate = Math.max(-64, Math.min(64, newTranslate));
     setTranslateX(newTranslate);
   };
 
   const handleTouchEnd = () => {
     if (gestureDisabled) return;
-    if (translateX > 40) { setTranslateX(60); }
-    else if (translateX < -40) { setTranslateX(-60); }
+    if (translateX > 40) { setTranslateX(64); }
+    else if (translateX < -40) { setTranslateX(-64); }
     else { setTranslateX(0); }
     axis.current = null;
   };
@@ -94,7 +94,8 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
         className={`relative p-3 transition-transform duration-200 ease-out ${selectMode ? 'cursor-pointer active:opacity-80' : ''}`}
         style={{
           transform: `translateX(${selectMode ? 0 : translateX}px)`,
-          background: 'var(--card)',
+          // 侧滑操作按钮在本层正下方，必须用不透明面，否则编辑/删除会透过玻璃卡面叠在图标与金额上
+          background: 'var(--card-solid)',
           boxShadow: selected ? '0 0 0 2px var(--primary), var(--shadow-card)' : 'var(--shadow-card)',
         }}
         onTouchStart={handleTouchStart}

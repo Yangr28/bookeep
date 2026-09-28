@@ -132,16 +132,20 @@
     "currentBadge": "Current",
     "earlyVersions": "Earlier versions",
     "gotIt": "Got it",
+    "rollbackInline": "Roll back",
     "rollbackButton": "Roll back to an older version ({{count}} available)"
   },
   "rollback": {
-    "title": "Roll back to older version",
-    "subtitle": "Choose the version to roll back to",
+    "title": "Roll back version",
+    "subtitle": "Roll back to v{{version}}",
+    "confirmTitle": "Roll back to v{{version}}?",
+    "confirmHint": "Released on {{date}} · {{count}} updates. You will temporarily use this version after rollback.",
     "downloading": "Downloading older version...",
     "downloadProgress": "{{percent}}% · The package is small, please wait",
     "failed": "Rollback failed",
     "done": "Rollback complete, reloading...",
     "doneHint": "The page will automatically refresh to the older version",
+    "confirmButton": "Confirm rollback",
     "updatesCount": "{{count}} updates",
     "notice1": "Only interface resources are switched; your bookkeeping data is completely unaffected",
     "notice2": "After rolling back, you can upgrade again via “Check for updates”",
@@ -158,6 +162,17 @@
     "confirm": "Confirm import"
   },
   "builtinChangelog": {
+    "v4_13_0": {
+      "date": "2026-09-28",
+      "notes": [
+        "New liquid-glass look: frosted translucent cards and ambient color glows, refreshed in dark mode too",
+        "Smart entry now shows a confirmation sheet: verify amount/category/account/note before saving",
+        "Receipt batch recognition rewritten: extracts multiple items line by line, filtering totals/payment noise",
+        "6-month asset trend is tappable for an area chart with month-by-month comparison",
+        "Version rollback is integrated into the changelog: a Roll back button next to each older version",
+        "Home quick button is now Voice; full entry uses the center + tab"
+      ]
+    },
     "v4_4_6": {
       "date": "2026-09-07",
       "notes": [

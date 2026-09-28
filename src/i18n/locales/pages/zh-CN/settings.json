@@ -132,16 +132,20 @@
     "currentBadge": "当前版本",
     "earlyVersions": "早期版本",
     "gotIt": "知道了",
+    "rollbackInline": "回退",
     "rollbackButton": "回退到旧版本（{{count}} 个可选）"
   },
   "rollback": {
-    "title": "回退到旧版本",
-    "subtitle": "选择要回退到的版本",
+    "title": "回退版本",
+    "subtitle": "回退到 v{{version}}",
+    "confirmTitle": "确认回退到 v{{version}}？",
+    "confirmHint": "该版本发布于 {{date}}，包含 {{count}} 条更新内容，回退后将暂时使用此版本",
     "downloading": "正在下载旧版本...",
     "downloadProgress": "{{percent}}% · 资源包很小，请稍候",
     "failed": "回退失败",
     "done": "回退完成，正在重新加载...",
     "doneHint": "页面将自动刷新到旧版本",
+    "confirmButton": "确认回退",
     "updatesCount": "{{count}} 条更新",
     "notice1": "仅切换界面资源，记账数据完全不受影响",
     "notice2": "回退后可通过「检查更新」再升级回新版本",
@@ -158,6 +162,17 @@
     "confirm": "确认导入"
   },
   "builtinChangelog": {
+    "v4_13_0": {
+      "date": "2026-09-28",
+      "notes": [
+        "全新液态玻璃视觉：半透明磨砂卡片与环境光斑，深色模式同步焕新",
+        "智能记账新增核对浮层：确认金额/分类/账户/备注后再保存，记错可及时改",
+        "拍票批量识别重写：小票逐行识别多笔消费，自动过滤合计/支付方式等噪声",
+        "近 6 月资产趋势支持点击查看面积折线图与逐月环比明细",
+        "版本回退整合进更新日志：每个旧版本号后可直接点「回退」",
+        "首页「记一笔」按钮改为语音入口，完整记账统一走底部 +"
+      ]
+    },
     "v4_4_6": {
       "date": "2026-09-07",
       "notes": [

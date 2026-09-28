@@ -143,90 +143,191 @@ export const processOCRResult = (result: OCRParseResult, categories: Category[])
   };
 };
 
+/* ============================================================
+ * 小票/账单批量解析
+ *
+ * 真实小票与支付截图的典型版式：
+ *   XX超市 欢迎光临
+ *   2026-09-28 12:11
+ *   午餐              30.00
+ *   可乐               3.50
+ *   电影票            80.00
+ *   合计             113.50
+ *
+ * 旧实现按「日期行」切分交易，多行商品没有日期分隔时会被合并成一条、
+ * 金额互相覆盖。这里改为逐行提取「名称 + 金额」，每行独立成一笔；
+ * 名称独占一行、金额在下一行（OCR 常见两行排版）时做配对；
+ * 合计/支付方式/噪声行一律不作为交易。
+ * ============================================================ */
+
+/** 金额提取结果：数值 + 用于从行中抹除金额的原始片段 */
+interface AmountHit {
+  amount: string;
+  raw: string;
+  /** 正负号：- 支出 / + 收入 / 0 未指定 */
+  sign: -1 | 0 | 1;
+}
+
+/** 从一行文本中提取货币金额（优先带 ¥/元/块 等明确单位的，避免误吃日期/数量/电话） */
+const extractAmountFromLine = (line: string): AmountHit | null => {
+  const patterns: RegExp[] = [
+    /([+-]?)\s*[¥￥]\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/, // ¥30 / ￥1,200.00
+    /([+-]?)\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)\s*(?:元|圆|块钱?|RMB|rmb)/, // 30元 / 1,200.00元
+  ];
+  for (const re of patterns) {
+    const m = line.match(re);
+    if (m) {
+      const num = parseFloat(m[2].replace(/,/g, ''));
+      if (isFiniteAmount(num)) {
+        return { amount: String(num), raw: m[0], sign: m[1] === '-' ? -1 : m[1] === '+' ? 1 : 0 };
+      }
+    }
+  }
+  // 行尾裸数字（仅在位于行末、且前面是空白分隔时才认，降低误判率）
+  const tail = line.match(/(\d+(?:\.\d{1,2})?)\s*$/);
+  if (tail) {
+    const num = parseFloat(tail[1]);
+    if (isFiniteAmount(num) && /\s{1,}|[.、:：]/.test(line.slice(0, tail.index))) {
+      return { amount: String(num), raw: tail[0], sign: 0 };
+    }
+  }
+  return null;
+};
+
+const isFiniteAmount = (n: number) => isFinite(n) && n > 0 && n < 100000000;
+
+/** 纯日期/时间行（小票抬头、每行的日期前缀） */
+const DATE_LINE_RE = /^\s*(?:\d{4}[-/年.]\s*)?\d{1,2}\s*[-/月.]\s*\d{1,2}\s*[日号]?\s*(?:\d{1,2}:\d{2}(?::\d{2})?)?\s*$/;
+const TIME_LINE_RE = /^\s*\d{1,2}:\d{2}(?::\d{2})?\s*$/;
+
+/** 汇总/支付方式行：不是具体商品，绝不能作为一条交易 */
+const SUMMARY_RE = /(合计|总计|小计|共计|总金额|价税合计|应付|实付|实收|实付金额|应收|现金|微信支付?|支付宝|云闪付|银联|刷卡|银行卡|储值卡|优惠券?|折扣|优惠|抹零|找零|退款金额|余额|积分|订单号|单号|流水号|交易号|商户单号|支付时间|交易时间|收款方|付款方|付款时间|餐盒费|服务费|配送费|运费|税费|税额|手续费)/;
+
+/** 噪声行：店名/宣传/地址/联系方式等，不作商品名也不参与配对 */
+const NOISE_RE = /(欢迎光临|谢谢惠顾|感谢惠顾|欢迎再次光临|营业时间|服务热线|订餐热线|电话|地址|官网|网址|二维码|扫码|收银员|收银|营业员|柜台|机号|工号|门店|分店|小票号|发票|抬头|税号|凭证|凭条|存根|持卡人|签单|授权号|批号|参考号|Issued|Hotline|Tel|Add|NO\.?\s*$)/i;
+
+/** 行首序号/数量前缀： 1. / 1、 / (1) / ① / *2 / x2 个 等 */
+const LEADING_INDEX_RE = /^[\s*•・\-—_:：.|、()（）\[\]【】0-9①②③④⑤⑥⑦⑧⑨⑩]+/;
+/** 数量×单价片段： x2 / ×3 / *2 / 2个 / 3瓶 等 */
+const QTY_RE = /(?:[x×*]\s*\d+|\d+\s*(?:个|份|瓶|杯|件|盒|包|袋|只|条|本|支|罐|箱|斤|公斤|kg|g|ml|L))/gi;
+/** 纯数量行：如 2 x 15.00（第二个数是单价，整行无商品名） */
+const QTY_PRICE_LINE_RE = /^\s*\d+\s*[x×*]\s*\d+(?:\.\d+)?\s*$/;
+
+/** 从金额行残余文字中清洗出商品名 */
+const cleanName = (raw: string): string => raw
+  .replace(QTY_RE, ' ')
+  .replace(LEADING_INDEX_RE, ' ')
+  .replace(/[¥￥]/g, ' ')
+  .replace(/(?:支付|消费|转账|收款|收入|扣款|缴费|付款|支出|到账|红包|退款)/g, ' ')
+  .replace(/[+\-]/g, ' ')
+  .replace(/[\s]+/g, ' ')
+  .trim();
+
 export const extractTransactionsFromText = (text: string, categories: Category[]): ParsedTransaction[] => {
-  const results: ParsedTransaction[] = [];
-  const lines = text.split('\n').filter(line => line.trim());
-  
-  let currentTransaction: OCRParseResult | null = null;
-  let currentDate = '';
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
 
-  for (const line of lines) {
-    const trimmedLine = line.trim();
+  // 1) 先找小票抬头共享日期/时间
+  let sharedDate = '';
+  let sharedTime = '';
+  for (const line of lines.slice(0, 8)) {
+    const dm = line.match(/(\d{4})[-/年.](\d{1,2})[-/月.](\d{1,2})/);
+    if (dm && !sharedDate) {
+      sharedDate = `${dm[1]}-${dm[2].padStart(2, '0')}-${dm[3].padStart(2, '0')}`;
+    }
+    const tm = line.match(/(\d{1,2}):(\d{2})(?::\d{2})?/);
+    if (tm && !sharedTime) {
+      sharedTime = `${tm[1].padStart(2, '0')}:${tm[2]}`;
+    }
+    if (sharedDate && sharedTime) break;
+  }
 
-    const datePattern = /(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})[日号]?/;
-    const dateMatch = trimmedLine.match(datePattern);
-    if (dateMatch) {
-      currentDate = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
-      if (currentTransaction && currentTransaction.amount) {
-        currentTransaction.date = currentTransaction.date || currentDate;
-        results.push(processOCRResult(currentTransaction, categories));
-      }
-      currentTransaction = {
-        amount: '',
-        note: '',
-        type: 'expense',
-        date: currentDate,
-        time: '',
-      };
-      continue;
+  interface RawItem { amount: string; note: string; type: TransactionType }
+  const items: RawItem[] = [];
+  /** 最近一个「纯名称行」，等待与下一金额行配对（名称与金额被 OCR 拆成两行的版式） */
+  let pendingName = '';
+  const seen = new Set<string>();
+
+  const pushItem = (amount: string, rawName: string, line: string, sign: -1 | 0 | 1) => {
+    let name = cleanName(rawName);
+    if (!name) name = pendingName ? cleanName(pendingName) : '';
+    pendingName = '';
+
+    // 去重：同名同金额只保留一笔（小票表头/汇总重复打印的情况）
+    const key = `${name}|${amount}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    let type: TransactionType = 'expense';
+    if (sign === 1 || line.includes('收入') || line.includes('收款') || line.includes('到账') || line.includes('退款') || line.includes('红包') || line.includes('工资')) {
+      type = 'income';
     }
 
-    if (!currentTransaction) {
-      currentTransaction = {
-        amount: '',
-        note: '',
-        type: 'expense',
-        date: currentDate || '',
-        time: '',
-      };
-    }
+    items.push({ amount, note: name || '图片识别记账', type });
+  };
 
-    const amountPattern = /(?:支付|消费|转账|收款|收入)?\s*(?:¥|￥)?\s*(\d+(?:\.\d{1,2})?)\s*(?:元)?/;
-    const amountMatch = trimmedLine.match(amountPattern);
-    if (amountMatch && parseFloat(amountMatch[1]) > 0) {
-      currentTransaction.amount = amountMatch[1];
+  for (const originalLine of lines) {
+    let line = originalLine;
 
-      for (const keyword of incomeKeywords) {
-        if (trimmedLine.includes(keyword)) {
-          currentTransaction.type = 'income';
-          break;
-        }
+    // 去掉行首内嵌日期前缀（"09-28 12:11 午餐 30.00" 账单流水中的时间戳）
+    line = line
+      .replace(/^\s*\d{4}[-/年.]\d{1,2}[-/月.]\d{1,2}[日号]?\s*/, '')
+      .replace(/^\s*\d{1,2}[-/.]\d{1,2}\s*/, '')
+      .replace(/^\s*\d{1,2}:\d{2}(?::\d{2})?\s*/, '')
+      .trim();
+    if (!line) continue;
+
+    // 纯日期/时间行
+    if (DATE_LINE_RE.test(originalLine) || TIME_LINE_RE.test(originalLine)) continue;
+    // 纯数量×单价行（金额是单价，不是一笔交易）
+    if (QTY_PRICE_LINE_RE.test(line)) { pendingName = ''; continue; }
+
+    const hit = extractAmountFromLine(line);
+
+    if (hit) {
+      // 汇总/支付方式/噪声行带金额：跳过并使待配对名称失效
+      if (SUMMARY_RE.test(line) || NOISE_RE.test(line)) {
+        pendingName = '';
+        continue;
       }
-
-      if (trimmedLine.includes('收款') || trimmedLine.includes('收入') || trimmedLine.includes('到账')) {
-        currentTransaction.type = 'income';
-      }
-
-      if (trimmedLine.includes('支付') || trimmedLine.includes('消费') || trimmedLine.includes('扣款')) {
-        currentTransaction.type = 'expense';
-      }
-
-      const descPattern = /(?:支付|消费|转账|收款|收入)\s*(.+?)\s*(?:¥|￥|\d)/;
-      const descMatch = trimmedLine.match(descPattern);
-      if (descMatch) {
-        currentTransaction.note = descMatch[1].trim();
-      }
+      const namePart = line.replace(hit.raw, ' ');
+      pushItem(hit.amount, namePart, originalLine, hit.sign);
     } else {
-      if (currentTransaction.note) {
-        currentTransaction.note += ' ' + trimmedLine;
-      } else {
-        currentTransaction.note = trimmedLine;
+      // 无金额行：作为待配对名称（噪声/纯序号行除外）
+      const cleaned = cleanName(line);
+      if (!cleaned || NOISE_RE.test(line) || SUMMARY_RE.test(line)) {
+        pendingName = '';
+        continue;
       }
+      // 电话号码/单号等长数字字母串不作名称
+      if (/^[0-9\s-]{7,}$/.test(cleaned)) { pendingName = ''; continue; }
+      pendingName = cleaned;
     }
   }
 
-  if (currentTransaction && currentTransaction.amount) {
-    results.push(processOCRResult(currentTransaction, categories));
+  // 2) 多行商品 → 逐笔生成；共享抬头日期时间
+  const baseDate = sharedDate ? new Date(`${sharedDate}T${sharedTime || '00:00'}:00`) : new Date();
+  const results: ParsedTransaction[] = items.map((it) => {
+    const categoryId = findCategoryByIdentifierOCR(categories, it.type, it.note);
+    return {
+      amount: it.amount,
+      note: it.note,
+      type: it.type,
+      date: new Date(baseDate),
+      categoryId,
+    };
+  });
+
+  if (results.length > 0) return results;
+
+  // 3) 兜底：整页只有一笔（单张支付成功截图），走整文本单条解析
+  const singleResult = parseOCRText(text);
+  if (singleResult.amount) {
+    return [processOCRResult(singleResult, categories)].filter(
+      (r) => r.amount && parseFloat(r.amount) > 0
+    );
   }
 
-  if (results.length === 0) {
-    const singleResult = parseOCRText(text);
-    if (singleResult.amount) {
-      results.push(processOCRResult(singleResult, categories));
-    }
-  }
-
-  return results.filter(r => r.amount && parseFloat(r.amount) > 0);
+  return [];
 };
 
 export interface RecognizeOptions {

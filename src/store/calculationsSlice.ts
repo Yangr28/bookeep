@@ -37,7 +37,7 @@ export interface CalculationsSlice {
   recalculateAllBalances: () => number;
   getTransactionsGroupedByCategory: (type: 'income' | 'expense', month?: number, year?: number) => { category: Category; total: number }[];
   /** 近 N 个月每月末总资产趋势（从当前资产反推，用于 sparkline） */
-  getMonthlyAssetsTrend: (months?: number) => { month: string; assets: number }[];
+  getMonthlyAssetsTrend: (months?: number) => { month: string; assets: number; income: number; expense: number }[];
 }
 
 interface CalculationsSliceDependencies {
@@ -261,24 +261,34 @@ export const createCalculationsSlice: StateCreator<
 
     // 按月聚合净流（income - expense，transfers 在账户间移动不影响总资产）
     const monthlyNet: Record<string, number> = {};
+    const monthlyIncome: Record<string, number> = {};
+    const monthlyExpense: Record<string, number> = {};
     for (const t of transactions) {
       const key = getMonthKey(new Date(t.createdAt));
       monthlyNet[key] = round2((monthlyNet[key] || 0) + (t.type === 'income' ? t.amount : -t.amount));
+      if (t.type === 'income') monthlyIncome[key] = round2((monthlyIncome[key] || 0) + t.amount);
+      else monthlyExpense[key] = round2((monthlyExpense[key] || 0) + t.amount);
     }
 
     // 反推：T_{i-1} = T_i - net(month_i)
     // 当前月（数组末项）取实时资产；更早月份依次减去后续月份的净流
-    const result: { month: string; assets: number }[] = new Array(monthKeys.length);
+    const result: { month: string; assets: number; income: number; expense: number }[] = new Array(monthKeys.length);
+    const last = monthKeys[monthKeys.length - 1];
     result[monthKeys.length - 1] = {
-      month: monthKeys[monthKeys.length - 1].label,
+      month: last.label,
       assets: currentAssets,
+      income: monthlyIncome[last.key] || 0,
+      expense: monthlyExpense[last.key] || 0,
     };
     for (let i = monthKeys.length - 2; i >= 0; i--) {
       const nextKey = monthKeys[i + 1].key;
       const nextNet = monthlyNet[nextKey] || 0;
+      const curKey = monthKeys[i].key;
       result[i] = {
         month: monthKeys[i].label,
         assets: round2(result[i + 1].assets - nextNet),
+        income: monthlyIncome[curKey] || 0,
+        expense: monthlyExpense[curKey] || 0,
       };
     }
 

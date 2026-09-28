@@ -22,8 +22,11 @@ export const BottomNav = ({ currentPage, onPageChange, onRecord }: BottomNavProp
     <nav
       className="fixed bottom-0 left-0 right-0 z-50"
       style={{
-        background: 'var(--card)',
-        borderTop: '1px solid var(--line)',
+        background: 'var(--glass-strong)',
+        WebkitBackdropFilter: 'blur(24px) saturate(1.8)',
+        backdropFilter: 'blur(24px) saturate(1.8)',
+        borderTop: '1px solid var(--glass-border)',
+        boxShadow: '0 -6px 24px rgba(15, 17, 24, 0.10)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
@@ -47,7 +50,9 @@ export const BottomNav = ({ currentPage, onPageChange, onRecord }: BottomNavProp
             className="w-14 h-14 rounded-full flex items-center justify-center text-white -mt-6 active:scale-95 transition-transform"
             style={{
               background: 'var(--primary)',
-              boxShadow: 'var(--shadow-fab)',
+              backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0) 52%)',
+              border: '1px solid rgba(255,255,255,0.25)',
+              boxShadow: 'var(--shadow-fab), inset 0 1px 0 rgba(255,255,255,0.4)',
             }}
           >
             <Plus size={28} strokeWidth={2.4} />

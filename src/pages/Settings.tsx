@@ -68,7 +68,10 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   const language = useStore((s) => s.language);
   const setLanguage = useStore((s) => s.setLanguage);
   const [showChangelog, setShowChangelog] = useState(false);
-  const [rollbackOpen, setRollbackOpen] = useState(false);
+  // 回退目标版本（在更新日志内联触发）；null 表示弹窗关闭
+  const [rollbackVersion, setRollbackVersion] = useState<string | null>(null);
+  // 本次回退是否已点击「确认回退」开始下载（区分确认态与流程进度态）
+  const [rollbackStarted, setRollbackStarted] = useState(false);
   const [subPage, setSubPage] = useState<'help' | 'privacy' | 'backups' | null>(null);
   const [nativeVersion, setNativeVersion] = useState('');
   const [hotVersion, setHotVersion] = useState('');
@@ -309,6 +312,23 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   })();
 
   const rollbackBusy = rollbackFlow?.phase === 'downloading' || rollbackFlow?.phase === 'installing';
+  /** 可回退版本号集合，供更新日志内联按钮快速判断 */
+  const rollbackVersionSet = new Set(rollbackTargets.map((r) => r.version));
+  /** 当前在回退弹窗中选中的目标 Release（含日期/更新条数） */
+  const rollbackTarget = rollbackVersion ? rollbackTargets.find((r) => r.version === rollbackVersion) ?? null : null;
+
+  /** 打开回退确认弹窗（不立即下载，等用户在弹窗内确认） */
+  const openRollbackConfirm = (version: string) => {
+    if (!onRollback || rollbackBusy) return;
+    setRollbackVersion(version);
+    setRollbackStarted(false);
+  };
+
+  const closeRollback = () => {
+    if (rollbackBusy) return;
+    setRollbackVersion(null);
+    setRollbackStarted(false);
+  };
 
   /** 内置更新日志（GitHub 拉取失败时回退显示），随语言切换更新 */
   const builtinReleases = useMemo<FetchedRelease[]>(() => {
@@ -324,9 +344,10 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
     }));
   }, [t]);
 
-  /** 确认回退：触发下载并激活用户选择的旧版本热更新包（激活后 WebView 自动重载） */
+  /** 确认回退：触发下载并激活选中版本的热更新包（激活后 WebView 自动重载） */
   const handleRollback = (version: string) => {
     if (!version || !onRollback || rollbackBusy) return;
+    setRollbackStarted(true);
     onRollback(version);
   };
 
@@ -827,8 +848,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
 
       {showChangelog && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-fade-in"
-          style={{ background: 'rgba(43,41,37,0.45)' }}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-fade-in sheet-scrim"
           onClick={() => setShowChangelog(false)}
         >
           <div
@@ -852,14 +872,28 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {(releases ?? builtinReleases).map((rel) => (
+              {(releases ?? builtinReleases).map((rel) => {
+                const canRollback = rollbackVersionSet.has(rel.version);
+                return (
                 <div key={rel.version}>
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${rel.version.endsWith('+') ? 'bg-[var(--paper-deep)] text-[var(--ink)]' : 'bg-[var(--primary-soft)] text-[var(--primary-ink)]'}`}>v{rel.version}</span>
                     {rel.version === appVersion && (
                       <span className="px-2 py-1 bg-[var(--primary-soft)] text-[var(--primary-ink)] text-xs font-medium rounded-full">{t('settings.changelog.currentBadge')}</span>
                     )}
                     <span className="text-sm text-[var(--ink-2)]">{rel.date}</span>
+                    {/* 可回退版本：版本号后直接给出回退按钮，无需再进二级列表 */}
+                    {canRollback && (
+                      <button
+                        onClick={() => openRollbackConfirm(rel.version)}
+                        disabled={rollbackBusy}
+                        className="ml-auto flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full active:scale-95 transition-all disabled:opacity-50"
+                        style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}
+                      >
+                        <RotateCcw size={12} />
+                        {t('settings.changelog.rollbackInline')}
+                      </button>
+                    )}
                   </div>
                   <ul className="space-y-2 text-sm text-[var(--ink)]">
                     {rel.notes.map((line, idx) => (
@@ -870,22 +904,10 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                     ))}
                   </ul>
                 </div>
-              ))}
+                );
+              })}
             </div>
             <div className="p-4 space-y-3" style={{ borderTop: '1px solid var(--line)' }}>
-              {rollbackTargets.length > 0 && !rollbackBusy && rollbackFlow?.phase !== 'done' && (
-                <button
-                  onClick={() => {
-                    setRollbackOpen(true);
-                    setShowChangelog(false);
-                  }}
-                  className="w-full py-2.5 text-sm font-medium flex items-center justify-center gap-2 rounded-button active:brightness-95"
-                  style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}
-                >
-                  <RotateCcw size={16} />
-                  {t('settings.changelog.rollbackButton', { count: rollbackTargets.length })}
-                </button>
-              )}
               <button
                 onClick={() => setShowChangelog(false)}
                 className="btn-primary w-full py-3 font-medium"
@@ -897,12 +919,11 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
         </div>
       )}
 
-      {/* 回退版本确认/进度弹窗 */}
-      {rollbackOpen && rollbackTargets.length > 0 && (
+      {/* 回退版本确认/进度弹窗（由更新日志中某个版本后的「回退」按钮触发） */}
+      {rollbackTarget && (
         <div
-          className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in"
-          style={{ background: 'rgba(43,41,37,0.45)' }}
-          onClick={() => !rollbackBusy && setRollbackOpen(false)}
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in sheet-scrim"
+          onClick={closeRollback}
         >
           <div
             className="card w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col animate-bounce-in"
@@ -912,19 +933,19 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               <div className="flex items-center gap-3">
                 <div
                   className="w-12 h-12 rounded-card flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'var(--card)', color: 'var(--expense)' }}
+                  style={{ background: 'var(--card-solid)', color: 'var(--expense)' }}
                 >
                   <RotateCcw size={26} />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{t('settings.rollback.title')}</h3>
-                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.rollback.subtitle')}</p>
+                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.rollback.subtitle', { version: rollbackTarget.version })}</p>
                 </div>
               </div>
             </div>
 
             <div className="px-6 py-4 overflow-y-auto flex-1">
-              {rollbackFlow?.phase === 'downloading' ? (
+              {rollbackStarted && (rollbackFlow?.phase === 'downloading' || rollbackFlow?.phase === 'installing') ? (
                 <div className="py-2">
                   <div className="flex items-center gap-3 mb-4">
                     <Loader2 size={22} className="animate-spin flex-shrink-0" style={{ color: 'var(--expense)' }} />
@@ -936,11 +957,11 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                   <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
                     <div
                       className="h-full rounded-full transition-all duration-300"
-                      style={{ width: `${Math.max(rollbackFlow.percent, 2)}%`, background: 'var(--expense)' }}
+                      style={{ width: `${Math.max(rollbackFlow?.percent ?? 2, 2)}%`, background: 'var(--expense)' }}
                     />
                   </div>
                 </div>
-              ) : rollbackFlow?.phase === 'error' ? (
+              ) : rollbackStarted && rollbackFlow?.phase === 'error' ? (
                 <div className="flex flex-col items-center text-center py-4">
                   <div
                     className="w-14 h-14 rounded-full flex items-center justify-center mb-3"
@@ -951,7 +972,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                   <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{t('settings.rollback.failed')}</p>
                   <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{rollbackFlow.error}</p>
                 </div>
-              ) : rollbackFlow?.phase === 'done' ? (
+              ) : rollbackStarted && rollbackFlow?.phase === 'done' ? (
                 <div className="flex flex-col items-center text-center py-4">
                   <div
                     className="w-14 h-14 rounded-full flex items-center justify-center mb-3"
@@ -963,25 +984,14 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                   <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.rollback.doneHint')}</p>
                 </div>
               ) : (
-                <div className="py-2 space-y-2">
-                  {rollbackTargets.map((r) => (
-                    <button
-                      key={r.version}
-                      onClick={() => handleRollback(r.version)}
-                      className="w-full flex items-center justify-between p-3 rounded-button transition-colors active:scale-[0.98]"
-                      style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
-                    >
-                      <div className="text-left">
-                        <p className="font-semibold">v{r.version}</p>
-                        <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{r.date}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('settings.rollback.updatesCount', { count: r.notes.length })}</span>
-                        <ChevronRight size={16} style={{ color: 'var(--ink-2)' }} />
-                      </div>
-                    </button>
-                  ))}
-                  <ul className="text-xs space-y-1.5 mt-3" style={{ color: 'var(--ink-2)' }}>
+                <div className="py-2">
+                  <p className="font-semibold text-base mb-1" style={{ color: 'var(--ink)' }}>
+                    {t('settings.rollback.confirmTitle', { version: rollbackTarget.version })}
+                  </p>
+                  <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>
+                    {t('settings.rollback.confirmHint', { date: rollbackTarget.date, count: rollbackTarget.notes.length })}
+                  </p>
+                  <ul className="text-xs space-y-1.5" style={{ color: 'var(--ink-2)' }}>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--expense)' }} />
                       <span>{t('settings.rollback.notice1')}</span>
@@ -999,18 +1009,28 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               )}
             </div>
 
-            {(rollbackFlow?.phase === 'error' || !rollbackFlow || rollbackFlow.phase === 'idle') && (
+            {/* 确认态：取消 + 确认回退；失败态：关闭 + 重试；下载/完成态无按钮（完成自动重载） */}
+            {(!rollbackStarted || rollbackFlow?.phase === 'idle' || rollbackFlow?.phase === 'error') && (
               <div className="px-6 py-4" style={{ borderTop: '1px solid var(--line)' }}>
-                {rollbackFlow?.phase === 'error' ? (
+                {rollbackStarted && rollbackFlow?.phase === 'error' ? (
                   <div className="flex gap-3">
-                    <button onClick={() => setRollbackOpen(false)} className="btn-ghost flex-1">{t('settings.rollback.close')}</button>
-                    <button onClick={() => { const first = rollbackTargets[0]; if (first) handleRollback(first.version); }} className="btn-danger flex-1 flex items-center justify-center gap-2">
+                    <button onClick={closeRollback} className="btn-ghost flex-1">{t('settings.rollback.close')}</button>
+                    <button onClick={() => rollbackVersion && handleRollback(rollbackVersion)} className="btn-danger flex-1 flex items-center justify-center gap-2">
                       <RefreshCw size={18} />
                       {t('common.retry')}
                     </button>
                   </div>
                 ) : (
-                  <button onClick={() => setRollbackOpen(false)} className="btn-ghost w-full">{t('common.cancel')}</button>
+                  <div className="flex gap-3">
+                    <button onClick={closeRollback} className="btn-ghost flex-1">{t('common.cancel')}</button>
+                    <button
+                      onClick={() => handleRollback(rollbackTarget.version)}
+                      className="btn-danger flex-[2] flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw size={16} />
+                      {t('settings.rollback.confirmButton')}
+                    </button>
+                  </div>
                 )}
               </div>
             )}
