@@ -24,6 +24,7 @@
   "hotNote": "The hot update only refreshes interface resources and takes effect automatically after downloading. Your data is not affected.",
   "apkRequiredNote": "This version includes native updates (such as app icon and permissions) and must be installed as a full package. Your bookkeeping data will not be lost.",
   "fullNote": "A full update downloads the complete package and requires confirmation in the system installer. Your bookkeeping data will not be lost.",
+  "backgroundHint": "Downloads continue with the screen off or in the background, with automatic resume.",
   "close": "Close",
   "later": "Later",
   "updateNow": "Update now",

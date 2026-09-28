@@ -1,7 +1,7 @@
 import { Zap, Package, X, RefreshCw, AlertCircle, CheckCircle, Loader2, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { UpdateCheckResult } from '../utils/update';
+import { compareVersions, type UpdateCheckResult } from '../utils/update';
 import type { UpdateFlowState } from '../hooks/useUpdateCheck';
 
 interface UpdateModalProps {
@@ -186,6 +186,12 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
                     ? t('update.apkRequiredNote')
                     : t('update.fullNote')}
               </p>
+              {/* 仅基座 ≥4.14.0 具备前台保活 + 断点续传能力，低版本不展示以免误导 */}
+              {compareVersions(result.nativeVersion, '4.14.0') >= 0 && (
+                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: 'var(--primary)' }}>
+                  {t('update.backgroundHint')}
+                </p>
+              )}
             </>
           )}
         </div>

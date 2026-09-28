@@ -25,8 +25,13 @@ const CategoryCardComponent = ({ category, isSelected = false, isFrequent = fals
     >
       {isFrequent && (
         <span
-          className="absolute -top-1 -right-1 text-[9px] leading-none font-semibold px-1 py-0.5 rounded-full pointer-events-none"
-          style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}
+          className="absolute top-1 right-1 text-[9px] leading-none font-semibold px-1 py-0.5 rounded-full pointer-events-none"
+          style={{
+            // 选中卡面与角标同为 primary-soft，选中时换实底白，避免角标糊进卡面
+            background: isSelected ? 'var(--card-solid)' : 'var(--primary-soft)',
+            color: 'var(--primary-ink)',
+            boxShadow: 'var(--shadow-card)',
+          }}
         >
           {frequentLabel}
         </span>

@@ -181,6 +181,8 @@ public class AppUpdatePlugin extends Plugin {
         }
         call.setKeepAlive(true);
         new Thread(() -> {
+            String label = "dist_v" + version + ".zip";
+            UpdateDownloadService.start(getContext(), label);
             File zip = new File(downloadsDir(), "dist_" + version + ".zip");
             try {
                 downloadFile(urls, zip, "hot");
@@ -199,6 +201,8 @@ public class AppUpdatePlugin extends Plugin {
             } catch (Exception e) {
                 Log.e(TAG, "downloadHotUpdate failed", e);
                 call.reject("热更新下载失败: " + e.getMessage());
+            } finally {
+                UpdateDownloadService.stop(getContext());
             }
         }).start();
     }
@@ -248,6 +252,8 @@ public class AppUpdatePlugin extends Plugin {
         }
         call.setKeepAlive(true);
         new Thread(() -> {
+            String label = "bookeep_v" + version + ".apk";
+            UpdateDownloadService.start(getContext(), label);
             File apk = new File(downloadsDir(), "bookeep_v" + version + ".apk");
             try {
                 downloadFile(urls, apk, "apk");
@@ -258,6 +264,8 @@ public class AppUpdatePlugin extends Plugin {
             } catch (Exception e) {
                 Log.e(TAG, "downloadApk failed", e);
                 call.reject("安装包下载失败: " + e.getMessage());
+            } finally {
+                UpdateDownloadService.stop(getContext());
             }
         }).start();
     }
@@ -353,6 +361,7 @@ public class AppUpdatePlugin extends Plugin {
     @PluginMethod
     public void downloadOcrResources(PluginCall call) {
         new Thread(() -> {
+            UpdateDownloadService.start(getContext(), "OCR 识别资源");
             try {
                 File cacheDir = new File(getContext().getFilesDir(), "ocr_cache");
                 File coreDir = new File(cacheDir, "core");
@@ -399,6 +408,8 @@ public class AppUpdatePlugin extends Plugin {
                 call.resolve(ret);
             } catch (Exception e) {
                 call.reject("OCR 资源下载失败: " + e.getMessage());
+            } finally {
+                UpdateDownloadService.stop(getContext());
             }
         }).start();
     }
@@ -476,54 +487,66 @@ public class AppUpdatePlugin extends Plugin {
     }
 
     /**
+     * 断点无法与本地 .part 对齐（416 / 206 起始位置不符）：上层删除 .part 后整文件重下。
+     */
+    private static class ResumeMismatchException extends Exception {
+        ResumeMismatchException(String msg) { super(msg); }
+    }
+
+    /**
      * 多源下载：依次尝试每个候选地址（国内 GitHub 加速镜像优先，直链兜底）。
      * 镜像快速失败（连接超时 20s，每个源最多 2 次）；最后一个源（通常是直链）多试 4 次。
-     * 先写入 <target>.part 临时文件，成功后 rename 原子替换，防止下载中断产生损坏文件。
+     * 先写入 <target>.part 临时文件，成功后 rename 原子替换。
+     * 断点续传：失败/中断时保留 .part（含跨 App 重启），下次带 Range 从已下载位置继续；
+     * 仅当服务器无法续传（200 全量 / 416 且大小不符 / 206 起始位置不符）时删档重下。
      */
     private void downloadFile(java.util.List<String> candidates, File target, String kind) throws Exception {
         File part = new File(target.getParentFile(), target.getName() + ".part");
         Exception lastError = null;
-        try {
-            for (int ui = 0; ui < candidates.size(); ui++) {
-                String urlStr = candidates.get(ui);
-                boolean isLast = ui == candidates.size() - 1;
-                int attempts = isLast ? 4 : 2;
-                for (int attempt = 0; attempt < attempts; attempt++) {
-                    if (ui > 0 || attempt > 0) {
-                        try {
-                            Thread.sleep(isLast ? 1500L * (attempt + 1) : 800L);
-                        } catch (InterruptedException ignored) {
-                            Thread.currentThread().interrupt();
-                        }
-                    }
+        for (int ui = 0; ui < candidates.size(); ui++) {
+            String urlStr = candidates.get(ui);
+            boolean isLast = ui == candidates.size() - 1;
+            int attempts = isLast ? 4 : 2;
+            for (int attempt = 0; attempt < attempts; attempt++) {
+                if (ui > 0 || attempt > 0) {
                     try {
-                        downloadOne(urlStr, part, kind, isLast, target.getName());
-                        if (!part.exists() || part.length() == 0) {
-                            throw new Exception("下载内容为空");
-                        }
-                        if (target.exists()) target.delete();
-                        if (!part.renameTo(target)) {
-                            // rename 失败（极少见）退化为复制
-                            copyFile(part, target);
-                            part.delete();
-                        }
-                        Log.i(TAG, "download success from: " + urlStr);
-                        return;
-                    } catch (Exception e) {
-                        lastError = e;
-                        Log.w(TAG, "download failed [源 " + (ui + 1) + "/" + candidates.size()
-                                + " 第 " + (attempt + 1) + " 次] " + urlStr + " -> " + e.getMessage());
+                        Thread.sleep(isLast ? 1500L * (attempt + 1) : 800L);
+                    } catch (InterruptedException ignored) {
+                        Thread.currentThread().interrupt();
                     }
                 }
+                try {
+                    downloadOne(urlStr, part, kind, isLast, target.getName());
+                    if (!part.exists() || part.length() == 0) {
+                        throw new Exception("下载内容为空");
+                    }
+                    if (target.exists()) target.delete();
+                    if (!part.renameTo(target)) {
+                        // rename 失败（极少见）退化为复制
+                        copyFile(part, target);
+                        part.delete();
+                    }
+                    Log.i(TAG, "download success from: " + urlStr);
+                    return;
+                } catch (ResumeMismatchException e) {
+                    // 本地残档无法续传：删档，下一次尝试整文件重下
+                    lastError = e;
+                    if (part.exists()) part.delete();
+                    Log.w(TAG, "resume mismatch, part discarded [源 " + (ui + 1) + "/" + candidates.size()
+                            + " 第 " + (attempt + 1) + " 次] " + e.getMessage());
+                } catch (Exception e) {
+                    lastError = e;
+                    Log.w(TAG, "download failed [源 " + (ui + 1) + "/" + candidates.size()
+                            + " 第 " + (attempt + 1) + " 次] " + urlStr + " -> " + e.getMessage());
+                }
             }
-            throw lastError != null ? lastError : new Exception("下载失败");
-        } finally {
-            // 中断/失败时清理临时文件，避免残留 .part 被误判为完整资源
-            if (part.exists()) part.delete();
         }
+        // 全部失败：保留 .part 供下次（甚至下次启动 App 后）断点续传
+        throw lastError != null ? lastError : new Exception("下载失败");
     }
 
-    private void downloadOne(String urlStr, File target, String kind, boolean isDirectSource, String fileLabel) throws Exception {
+    private void downloadOne(String urlStr, File partFile, String kind, boolean isDirectSource, String fileLabel) throws Exception {
+        long existing = partFile.exists() ? partFile.length() : 0L;
         HttpURLConnection conn = null;
         InputStream input = null;
         OutputStream output = null;
@@ -538,14 +561,46 @@ public class AppUpdatePlugin extends Plugin {
             conn.setRequestProperty("User-Agent",
                     "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36");
             conn.setRequestProperty("Accept-Encoding", "identity");
+            // 带上本地残档偏移，服务器支持则从该位置续传
+            if (existing > 0) {
+                conn.setRequestProperty("Range", "bytes=" + existing + "-");
+            }
             conn.connect();
             int code = conn.getResponseCode();
-            if (code != HttpURLConnection.HTTP_OK) {
+
+            long base;       // 本次流之前已有的字节数
+            long total;      // 文件总大小（-1 未知）
+            boolean append;
+            if (code == 206) {
+                String contentRange = conn.getHeaderField("Content-Range"); // 形如 bytes 100-999/1234
+                long start = parseRangeStart(contentRange);
+                if (contentRange != null && start >= 0 && start != existing) {
+                    throw new ResumeMismatchException("206 start=" + start + " but part=" + existing);
+                }
+                append = true;
+                base = existing;
+                long rangeTotal = parseRangeTotal(contentRange);
+                long clen = conn.getContentLengthLong();
+                total = rangeTotal > 0 ? rangeTotal : (clen > 0 ? clen + existing : -1);
+            } else if (code == 200) {
+                // 服务器忽略 Range 返回全量（或本就无残档）：从头覆盖写
+                append = false;
+                base = 0;
+                total = conn.getContentLengthLong();
+            } else if (code == 416) {
+                // Range 越界：残档很可能已经完整，HEAD 探测确认后直接交付
+                long serverTotal = probeTotalSize(urlStr);
+                if (existing > 0 && serverTotal > 0 && existing == serverTotal) {
+                    Log.i(TAG, "part already complete (" + existing + " bytes), skip download");
+                    return;
+                }
+                throw new ResumeMismatchException("HTTP 416, part=" + existing + " serverTotal=" + serverTotal);
+            } else {
                 throw new Exception("HTTP " + code);
             }
+
             input = conn.getInputStream();
-            output = new FileOutputStream(target);
-            long total = conn.getContentLengthLong();
+            output = new FileOutputStream(partFile, append);
             long read = 0;
             long lastNotify = 0;
             byte[] buffer = new byte[8192];
@@ -556,16 +611,62 @@ public class AppUpdatePlugin extends Plugin {
                 long now = System.currentTimeMillis();
                 if (now - lastNotify > 200) {
                     lastNotify = now;
-                    notifyProgress(kind, read, total, fileLabel);
+                    notifyProgress(kind, base + read, total, fileLabel);
                 }
             }
             output.flush();
-            notifyProgress(kind, read, total > 0 ? total : read, fileLabel);
+            notifyProgress(kind, base + read, total > 0 ? total : base + read, fileLabel);
         } finally {
             if (output != null) try { output.close(); } catch (Exception ignored) {}
             if (input != null) try { input.close(); } catch (Exception ignored) {}
             if (conn != null) conn.disconnect();
         }
+    }
+
+    /** 解析 Content-Range 起始偏移："bytes 100-999/1234" → 100；无法解析 → -1 */
+    private long parseRangeStart(String contentRange) {
+        if (contentRange == null) return -1;
+        try {
+            String s = contentRange.trim().toLowerCase().replace("bytes", "").trim();
+            int dash = s.indexOf('-');
+            return dash > 0 ? Long.parseLong(s.substring(0, dash).trim()) : -1;
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /** 解析 Content-Range 总大小："bytes 100-999/1234" → 1234；"*"/未知 → -1 */
+    private long parseRangeTotal(String contentRange) {
+        if (contentRange == null) return -1;
+        try {
+            int slash = contentRange.lastIndexOf('/');
+            if (slash < 0) return -1;
+            String tail = contentRange.substring(slash + 1).trim();
+            if (tail.equals("*")) return -1;
+            return Long.parseLong(tail);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /** HEAD 探测文件总大小（用于 416 时判断残档是否已完整）；失败返回 -1 */
+    private long probeTotalSize(String urlStr) {
+        HttpURLConnection conn = null;
+        try {
+            conn = (HttpURLConnection) new URL(urlStr).openConnection();
+            conn.setInstanceFollowRedirects(true);
+            conn.setConnectTimeout(20000);
+            conn.setReadTimeout(30000);
+            conn.setRequestMethod("HEAD");
+            conn.setRequestProperty("User-Agent",
+                    "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36");
+            conn.connect();
+            if (conn.getResponseCode() == 200) return conn.getContentLengthLong();
+        } catch (Exception ignored) {
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+        return -1;
     }
 
     private void copyFile(File src, File dest) throws Exception {
@@ -582,13 +683,16 @@ public class AppUpdatePlugin extends Plugin {
     }
 
     private void notifyProgress(String kind, long loaded, long total, String fileLabel) {
+        int percent = total > 0 ? (int) (loaded * 100 / total) : 0;
         JSObject data = new JSObject();
         data.put("kind", kind);
         data.put("loaded", loaded);
         data.put("total", total);
-        data.put("percent", total > 0 ? (int) (loaded * 100 / total) : 0);
+        data.put("percent", percent);
         data.put("file", fileLabel);
         notifyListeners("downloadProgress", data);
+        // 同步刷新前台服务通知（息屏/后台时用户可见下载进度）
+        UpdateDownloadService.reportProgress(percent, fileLabel);
     }
 
     private void unzip(File zip, File targetDir) throws Exception {

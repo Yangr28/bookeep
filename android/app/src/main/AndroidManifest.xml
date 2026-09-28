@@ -50,6 +50,12 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/bookeep_widget_info" />
         </receiver>
+
+        <!-- 更新下载保活：息屏/切后台时前台服务继续下载 -->
+        <service
+            android:name=".UpdateDownloadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 
     <!-- Permissions -->
@@ -57,4 +63,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 应用内整包更新：调起系统安装器安装 APK -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- 更新下载前台服务（Android 9+ 声明，14+ 需 dataSync 类型权限） -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 </manifest>

@@ -162,6 +162,14 @@
     "confirm": "Confirm import"
   },
   "builtinChangelog": {
+    "v4_14_0": {
+      "date": "2026-09-28",
+      "notes": [
+        "Updates now download in background and with screen off via a foreground service with live progress",
+        "Resumable downloads: after a drop or interruption it continues from where it stopped, even after an app restart",
+        "Fixed the “frequent” badge overlapping the selected category card border"
+      ]
+    },
     "v4_13_1": {
       "date": "2026-09-28",
       "notes": [
