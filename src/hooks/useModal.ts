@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Transaction } from '../types';
 
-type FilterType = 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance';
+type FilterType = 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance' | 'mom-compare';
 
 interface ModalState {
   showCalendar: boolean;

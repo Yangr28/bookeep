@@ -13,8 +13,8 @@ interface ProfileProps {
   isDark: boolean;
   onToggleTheme: () => void;
   selectedDate: Date;
-  /** 洞察点击：带分类跳分类明细，否则跳当月支出明细 */
-  onInsightClick: (payload: { categoryId?: string; transactionIds?: string[]; month?: string }) => void;
+  /** 洞察点击：payload.type 决定 App 侧路由（anomaly_mom 跳对比页，其他跳分类/精准定位） */
+  onInsightClick: (payload: NonNullable<Insight['payload']>) => void;
 }
 
 const SEVERITY_STYLE: Record<InsightSeverity, { bg: string; color: string }> = {
@@ -330,7 +330,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate, onInsightClick }: Prof
                     <div className="space-y-1">
                       {insightList.map((insight, idx) => (
                         <InsightRow
-                          key={`${insight.type}-${insight.payload?.categoryId ?? idx}`}
+                          key={`${insight.type}-${insight.payload?.categoryId ?? 'idx'}-${insight.amount ?? idx}`}
                           insight={insight}
                           index={idx}
                           onClick={() => insight.payload && onInsightClick(insight.payload)}

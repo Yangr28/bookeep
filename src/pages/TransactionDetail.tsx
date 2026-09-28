@@ -14,16 +14,23 @@ import Empty from '../components/Empty';
 
 interface TransactionDetailProps {
   onBack: () => void;
-  filterType: 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance';
+  filterType: 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance' | 'mom-compare';
   categoryId?: string | null;
   /** 智能洞察精准定位：非空时仅显示这些 id 对应的记录（优先于其他筛选） */
   insightTransactionIds?: string[] | null;
+  /** 智能洞察环比对比：携带上月/本月支出数据，由 mom-compare 视图渲染 */
+  insightMoMData?: {
+    currentMonth: string;
+    prevMonth: string;
+    currentSpent: number;
+    prevSpent: number;
+  } | null;
   onEditTransaction?: (transaction: Transaction) => void;
   onDeleteTransaction?: (transaction: Transaction) => void;
   onDeleteBatch?: (transactions: Transaction[]) => void;
 }
 
-export const TransactionDetail = ({ onBack, filterType, categoryId, insightTransactionIds, onEditTransaction, onDeleteTransaction, onDeleteBatch }: TransactionDetailProps) => {
+export const TransactionDetail = ({ onBack, filterType, categoryId, insightTransactionIds, insightMoMData, onEditTransaction, onDeleteTransaction, onDeleteBatch }: TransactionDetailProps) => {
   const { t } = useTranslation();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -140,13 +147,15 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
       if (amountMin && amount < parseFloat(amountMin)) return false;
       if (amountMax && amount > parseFloat(amountMax)) return false;
 
-      if (categoryId) {
-        return isCategoryMatch;
-      }
-
-      // 智能洞察精准定位：仅显示洞察携带的交易（可跨月，如固定订阅聚类）
+      // 智能洞察精准定位：优先级最高，仅显示洞察携带的交易（可跨月，如固定订阅聚类）
+      // 必须在 categoryId 检查之前，否则 recurring 跳转带了 categoryId 会先走分类过滤
+      // 导致显示该分类的全部流水而非洞察定位的几笔
       if (insightTransactionIds) {
         return insightTransactionIds.includes(t.id);
+      }
+
+      if (categoryId) {
+        return isCategoryMatch;
       }
 
       switch (filterType) {
@@ -179,18 +188,21 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
     'month-expense': { titleKey: 'transactionDetail.monthExpense', periodKey: 'transactionDetail.periodThisMonth', type: 'expense' as const, color: 'red' },
     'month-balance': { titleKey: 'transactionDetail.monthBalance', periodKey: 'transactionDetail.periodThisMonth', type: 'income' as const, color: 'emerald' },
     'total-balance': { titleKey: 'transactionDetail.totalAssets', periodKey: 'transactionDetail.periodAll', type: 'income' as const, color: 'purple' },
+    'mom-compare': { titleKey: 'transactionDetail.momCompare', periodKey: 'transactionDetail.periodAll', type: 'expense' as const, color: 'red' },
   };
 
   const config = pageConfig[filterType];
   const isIncome = config.type === 'income';
   const isTotalBalance = filterType === 'total-balance';
   const isMonthBalance = filterType === 'month-balance';
+  const isMoMCompare = filterType === 'mom-compare';
   const isCategoryDetail = !!selectedCategory;
 
-  const pageTitle = isCategoryDetail && selectedCategory
-    ? t('transactionDetail.categoryDetail', { name: selectedCategory.name })
-    : insightTransactionIds
-      ? t('transactionDetail.relatedRecords')
+  // 标题优先级：精准定位模式 > 分类明细 > 默认页
+  const pageTitle = insightTransactionIds
+    ? t('transactionDetail.relatedRecords')
+    : isCategoryDetail && selectedCategory
+      ? t('transactionDetail.categoryDetail', { name: selectedCategory.name })
       : t(config.titleKey);
 
   const categoryFilterChips = [
@@ -198,6 +210,25 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
     ...categories.map((c) => ({ value: c.id, label: c.name, color: c.color })),
     { value: 'uncategorized', label: t('common.unclassified') },
   ];
+
+  // mom-compare 视图数据派生：上月支出明细 + 本月支出明细（按 createdAt 降序）
+  const momPrevMonthTxs = isMoMCompare && insightMoMData
+    ? transactions
+        .filter((t) => t.type === 'expense' && toDateKey(new Date(t.createdAt)).slice(0, 7) === insightMoMData.prevMonth)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    : [];
+  const momCurrentMonthTxs = isMoMCompare && insightMoMData
+    ? transactions
+        .filter((t) => t.type === 'expense' && toDateKey(new Date(t.createdAt)).slice(0, 7) === insightMoMData.currentMonth)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    : [];
+
+  // 环比变化百分比与方向（mom-compare 顶部对比卡片用）
+  const momDiff = insightMoMData ? insightMoMData.currentSpent - insightMoMData.prevSpent : 0;
+  const momChangePct = insightMoMData && insightMoMData.prevSpent > 0
+    ? Math.round((momDiff / insightMoMData.prevSpent) * 100)
+    : 0;
+  const momUp = momDiff > 0;
 
   return (
     <div className="page-root pb-6">
@@ -208,10 +239,97 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
         </button>
         <div className="flex-1 min-w-0">
           <h1 className="page-title truncate">{pageTitle}</h1>
-          <p className="page-subtitle">{t('transactionDetail.recordCount', { count: filteredTransactions.length })}</p>
+          <p className="page-subtitle">
+            {isMoMCompare && insightMoMData
+              ? `${insightMoMData.prevMonth} → ${insightMoMData.currentMonth}`
+              : t('transactionDetail.recordCount', { count: filteredTransactions.length })}
+          </p>
         </div>
       </div>
 
+      {/* mom-compare 视图：上月 vs 本月支出对比 + 两段列表 */}
+      {isMoMCompare && insightMoMData && (
+        <div className="px-4 mt-3 pb-6 space-y-4">
+          {/* 对比卡片 */}
+          <div className="card p-5">
+            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.momCompareSubtitle')}</p>
+            <div className="flex items-center justify-between mt-3 gap-3">
+              <div className="flex-1 text-center">
+                <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.prevMonthExpense')}</p>
+                <p className="text-xl font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
+                  {formatCurrencyShort(insightMoMData.prevSpent)}
+                </p>
+              </div>
+              <div className="flex-shrink-0 px-2">
+                <span className="text-lg" style={{ color: 'var(--ink-2)' }}>→</span>
+              </div>
+              <div className="flex-1 text-center">
+                <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.currentMonthExpense')}</p>
+                <p className="text-xl font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
+                  {formatCurrencyShort(insightMoMData.currentSpent)}
+                </p>
+              </div>
+            </div>
+            <div
+              className="flex items-center justify-center gap-1.5 mt-4 pt-3 text-sm font-medium"
+              style={{ borderTop: '1px solid var(--line)', color: momUp ? 'var(--expense)' : 'var(--primary)' }}
+            >
+              {momUp ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+              <span>
+                {momUp ? '+' : ''}{formatCurrencyShort(momDiff)}
+                {insightMoMData.prevSpent > 0 && ` · ${momUp ? '+' : ''}${momChangePct}%`}
+              </span>
+            </div>
+          </div>
+
+          {/* 本月支出明细 */}
+          <div>
+            <div className="flex items-center justify-between mb-2 px-1">
+              <h2 className="text-sm font-bold" style={{ color: 'var(--ink)' }}>
+                {t('transactionDetail.currentMonthExpense')} · {momCurrentMonthTxs.length}
+              </h2>
+            </div>
+            {momCurrentMonthTxs.length > 0 ? (
+              momCurrentMonthTxs.map((transaction) => (
+                <TransactionCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
+                  onEdit={() => onEditTransaction?.(transaction)}
+                  disabled={isMultiSelect}
+                />
+              ))
+            ) : (
+              <p className="text-sm text-center py-4" style={{ color: 'var(--ink-2)' }}>{t('common.noRecords')}</p>
+            )}
+          </div>
+
+          {/* 上月支出明细 */}
+          <div>
+            <div className="flex items-center justify-between mb-2 px-1">
+              <h2 className="text-sm font-bold" style={{ color: 'var(--ink)' }}>
+                {t('transactionDetail.prevMonthExpense')} · {momPrevMonthTxs.length}
+              </h2>
+            </div>
+            {momPrevMonthTxs.length > 0 ? (
+              momPrevMonthTxs.map((transaction) => (
+                <TransactionCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
+                  onEdit={() => onEditTransaction?.(transaction)}
+                  disabled={isMultiSelect}
+                />
+              ))
+            ) : (
+              <p className="text-sm text-center py-4" style={{ color: 'var(--ink-2)' }}>{t('common.noRecords')}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isMoMCompare && (
+        <>
       {/* 汇总卡片 */}
       <div className="px-4 mt-3">
         {isCategoryDetail && selectedCategory ? (
@@ -580,6 +698,8 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
         message={t('transactionDetail.batchDeleteConfirmMessage', { count: selectedIds.length })}
         itemName={t('transactionDetail.batchDeleteConfirmItem', { count: selectedIds.length })}
       />
+        </>
+      )}
     </div>
   );
 };

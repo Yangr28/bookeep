@@ -44,9 +44,19 @@ export interface Insight {
   amount?: number;
   /** 跳转所需的最小载荷 */
   payload?: {
+    /** 标记本条洞察的规则类型，便于 App 侧按类型分流到不同视图 */
+    type?: InsightType;
     categoryId?: string;
     transactionIds?: string[];
     month?: string;
+    /** anomaly_mom 专用：上个月份键 YYYY-MM */
+    prevMonth?: string;
+    /** anomaly_mom 专用：上月支出总额 */
+    prevSpent?: number;
+    /** anomaly_mom 专用：本月支出总额 */
+    currentSpent?: number;
+    /** recurring 专用：该订阅簇的金额 */
+    amount?: number;
   };
 }
 
@@ -84,9 +94,14 @@ export const ANOMALY_DANGER_THRESHOLD = 0.80;
 export const BUDGET_WARNING_RATIO = 0.80;
 export const BUDGET_DANGER_RATIO = 1.00;
 export const LARGE_EXPENSE_MULTIPLE = 5;
-export const RECURRING_AMOUNT_TOLERANCE = 0.10;
+/** 同簇金额容差：订阅服务金额通常完全一致，5% 容差仅用于处理汇率/小数变动，
+ *  过宽（10%）会让 Netflix 25 与 Spotify 28 误合并为同一订阅 */
+export const RECURRING_AMOUNT_TOLERANCE = 0.05;
 export const RECURRING_WINDOW_MONTHS = 3;
 export const RECURRING_MIN_MONTHS = 3;
+/** 同分类下最多识别的固定支出条数，避免噪声；用户痛点：同分类多个固定支出（如房租+宽带+物业）
+ *  原 `continue recurring` 只识别首个，无法区分 */
+export const RECURRING_MAX_CLUSTERS_PER_CATEGORY = 3;
 export const FREQUENT_TX_THRESHOLD = 12;
 export const MIN_TX_FOR_RULES = 8;
 export const LARGE_EXPENSE_MAX_ITEMS = 3;
@@ -143,7 +158,13 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
           direction: up ? 'up' : 'down',
         },
         amount: currentSpent - prevSpent,
-        payload: { month: currentMonth },
+        payload: {
+          type: 'anomaly_mom',
+          month: currentMonth,
+          prevMonth,
+          prevSpent,
+          currentSpent,
+        },
       });
     }
   }
@@ -254,19 +275,34 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
   }
 
   recurring: for (const [categoryId, txs] of recentByCategory) {
-    // 同分类按金额升序，贪心聚类：与簇首金额相差 ±10% 视为同一订阅
+    // 同分类按金额升序，贪心聚类。
+    // 聚类优先级：先尝试匹配金额完全相同的簇（订阅服务通常金额一致），
+    // 再退到 ±5% 容差内的簇，避免 Netflix 25 与 Spotify 28 误合并。
     const sorted = txs.slice().sort((a, b) => a.amount - b.amount);
     const clusters: { amount: number; months: Set<string>; count: number; ids: string[] }[] = [];
     for (const tx of sorted) {
+      // 1) 优先合并到金额完全相同的簇
       let placed = false;
       for (const c of clusters) {
-        const denom = Math.max(c.amount, tx.amount);
-        if (denom > 0 && Math.abs(tx.amount - c.amount) / denom <= RECURRING_AMOUNT_TOLERANCE) {
+        if (c.amount === tx.amount) {
           c.months.add(txMonth(tx));
           c.count += 1;
           c.ids.push(tx.id);
           placed = true;
           break;
+        }
+      }
+      // 2) 退到容差内
+      if (!placed) {
+        for (const c of clusters) {
+          const denom = Math.max(c.amount, tx.amount);
+          if (denom > 0 && Math.abs(tx.amount - c.amount) / denom <= RECURRING_AMOUNT_TOLERANCE) {
+            c.months.add(txMonth(tx));
+            c.count += 1;
+            c.ids.push(tx.id);
+            placed = true;
+            break;
+          }
         }
       }
       if (!placed) {
@@ -278,24 +314,32 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
         });
       }
     }
-    for (const c of clusters) {
-      if (c.months.size >= RECURRING_MIN_MONTHS) {
-        insights.push({
+    // 命中簇按金额降序（大额订阅优先），最多输出 N 条：
+    // 同分类下多个固定支出（房租+宽带+物业）应分别识别而非只取首个
+    const hits = clusters
+      .filter((c) => c.months.size >= RECURRING_MIN_MONTHS)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, RECURRING_MAX_CLUSTERS_PER_CATEGORY);
+    for (const c of hits) {
+      insights.push({
+        type: 'recurring',
+        severity: 'info',
+        titleKey: 'insights.recurring.title',
+        titleParams: { category: categoryName(categoryId) },
+        descriptionKey: 'insights.recurring.description',
+        descriptionParams: {
+          amount: formatAmount(c.amount),
+          months: c.months.size,
+        },
+        amount: c.amount,
+        payload: {
           type: 'recurring',
-          severity: 'info',
-          titleKey: 'insights.recurring.title',
-          titleParams: { category: categoryName(categoryId) },
-          descriptionKey: 'insights.recurring.description',
-          descriptionParams: {
-            amount: formatAmount(c.amount),
-            months: c.months.size,
-          },
+          categoryId,
+          month: currentMonth,
+          transactionIds: c.ids,
           amount: c.amount,
-          payload: { categoryId, month: currentMonth, transactionIds: c.ids },
-        });
-        // 一个分类只取首个命中簇，避免噪声
-        continue recurring;
-      }
+        },
+      });
     }
   }
 

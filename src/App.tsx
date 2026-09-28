@@ -43,7 +43,7 @@ import { initialTransactions } from './data/initialData';
 import { convertToCNY, getRate } from './utils/currency';
 import WidgetLaunch from './plugins/widgetLaunch';
 
-type FilterType = 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance';
+type FilterType = 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance' | 'mom-compare';
 
 export default function App() {
   const { t } = useTranslation();
@@ -141,6 +141,13 @@ export default function App() {
   const generateRecurringTransactions = useStore((state) => state.generateRecurringTransactions);
   // 智能洞察精准定位：携带具体交易 id 列表时，明细页仅显示这些记录
   const [insightTransactionIds, setInsightTransactionIds] = useState<string[] | null>(null);
+  // 智能洞察环比对比：携带上月/本月支出数据，由 TransactionDetail 的 mom-compare 视图渲染
+  const [insightMoMData, setInsightMoMData] = useState<{
+    currentMonth: string;
+    prevMonth: string;
+    currentSpent: number;
+    prevSpent: number;
+  } | null>(null);
 
   // === 页面滚动位置保存/恢复：返回上一页时恢复到离开时的位置 ===
   // 注意：不能在页面切换瞬间读 window.scrollY——旧页卸载、新页（如记账页）内容变短后，
@@ -246,12 +253,40 @@ export default function App() {
   }, [handlePageChange, setSelectedCategoryId]);
 
   // 智能洞察跳转：优先按 payload.transactionIds 精准定位；无 ids 时按分类/当月筛选
-  const handleInsightClick = useCallback((payload: { categoryId?: string; transactionIds?: string[]; month?: string }) => {
+  // 智能洞察点击：按 payload.type 分流到不同视图
+  // - anomaly_mom：跳到 /detail 走 'mom-compare' 视图（上月 vs 本月支出对比）
+  // - recurring/budget_*：跳到 /detail 走 'month-expense' 视图，并用 insightTransactionIds 精准定位
+  const handleInsightClick = useCallback((payload: {
+    type?: string;
+    categoryId?: string;
+    transactionIds?: string[];
+    month?: string;
+    prevMonth?: string;
+    prevSpent?: number;
+    currentSpent?: number;
+    amount?: number;
+  }) => {
+    if (payload.type === 'anomaly_mom') {
+      // 环比对比视图：携带上月/本月数据，由 TransactionDetail 渲染对比卡片 + 两段列表
+      setDetailFilter('mom-compare');
+      setSelectedCategoryId(null);
+      setInsightTransactionIds(null);
+      setInsightMoMData({
+        currentMonth: payload.month ?? '',
+        prevMonth: payload.prevMonth ?? '',
+        currentSpent: payload.currentSpent ?? 0,
+        prevSpent: payload.prevSpent ?? 0,
+      });
+      handlePageChange('/detail');
+      return;
+    }
+    // 其他类型走精准定位（含 transactionIds 时跨月显示这些流水）
     setDetailFilter('month-expense');
     setSelectedCategoryId(payload.categoryId ?? null);
     setInsightTransactionIds(
       payload.transactionIds && payload.transactionIds.length > 0 ? payload.transactionIds : null,
     );
+    setInsightMoMData(null);
     handlePageChange('/detail');
   }, [handlePageChange, setDetailFilter, setSelectedCategoryId]);
 
@@ -730,6 +765,7 @@ export default function App() {
             filterType={detailFilter}
             categoryId={selectedCategoryId}
             insightTransactionIds={insightTransactionIds}
+            insightMoMData={insightMoMData}
             onEditTransaction={handleEditTransaction}
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onDeleteBatch={handleDeleteTransactionsBatchWithUndo}

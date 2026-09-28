@@ -473,6 +473,45 @@ describe('insights - recurring', () => {
     });
     expect(r.filter((x) => x.type === 'recurring')).toHaveLength(0);
   });
+
+  it('同分类下多个不同金额的固定支出分别识别（不合并）', () => {
+    // 同分类 'sub' 下：房租 5000 + 宽带 100，每月各 1 笔，3 个月共 6 笔
+    // 应识别为 2 条 recurring insight（金额 5000 与 100），而非 continue recurring 只取首个
+    const txs: Transaction[] = [];
+    ['2026-04-10', '2026-05-10', '2026-06-10'].forEach((d) => {
+      txs.push(makeTx({ id: `rent-${d}`, amount: 5000, categoryId: 'sub', createdAt: onDate(d) }));
+      txs.push(makeTx({ id: `net-${d}`, amount: 100, categoryId: 'sub', createdAt: onDate(d) }));
+    });
+    const r = generateInsights({
+      currentMonthTransactions: txs.filter((t) => t.createdAt.includes('2026-06')),
+      allTransactions: txs,
+      categories: baseCategories,
+      now: NOW,
+    });
+    const rec = r.filter((x) => x.type === 'recurring');
+    expect(rec).toHaveLength(2);
+    const amounts = rec.map((x) => x.amount).sort((a, b) => b - a);
+    expect(amounts).toEqual([5000, 100]);
+  });
+
+  it('金额完全相同优先聚类，相近金额不误合并', () => {
+    // 同分类下 Netflix 25 与 Spotify 28，3 个月各 1 笔，金额相差 12% > 5% 容差
+    // 应识别为 2 条独立订阅，而非合并为同一簇
+    const txs: Transaction[] = [];
+    ['2026-04-10', '2026-05-10', '2026-06-10'].forEach((d) => {
+      txs.push(makeTx({ id: `netflix-${d}`, amount: 25, categoryId: 'sub', createdAt: onDate(d) }));
+      txs.push(makeTx({ id: `spotify-${d}`, amount: 28, categoryId: 'sub', createdAt: onDate(d) }));
+    });
+    const r = generateInsights({
+      currentMonthTransactions: txs.filter((t) => t.createdAt.includes('2026-06')),
+      allTransactions: txs,
+      categories: baseCategories,
+      now: NOW,
+    });
+    const rec = r.filter((x) => x.type === 'recurring');
+    expect(rec).toHaveLength(2);
+    expect(rec.map((x) => x.amount).sort((a, b) => a - b)).toEqual([25, 28]);
+  });
 });
 
 describe('insights - frequent', () => {
