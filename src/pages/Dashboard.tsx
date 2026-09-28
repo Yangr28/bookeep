@@ -10,11 +10,9 @@ import { TrendDetailSheet } from '../components/TrendDetailSheet';
 import { formatCurrencyShort } from '../utils/format';
 import { getMonthKey } from '../utils/date';
 import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle, Mic, History } from 'lucide-react';
+import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle, History } from 'lucide-react';
 import Empty from '../components/Empty';
-import { SpeechSheet } from '../components/SpeechSheet';
 import { getNoteSuggestions } from '../utils/recommender';
-import { useSpeechToText } from '../hooks/useSpeechToText';
 import { TransactionType, Transaction } from '../types';
 
 // 仅首次启动进入首页时自动聚焦智能记账输入框；返回首页时不再弹出键盘
@@ -197,11 +195,6 @@ const DashboardComponent = ({
     setSuggestionsOpen(false);
     smartInputRef.current?.focus();
   }, []);
-
-  // 语音记账：仅探测设备能力以决定是否渲染麦克风；识别过程在 SpeechSheet 浮层内进行，
-  // 确认后文本回填智能输入框（走 parseSmartInput 预填管道，不自动入账）
-  const { available: speechAvailable } = useSpeechToText();
-  const [speechSheetOpen, setSpeechSheetOpen] = useState(false);
 
   // 实时解析预览（轻量 parseSmartInput + 账户/分类反查，不走历史匹配避免输入卡顿）
   const [preview, setPreview] = useState<null | {
@@ -522,18 +515,6 @@ const DashboardComponent = ({
                 aria-expanded={suggestionsOpen}
                 aria-controls="smart-suggestion-list"
               />
-              {/* 原生环境降级显示：仅明确探测不可用（Web/旧基座）时隐藏；null=未探测完成也显示，避免用户看不到入口 */}
-              {speechAvailable !== false && (
-                <button
-                  type="button"
-                  onClick={() => setSpeechSheetOpen(true)}
-                  aria-label={t('speech.tapToSpeak')}
-                  className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0 card-press"
-                  style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
-                >
-                  <Mic size={15} />
-                </button>
-              )}
               <button
                 onClick={() => handleSmartSubmit()}
                 aria-label={t('dashboard.save')}
@@ -659,20 +640,11 @@ const DashboardComponent = ({
             </div>
           )}
 
-          {/* 操作行：拍票 + 语音（完整记账统一走底部中央 +，避免入口重复） */}
-          <div className="flex gap-2">
-            <button onClick={onShowOCRModal} className="btn-ghost px-4 py-2.5 text-sm flex-1">
-              <Image size={16} />
-              <span>{t('dashboard.ocrShot')}</span>
-            </button>
-            <button
-              onClick={() => setSpeechSheetOpen(true)}
-              className="btn-ghost px-4 py-2.5 text-sm flex-1"
-            >
-              <Mic size={16} />
-              <span>{t('dashboard.voice')}</span>
-            </button>
-          </div>
+          {/* 拍票批量记账（完整记账统一走底部中央 +） */}
+          <button onClick={onShowOCRModal} className="btn-ghost w-full px-4 py-2.5 text-sm">
+            <Image size={16} />
+            <span>{t('dashboard.ocrShot')}</span>
+          </button>
         </div>
       </div>
 
@@ -741,12 +713,6 @@ const DashboardComponent = ({
           </div>
         )}
       </div>
-
-      <SpeechSheet
-        open={speechSheetOpen}
-        onClose={() => setSpeechSheetOpen(false)}
-        onResult={(text) => setSmartInput(text)}
-      />
 
       {/* 智能记账核对浮层：确认后才入账，或跳完整记账页再改 */}
       <SmartConfirmSheet

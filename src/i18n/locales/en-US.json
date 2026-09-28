@@ -22,25 +22,6 @@
     "deleteTransactionTitle": "Delete this transaction?",
     "unclassified": "Uncategorized"
   },
-  "speech": {
-    "tapToSpeak": "Tap to speak",
-    "listening": "Listening…",
-    "stop": "Stop",
-    "preparing": "Preparing…",
-    "sheetTitle": "Voice entry",
-    "hint": "Say something like “lunch, $30”",
-    "retry": "Say again",
-    "useText": "Use this text",
-    "emptyResult": "Nothing heard, please say it again",
-    "gotIt": "Got it",
-    "error": {
-      "unavailable": "Speech recognition is not available on this device",
-      "permissionDenied": "Microphone permission is off. Please enable it in system settings",
-      "noSpeech": "No speech detected, please try again",
-      "serviceUnavailable": "Speech service unavailable, please try again later",
-      "generic": "Speech recognition failed, please try again"
-    }
-  },
   "nav": {
     "home": "Home",
     "records": "Records",
@@ -105,7 +86,6 @@
     "trendMoM": "MoM",
     "trendMonthlyNet": "Net this month",
     "ocrShot": "Scan receipt",
-    "voice": "Voice",
     "record": "Add transaction",
     "todayIncome": "Today's income",
     "todayExpense": "Today's expense",

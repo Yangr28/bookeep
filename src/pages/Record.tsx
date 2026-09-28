@@ -7,10 +7,8 @@ import { formatDateTime } from '../utils/format';
 import { isSameLocalDate } from '../utils/date';
 import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
 import { getFrequentCategories, getFrequentAmounts, predictCategory, recommendAccount } from '../utils/recommender';
-import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ArrowLeft, Circle, CheckCircle2, Mic } from 'lucide-react';
+import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ArrowLeft, Circle, CheckCircle2 } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
-import { useSpeechToText } from '../hooks/useSpeechToText';
-import { SpeechSheet } from '../components/SpeechSheet';
 
 interface RecordProps {
   editTransaction?: Transaction | null;
@@ -41,9 +39,6 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
   const { t } = useTranslation();
   const [smartInput, setSmartInput] = useState('');
   const [showSmartResult, setShowSmartResult] = useState(false);
-  // 语音记账：仅探测能力决定麦克风渲染；识别在 SpeechSheet 内完成后回填输入框
-  const { available: speechAvailable } = useSpeechToText();
-  const [speechSheetOpen, setSpeechSheetOpen] = useState(false);
 
   useEffect(() => {
     // 滚动位置由 App.tsx 统一管理
@@ -219,18 +214,6 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
                 className="flex-1 min-w-0 bg-transparent outline-none text-sm"
                 style={{ color: 'var(--ink)' }}
               />
-              {/* 原生环境降级显示：仅明确探测不可用时隐藏，避免整包后仍看不到入口 */}
-              {speechAvailable !== false && (
-                <button
-                  type="button"
-                  onClick={() => setSpeechSheetOpen(true)}
-                  aria-label={t('speech.tapToSpeak')}
-                  className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0 card-press"
-                  style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
-                >
-                  <Mic size={15} />
-                </button>
-              )}
               <button
                 onClick={handleSmartSubmit}
                 disabled={!smartInput.trim()}
@@ -425,12 +408,6 @@ const RecordComponent = ({ editTransaction, onBack, selectedDateTime, selectedAc
           </button>
         )}
       </div>
-
-      <SpeechSheet
-        open={speechSheetOpen}
-        onClose={() => setSpeechSheetOpen(false)}
-        onResult={(text) => setSmartInput(text)}
-      />
     </div>
   );
 };

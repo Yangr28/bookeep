@@ -162,6 +162,13 @@
     "confirm": "Confirm import"
   },
   "builtinChangelog": {
+    "v4_13_1": {
+      "date": "2026-09-28",
+      "notes": [
+        "Removed voice entry and microphone permission for a cleaner home and record page",
+        "Fixed swipe actions showing through translucent record cards"
+      ]
+    },
     "v4_13_0": {
       "date": "2026-09-28",
       "notes": [

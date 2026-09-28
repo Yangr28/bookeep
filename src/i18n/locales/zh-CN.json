@@ -22,25 +22,6 @@
     "deleteTransactionTitle": "确认删除交易",
     "unclassified": "未分类"
   },
-  "speech": {
-    "tapToSpeak": "点击说话",
-    "listening": "正在聆听…",
-    "stop": "停止",
-    "preparing": "正在准备…",
-    "sheetTitle": "语音记账",
-    "hint": "说一句话，例如「午餐花了 30 元」",
-    "retry": "重说",
-    "useText": "填入输入框",
-    "emptyResult": "没有识别到内容，请重说",
-    "gotIt": "我知道了",
-    "error": {
-      "unavailable": "当前设备不支持语音识别",
-      "permissionDenied": "麦克风权限未开启，请到系统设置打开",
-      "noSpeech": "没有检测到语音，请重试",
-      "serviceUnavailable": "语音服务不可用，请稍后重试",
-      "generic": "语音识别失败，请重试"
-    }
-  },
   "nav": {
     "home": "首页",
     "records": "账单",
@@ -105,7 +86,6 @@
     "trendMoM": "环比",
     "trendMonthlyNet": "当月结余",
     "ocrShot": "拍票",
-    "voice": "语音",
     "record": "记一笔",
     "todayIncome": "今日收入",
     "todayExpense": "今日支出",

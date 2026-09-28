@@ -508,21 +508,6 @@ summary:focus-visible {
 }
 .animate-pulse-warning { animation: pulse-warning 1.6s ease-in-out infinite; }
 
-/* 语音聆听波纹：麦克风图标外圈两层扩散（reduced-motion 下被全局守卫关停） */
-@keyframes speech-ripple {
-  0% { transform: scale(0.75); opacity: 0.55; }
-  100% { transform: scale(1.9); opacity: 0; }
-}
-.speech-ripple {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  background: var(--primary-soft);
-  animation: speech-ripple 1.8s ease-out infinite;
-  pointer-events: none;
-}
-.speech-ripple-delay { animation-delay: 0.9s; }
-
 /* 页面切换过渡 */
 .page-enter { animation: fade-in 0.2s ease-out; }
 
