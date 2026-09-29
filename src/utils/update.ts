@@ -68,6 +68,7 @@ interface GithubRelease {
   tag_name: string;
   body: string | null;
   draft: boolean;
+  prerelease?: boolean;
   assets: GithubAsset[];
 }
 
@@ -96,10 +97,43 @@ export function isUpdateConfigured(): boolean {
   return !!GITHUB_REPO;
 }
 
+/** 带超时的 fetch：避免网络/镜像挂起导致更新检查无响应（表现为永远不弹更新提示） */
+async function fetchWithTimeout(url: string, init?: RequestInit, timeoutMs = 8000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** 解析一个 Release 的整包 / 热更包 / 元数据资产 */
+function parseReleaseAssets(release: GithubRelease): {
+  apk?: GithubAsset;
+  zip?: GithubAsset;
+  meta?: GithubAsset;
+} {
+  let apk: GithubAsset | undefined;
+  let zip: GithubAsset | undefined;
+  let meta: GithubAsset | undefined;
+  for (const asset of release.assets) {
+    if (/\.apk$/i.test(asset.name)) {
+      apk = asset;
+    } else if (/^dist_.*\.zip$/i.test(asset.name)) {
+      zip = asset;
+    } else if (asset.name === 'update.json') {
+      meta = asset;
+    }
+  }
+  return { apk, zip, meta };
+}
+
 /**
- * 检查 GitHub Releases 最新版本并决策更新方式：
- * 1. 远程原生版本 > 本地原生版本 → 整包 APK 更新
- * 2. 否则远程 Web 版本 > 本地 Web 版本且满足最低原生版本要求 → 热更新
+ * 检查 GitHub Releases 并决策更新方式：
+ * 1. 本地原生基座落后于「最近发布的整包版本」→ 整包 APK 更新（回溯历史 Release 找 APK，
+ *    不依赖 update.json——旧基座只发热更包时必须能找到 APK，否则永远收不到更新）
+ * 2. 否则最新版的热更包版本 > 本地 Web 版本且满足最低原生版本要求 → 热更新
  * 3. 否则已是最新
  */
 export async function checkForUpdate(): Promise<UpdateCheckResult> {
@@ -117,48 +151,39 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
     return { ...base, type: 'none' };
   }
 
-  const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+  // 一次拉取最近 20 个 Release（按创建时间倒序，第一个为最新发布）：
+  // 最新版决定热更新；最近带 APK 的 Release 决定基座落后时的整包引导
+  const resp = await fetchWithTimeout(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=20`, {
     headers: { Accept: 'application/vnd.github+json' },
   });
-  if (resp.status === 404) {
-    throw new Error('未找到发布版本，请确认仓库配置');
-  }
   if (!resp.ok) {
     throw new Error(`版本服务异常（${resp.status}），请稍后重试`);
   }
 
-  const release: GithubRelease = await resp.json();
-  if (release.draft) {
+  const releases: GithubRelease[] = await resp.json();
+  const published = releases.filter(
+    (r) => !r.draft && !r.prerelease && !!r.tag_name.replace(/^v/, '').trim(),
+  );
+  if (published.length === 0) {
     return { ...base, type: 'none' };
   }
+  const latest = published[0];
+  const latestAssets = parseReleaseAssets(latest);
+  const remoteVersion = latest.tag_name.replace(/^v/, '').trim();
 
-  const remoteVersion = (release.tag_name || '').replace(/^v/, '').trim();
-  if (!remoteVersion) {
-    return { ...base, type: 'none' };
-  }
-
-  let apkAsset: GithubAsset | undefined;
-  let zipAsset: GithubAsset | undefined;
-  let metaAsset: GithubAsset | undefined;
-  for (const asset of release.assets) {
-    if (/\.apk$/i.test(asset.name)) {
-      apkAsset = asset;
-    } else if (/^dist_.*\.zip$/i.test(asset.name)) {
-      zipAsset = asset;
-    } else if (asset.name === 'update.json') {
-      metaAsset = asset;
-    }
-  }
-
+  // 拉取最新版的 update.json 元数据（走镜像候选 + 超时；全部失败按默认规则处理）
   let meta: UpdateMeta = {};
-  if (metaAsset) {
-    try {
-      const metaResp = await fetch(metaAsset.browser_download_url);
-      if (metaResp.ok) {
-        meta = await metaResp.json();
+  if (latestAssets.meta) {
+    for (const url of getDownloadCandidates(latestAssets.meta.browser_download_url)) {
+      try {
+        const metaResp = await fetchWithTimeout(url);
+        if (metaResp.ok) {
+          meta = await metaResp.json();
+          break;
+        }
+      } catch {
+        // 换下一个候选地址
       }
-    } catch {
-      // 元数据拉取失败不阻断流程，按默认规则处理
     }
   }
 
@@ -166,35 +191,49 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
     ...base,
     type: 'none',
     version: remoteVersion,
-    changelog: (release.body || '').trim(),
+    changelog: (latest.body || '').trim(),
     mandatory: !!meta.mandatory,
     requireApk: !!meta.requireApk,
     sha256: meta.sha256,
   };
 
-  // 1. 原生版本落后且有整包资产 → 直接整包更新（一次到位）
-  //    不再"热更新优先"：旧基座先热更再整包会造成双重更新体验；
-  //    且此判断不依赖 update.json（元数据拉取失败也不会误入热更新分支）
-  if (apkAsset && compareVersions(remoteVersion, local.nativeVersion) > 0) {
+  // 1. 基座落后 → 直接整包更新（一次到位）。回溯最近带 APK 的 Release：
+  //    最新版只发热更包时（如 v4.15.3），旧基座用户不能被静默卡死，也不能误推热更——
+  //    必须引导安装最近整包（该判断不依赖 update.json，元数据拉取失败不影响）
+  let apkPick: { version: string; url: string; changelog: string } | null = null;
+  for (const release of published) {
+    const { apk } = parseReleaseAssets(release);
+    if (apk) {
+      apkPick = {
+        version: release.tag_name.replace(/^v/, '').trim(),
+        url: apk.browser_download_url,
+        changelog: (release.body || '').trim(),
+      };
+      break;
+    }
+  }
+  if (apkPick && compareVersions(apkPick.version, local.nativeVersion) > 0) {
     result.type = 'apk';
-    result.apkUrl = apkAsset.browser_download_url;
+    result.version = apkPick.version;
+    result.changelog = apkPick.changelog;
+    result.apkUrl = apkPick.url;
     return result;
   }
 
-  // 2. 热更新（原生已是最新，Web 版本落后且满足最低原生版本要求）
-  if (zipAsset && compareVersions(remoteVersion, local.webVersion) > 0) {
+  // 2. 热更新（原生已是最新整包，Web 版本落后且满足最低原生版本要求）
+  if (latestAssets.zip && compareVersions(remoteVersion, local.webVersion) > 0) {
     const minNative = (meta.minNativeVersion || '').replace(/^v/, '').trim();
     const nativeOk = !minNative || compareVersions(local.nativeVersion, minNative) >= 0;
     if (nativeOk) {
       result.type = 'hot';
-      result.hotUrl = zipAsset.browser_download_url;
+      result.hotUrl = latestAssets.zip.browser_download_url;
       result.minNativeVersion = minNative || undefined;
       result.sha256 = meta.sha256;
       return result;
     }
   }
 
-  // 3. 无整包资产（Release 只发了热更包）且原生版本不满足要求 → 无法更新，视为最新
+  // 3. 其余情况视为最新（例如基座不满足热更要求且无更新的整包可装）
   result.type = 'none';
   return result;
 }
