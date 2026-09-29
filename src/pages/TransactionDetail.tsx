@@ -247,27 +247,27 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
         </div>
       </div>
 
-      {/* mom-compare 视图：上月 vs 本月支出对比 + 两段列表 */}
+      {/* mom-compare 视图：上月 vs 本月支出左右并排对比 + 两列明细 */}
       {isMoMCompare && insightMoMData && (
         <div className="px-4 mt-3 pb-6 space-y-4">
-          {/* 对比卡片 */}
+          {/* 对比卡片：两列并排，中间分隔线 */}
           <div className="card p-5">
-            <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.momCompareSubtitle')}</p>
-            <div className="flex items-center justify-between mt-3 gap-3">
-              <div className="flex-1 text-center">
+            <p className="text-sm font-medium text-center" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.momCompareSubtitle')}</p>
+            <div className="flex mt-4">
+              <div className="flex-1 text-center px-1">
                 <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.prevMonthExpense')}</p>
                 <p className="text-xl font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
                   {formatCurrencyShort(insightMoMData.prevSpent)}
                 </p>
+                <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-2)' }}>{insightMoMData.prevMonth}</p>
               </div>
-              <div className="flex-shrink-0 px-2">
-                <span className="text-lg" style={{ color: 'var(--ink-2)' }}>→</span>
-              </div>
-              <div className="flex-1 text-center">
+              <div className="w-px self-stretch flex-shrink-0" style={{ background: 'var(--line)' }} />
+              <div className="flex-1 text-center px-1">
                 <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.currentMonthExpense')}</p>
                 <p className="text-xl font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
                   {formatCurrencyShort(insightMoMData.currentSpent)}
                 </p>
+                <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-2)' }}>{insightMoMData.currentMonth}</p>
               </div>
             </div>
             <div
@@ -282,48 +282,49 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
             </div>
           </div>
 
-          {/* 本月支出明细 */}
-          <div>
-            <div className="flex items-center justify-between mb-2 px-1">
-              <h2 className="text-sm font-bold" style={{ color: 'var(--ink)' }}>
-                {t('transactionDetail.currentMonthExpense')} · {momCurrentMonthTxs.length}
-              </h2>
-            </div>
-            {momCurrentMonthTxs.length > 0 ? (
-              momCurrentMonthTxs.map((transaction) => (
-                <TransactionCard
-                  key={transaction.id}
-                  transaction={transaction}
-                  onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
-                  onEdit={() => onEditTransaction?.(transaction)}
-                  disabled={isMultiSelect}
-                />
-              ))
-            ) : (
-              <p className="text-sm text-center py-4" style={{ color: 'var(--ink-2)' }}>{t('common.noRecords')}</p>
-            )}
-          </div>
-
-          {/* 上月支出明细 */}
-          <div>
-            <div className="flex items-center justify-between mb-2 px-1">
-              <h2 className="text-sm font-bold" style={{ color: 'var(--ink)' }}>
-                {t('transactionDetail.prevMonthExpense')} · {momPrevMonthTxs.length}
-              </h2>
-            </div>
-            {momPrevMonthTxs.length > 0 ? (
-              momPrevMonthTxs.map((transaction) => (
-                <TransactionCard
-                  key={transaction.id}
-                  transaction={transaction}
-                  onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
-                  onEdit={() => onEditTransaction?.(transaction)}
-                  disabled={isMultiSelect}
-                />
-              ))
-            ) : (
-              <p className="text-sm text-center py-4" style={{ color: 'var(--ink-2)' }}>{t('common.noRecords')}</p>
-            )}
+          {/* 两列并排明细：左上月 · 右本月，逐条紧凑卡片便于逐行对照 */}
+          <div className="grid grid-cols-2 gap-3 items-start">
+            {([
+              { key: insightMoMData.prevMonth, title: t('transactionDetail.prevMonthExpense'), txs: momPrevMonthTxs },
+              { key: insightMoMData.currentMonth, title: t('transactionDetail.currentMonthExpense'), txs: momCurrentMonthTxs },
+            ]).map((col) => (
+              <div key={col.key}>
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <h2 className="text-xs font-bold" style={{ color: 'var(--ink)' }}>{col.title}</h2>
+                  <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{col.txs.length}</span>
+                </div>
+                {col.txs.length > 0 ? (
+                  col.txs.map((tx) => {
+                    const category = useStore.getState().getCategoryById(tx.categoryId);
+                    return (
+                      <button
+                        key={tx.id}
+                        onClick={() => onEditTransaction?.(tx)}
+                        className="w-full text-left p-2.5 rounded-card mb-2"
+                        style={{ background: 'var(--card)', boxShadow: 'var(--shadow-card)' }}
+                      >
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: category?.color || 'var(--ink-2)' }} />
+                            <span className="text-xs font-medium truncate" style={{ color: 'var(--ink)' }}>
+                              {category?.name || t('common.unclassified')}
+                            </span>
+                          </div>
+                          <span className="text-xs font-semibold amount-num flex-shrink-0" style={{ color: 'var(--expense)' }}>
+                            -{formatCurrencyShort(tx.amount)}
+                          </span>
+                        </div>
+                        <p className="text-[10px] mt-1 truncate" style={{ color: 'var(--ink-2)' }}>
+                          {toDateKey(new Date(tx.createdAt)).slice(5)}{tx.note ? ` · ${tx.note}` : ''}
+                        </p>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-center py-6" style={{ color: 'var(--ink-2)' }}>{t('common.noRecords')}</p>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}

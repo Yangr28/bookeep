@@ -274,7 +274,7 @@ export const generateInsights = (ctx: InsightContext): Insight[] => {
     else recentByCategory.set(tx.categoryId, [tx]);
   }
 
-  recurring: for (const [categoryId, txs] of recentByCategory) {
+  for (const [categoryId, txs] of recentByCategory) {
     // 同分类按金额升序，贪心聚类。
     // 聚类优先级：先尝试匹配金额完全相同的簇（订阅服务通常金额一致），
     // 再退到 ±5% 容差内的簇，避免 Netflix 25 与 Spotify 28 误合并。
