@@ -34,8 +34,8 @@ android {
         applicationId "io.github.trae.bookeep"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion 36
-        versionCode 98
-        versionName "4.15.4"
+        versionCode 99
+        versionName "4.15.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
@@ -76,4 +76,15 @@ try {
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+
+// === 整包构建前自动同步 Web 资源到 assets/public ===
+// v4.15.4 曾因漏跑 `cap copy android`，APK 内置陈旧网页资源，用户安装新包后界面仍是旧版本。
+// 挂到 preBuild 强制每次构建前同步（assets/public 不进 git，换机构建无法靠提交保证一致）。
+tasks.register('capCopyWebAssets', Exec) {
+    workingDir rootProject.projectDir.parentFile
+    commandLine 'node', 'node_modules/@capacitor/cli/bin/capacitor', 'copy', 'android'
+}
+tasks.matching { it.name == 'preBuild' }.configureEach {
+    dependsOn 'capCopyWebAssets'
 }

@@ -47,6 +47,8 @@ public class AppUpdatePlugin extends Plugin {
     private static final String KEY_HOT_PENDING_COUNT = "hot_pending_count";
     private static final String KEY_HOT_PREVIOUS = "hot_previous";
     private static final String KEY_LAST_APK = "last_apk_path";
+    /** 上次启动时读到的原生 versionName：与当前不同即说明发生了整包覆盖安装 */
+    private static final String KEY_LAST_NATIVE = "last_native";
 
     private SharedPreferences prefs() {
         return getContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
@@ -97,17 +99,44 @@ public class AppUpdatePlugin extends Plugin {
         String hotBaseNative = prefs.getString(KEY_HOT_BASE_NATIVE, "");
         String pending = prefs.getString(KEY_HOT_PENDING, "");
         String previous = prefs.getString(KEY_HOT_PREVIOUS, "");
+        String lastNative = prefs.getString(KEY_LAST_NATIVE, "");
 
         SharedPreferences.Editor editor = prefs.edit();
 
-        // 整包 APK 升级覆盖安装后，filesDir/prefs 仍保留，但内置 Web 资源已是新版，弃用旧热更新包
-        if (!hotVersion.isEmpty() && !hotBaseNative.isEmpty() && !hotBaseNative.equals(nativeVersion)) {
-            Log.i(TAG, "Native version changed (" + hotBaseNative + " -> " + nativeVersion
-                    + "), discarding hot update " + hotVersion);
+        // 整包 APK 升级覆盖安装后，filesDir/prefs 仍保留，但内置 Web 资源已是新版，必须弃用旧热更新包。
+        // 三重判定（任一命中即弃用），避免单一字段缺失导致旧热更无法清理：
+        //  a) 热更记录的基座版本非空且与当前原生版本不一致（旧基座残留；用户主动回退时 base 等于
+        //     当前基座，不会误杀）
+        //  b) 热更记录缺少基座版本字段（上古/异常数据；v4.4.4 起正常激活流程必写该字段）
+        //  c) 上次启动记录的原生版本与当前不同（覆盖安装的铁证，不依赖热更数据完整性）
+        boolean discardHot = false;
+        StringBuilder discardReason = new StringBuilder();
+        if (!hotVersion.isEmpty()) {
+            if (!hotBaseNative.isEmpty() && !hotBaseNative.equals(nativeVersion)) {
+                discardHot = true;
+                discardReason.append("base ").append(hotBaseNative).append(" != ").append(nativeVersion);
+            } else if (hotBaseNative.isEmpty()) {
+                discardHot = true;
+                discardReason.append("missing base native record for hot ").append(hotVersion);
+            }
+        }
+        if (!lastNative.isEmpty() && !lastNative.equals(nativeVersion)) {
+            discardHot = true;
+            if (discardReason.length() > 0) discardReason.append("; ");
+            discardReason.append("last native ").append(lastNative).append(" -> ").append(nativeVersion);
+        }
+        // 无论是否有热更，都刷新本次原生版本记录，供下次升级时判定
+        editor.putString(KEY_LAST_NATIVE, nativeVersion);
+
+        if (discardHot) {
+            Log.i(TAG, "Discarding hot update (" + discardReason + ")");
             editor.remove(KEY_HOT_VERSION).remove(KEY_HOT_BASE_NATIVE)
                   .remove(KEY_HOT_PENDING).remove(KEY_HOT_PENDING_COUNT)
                   .remove(KEY_HOT_PREVIOUS);
             editor.apply();
+            // 清理磁盘上的旧热更目录
+            File root = new File(context.getFilesDir(), "hot-updates");
+            if (root.exists()) deleteRecursively(root);
             return;
         }
 
@@ -737,7 +766,7 @@ public class AppUpdatePlugin extends Plugin {
         }
     }
 
-    private void deleteRecursively(File f) {
+    private static void deleteRecursively(File f) {
         if (f.isDirectory()) {
             File[] children = f.listFiles();
             if (children != null) {
