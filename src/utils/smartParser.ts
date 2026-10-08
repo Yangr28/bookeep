@@ -70,20 +70,20 @@ const incomeKeywords = [
 ];
 
 const expenseKeywordCategories: Record<string, string[]> = {
-  餐饮: ['饭', '餐', '食', '外卖', '奶茶', '咖啡', '早餐', '午餐', '晚餐', '夜宵', '零食', '饮料', '下午茶', '肯德基', '麦当劳', '必胜客', '汉堡', '火锅', '烧烤', '美团', '饿了么', '大众点评', '吃饭', '用餐', '食堂', '餐馆', '饭店', '面馆', '快餐店', '沙县', '黄焖鸡', '麻辣烫', '串串', '冒菜', '螺蛳粉', '酸辣粉', '米线', '米粉', '炒饭', '炒面', '盖浇饭', '便当', '盒饭', '寿司', '刺身', '牛排', '西餐', '日料', '韩餐', '甜点', '蛋糕', '冰淇淋', '可乐', '雪碧', '果汁', '酸奶', '牛奶', '面包', '饼干', '薯片', '巧克力', '糖果', '水果', '蔬菜', '生鲜', '便利店', '喜茶', '奈雪', '瑞幸', '星巴克', '蜜雪冰城', '海底捞', '星巴克咖啡', '肯德基KFC', '麦当劳麦乐送', '华莱士', '德克士', '真功夫', '永和大王', '老乡鸡', '西贝', '外婆家', '绿茶餐厅', '太二', '费大厨', '木屋烧烤', '半天妖', '谭鸭血', '小龙坎', '海底捞火锅', '呷哺呷哺'],
-  交通: ['打车', '滴滴', '出租', '地铁', '公交', '加油', '停车', '车票', '机票', '高铁', '火车', '过路费', '高速', '滴滴出行', '高德打车', '网约车', '快车', '专车', '顺风车', '出租车', '的', '大巴', '长途汽车', '轮船', '轮渡', '租车', '自驾', '油费', '汽油', '柴油', '停车费', '停车场', '高速费', 'ETC', '违章', '罚款', '年检', '保养', '维修', '洗车', '共享单车', '哈啰', '青桔', '美团单车', '电动车', '电瓶车', '地铁卡', '公交卡', '一卡通', '交通卡', '加油卡', '石油', '石化', '中海油', '壳牌'],
-  购物: ['购物', '超市', '淘宝', '京东', '拼多多', '衣服', '鞋', '化妆品', '日用品', '生鲜', '超市', '便利店', '屈臣氏', '优衣库', '无印良品', '商场', '百货', '服装店', '鞋店', '包包', '首饰', '珠宝', '眼镜', '手表', '数码', '手机', '电脑', '平板', '耳机', '充电器', '数据线', '家电', '冰箱', '洗衣机', '空调', '电视', '微波炉', '电饭煲', '厨具', '餐具', '家具', '家居', '装修', '建材', '五金', '文具', '办公用品', '图书', '书籍', '玩具', '母婴', '奶粉', '尿布', '童装', '天猫', '唯品会', '苏宁易购', '网易严选', '小米', '华为', '苹果', 'Apple', '耐克', 'Nike', '阿迪', 'Adidas', '优衣库', '宜家', '名创优品', 'MINISO', '无印良品', 'MUJI', '山姆', '盒马', '永辉', '沃尔玛', '家乐福', '大润发', '物美', '苏果', '全家', '7-11', '罗森', '便利蜂'],
-  娱乐: ['电影', '游戏', 'KTV', '演唱会', '演出', '门票', '旅游', '娱乐', '游乐场', '景区', '门票', '游乐园', '动物园', '植物园', '博物馆', '科技馆', '美术馆', '展览', '话剧', '音乐剧', '歌剧', '相声', '脱口秀', '直播', '打赏', '游戏币', '皮肤', '装备', '点卡', '网吧', '网咖', '台球', '保龄球', '高尔夫', '滑雪', '滑冰', '游泳', '健身', '瑜伽', '舞蹈', '乐器', '唱歌', '蹦迪', '酒吧', '夜场', '剧本杀', '密室逃脱', '桌游', '麻将', '棋牌室', '电竞', 'Steam', '腾讯视频', '爱奇艺', '优酷', '芒果TV', 'B站', '哔哩哔哩', '网易云', 'QQ音乐', '酷狗', '酷我', '喜马拉雅', '得到', '知乎', '微博会员', '爱奇艺会员', '腾讯会员', '优酷会员', 'B站大会员', '网易云黑胶', 'QQ音乐绿钻'],
+  餐饮: ['饭', '餐', '食', '外卖', '奶茶', '咖啡', '早餐', '午饭', '晚饭', '早饭', '午餐', '晚餐', '夜宵', '宵夜', '早茶', '加餐', '工作餐', '零食', '饮料', '下午茶', '肯德基', '麦当劳', '必胜客', '汉堡', '火锅', '烧烤', '美团', '饿了么', '大众点评', '吃饭', '吃面', '嗦粉', '干饭', '用餐', '食堂', '餐馆', '饭店', '面馆', '面条', '拉面', '牛肉面', '兰州拉面', '快餐', '快餐店', '沙县', '黄焖鸡', '麻辣烫', '串串', '冒菜', '螺蛳粉', '酸辣粉', '米线', '米粉', '炒饭', '炒面', '盖浇饭', '盖饭', '便当', '盒饭', '包子', '馒头', '饺子', '水饺', '馄饨', '粥', '稀饭', '煎饼', '肉夹馍', '凉皮', '凉面', '鸡排', '炸鸡', '烤肉', '烤鱼', '酸菜鱼', '麻辣香锅', '小龙虾', '大闸蟹', '螃蟹', '海鲜', '寿司', '刺身', '牛排', '披萨', '比萨', '意面', '三明治', '沙拉', '轻食', '西餐', '日料', '韩餐', '甜点', '蛋糕', '冰淇淋', '可乐', '雪碧', '果汁', '酸奶', '牛奶', '矿泉水', '纯净水', '气泡水', '红牛', '东鹏特饮', '柠檬茶', '面包', '饼干', '薯片', '辣条', '坚果', '巧克力', '糖果', '水果', '苹果', '香蕉', '橙子', '橘子', '葡萄', '西瓜', '草莓', '蓝莓', '榴莲', '芒果', '桃子', '梨', '蔬菜', '青菜', '猪肉', '牛肉', '羊肉', '鸡肉', '鸡翅', '鸡蛋', '鸭肉', '鱼肉', '豆腐', '大米', '面粉', '食用油', '酱油', '调料', '调味品', '喜茶', '奈雪', '瑞幸', '星巴克', '蜜雪冰城', '霸王茶姬', '茶百道', '古茗', '沪上阿姨', '书亦烧仙草', '益禾堂', '库迪', '幸运咖', '塔斯汀', '杨国福', '张亮麻辣烫', '海底捞', '星巴克咖啡', '肯德基KFC', '麦当劳麦乐送', '华莱士', '德克士', '真功夫', '永和大王', '老乡鸡', '西贝', '外婆家', '绿茶餐厅', '太二', '费大厨', '木屋烧烤', '半天妖', '谭鸭血', '小龙坎', '海底捞火锅', '呷哺呷哺', '小米粥'],
+  交通: ['打车', '滴滴', '出租', '地铁', '公交', '加油', '停车', '车票', '机票', '高铁', '火车', '过路费', '高速', '滴滴出行', '高德打车', '网约车', '快车', '专车', '顺风车', '出租车', '的', '大巴', '长途汽车', '轮船', '轮渡', '租车', '自驾', '油费', '汽油', '柴油', '停车费', '停车场', '高速费', 'ETC', '违章', '罚款', '年检', '保养', '维修', '洗车', '共享单车', '哈啰', '青桔', '美团单车', '电动车', '电瓶车', '地铁卡', '公交卡', '一卡通', '交通卡', '加油卡', '石油', '石化', '中海油', '壳牌', '充电桩', '充电费', '电车充电'],
+  购物: ['购物', '超市', '淘宝', '京东', '拼多多', '衣服', '鞋', '化妆品', '日用品', '生鲜', '买菜', '菜市场', '菜场', '屈臣氏', '优衣库', '无印良品', '商场', '百货', '服装店', '鞋店', '包包', '首饰', '珠宝', '眼镜', '手表', '数码', '手机', '电脑', '平板', '耳机', '充电器', '数据线', '家电', '冰箱', '洗衣机', '空调', '电视', '微波炉', '电饭煲', '厨具', '餐具', '家具', '家居', '装修', '建材', '五金', '文具', '办公用品', '图书', '书籍', '玩具', '母婴', '奶粉', '尿布', '纸尿裤', '童装', '天猫', '唯品会', '苏宁易购', '网易严选', '小米', '华为', '苹果手机', '苹果电脑', '苹果店', '苹果官网', 'Apple', '耐克', 'Nike', '阿迪', 'Adidas', '宜家', '名创优品', 'MINISO', 'MUJI', '山姆', '盒马', '永辉', '沃尔玛', '家乐福', '大润发', '物美', '苏果', '全家', '7-11', '罗森', '便利蜂', '猫粮', '狗粮', '宠物', '猫砂', '宠物用品', '快递费', '运费', '邮费', '寄快递', '菜鸟驿站', '丰巢', '洗衣液', '纸巾', '卫生纸', '便利店'],
+  娱乐: ['电影', '游戏', 'KTV', '演唱会', '演出', '门票', '旅游', '娱乐', '游乐场', '景区', '游乐园', '动物园', '植物园', '博物馆', '科技馆', '美术馆', '展览', '话剧', '音乐剧', '歌剧', '相声', '脱口秀', '直播', '打赏', '游戏币', '皮肤', '装备', '点卡', '网吧', '网咖', '台球', '保龄球', '高尔夫', '滑雪', '滑冰', '游泳', '健身', '瑜伽', '舞蹈', '乐器', '唱歌', '蹦迪', '酒吧', '夜场', '剧本杀', '密室逃脱', '桌游', '麻将', '棋牌室', '电竞', '彩票', '刮刮乐', 'Steam', '腾讯视频', '爱奇艺', '优酷', '芒果TV', 'B站', '哔哩哔哩', '网易云', 'QQ音乐', '酷狗', '酷我', '喜马拉雅', '得到', '知乎', '微博会员', '爱奇艺会员', '腾讯会员', '优酷会员', 'B站大会员', '网易云黑胶', 'QQ音乐绿钻'],
   医疗: ['医院', '药店', '看病', '挂号', '体检', '药品', '医疗', '牙科', '诊所', '门诊', '住院', '手术', '治疗', '检查', '化验', '拍片', 'CT', 'MRI', 'B超', '疫苗', '预防针', '保健品', '维生素', '中药', '西药', '处方药', '非处方药', '医疗器械', '口罩', '消毒', '体温计', '血压计', '血糖仪', '眼科', '眼镜', '验光', '配镜', '隐形眼镜', '医美', '美容', '护肤', '化妆', '美甲', '美发', '理发', '剪发', '染发', '烫发', 'SPA', '按摩', '足疗', '足浴', '理疗', '针灸', '艾灸', '拔罐', '刮痧', '正骨', '牙科诊所', '口腔医院', '三甲医院', '社区医院', '同仁堂', '大药房', '益丰', '老百姓', '海王星辰', '叮当快药', '京东健康', '阿里健康', '平安好医生', '微医', '好大夫在线'],
   教育: ['学习', '课程', '培训', '书籍', '教材', '网课', '教育', '学校', '学费', '辅导班', '补习班', '兴趣班', '钢琴班', '舞蹈班', '美术班', '书法班', '英语班', '数学班', '语文班', '编程班', '机器人', '夏令营', '冬令营', '游学', '留学', '考试', '报名费', '资料费', '文具', '书包', '校服', '校车', '托管', '早教', '幼儿园', '考研', '考公', '考证', '雅思', '托福', 'GRE', '四六级', '驾考', '驾校', '学车', '学而思', '新东方', '猿辅导', '作业帮', 'VIPKID', '51Talk', '粉笔', '华图', '中公', '沪江', '有道', '万门', '得到', '樊登读书', '喜马拉雅', '微信读书', 'Kindle', '当当', '京东图书', '新华书店'],
   通讯: ['话费', '流量', '手机费', '宽带', '网络', '电信', '移动', '联通', '套餐', '充值', '缴费', 'Wi-Fi', '路由器', '机顶盒', '电视费', '有线电视', 'IPTV', '话费充值', '流量包', '加油包', '中国移动', '中国联通', '中国电信', '广电', '长城宽带', '鹏博士', '宽带费', '网费', '电话费', '短信费', '彩信费', '漫游费', '国际长途', '5G套餐', '4G套餐', '冰激凌套餐', '大王卡', '米粉卡', '圣卡', '鱼卡'],
   住房: ['房租', '水电', '物业', '水电煤', '暖气', '维修', '搬家', '租房', '买房', '装修', '家具', '家电', '物业费', '水电费', '煤气费', '取暖费', '空调费', '网费', '保洁', '家政', '维修', '管道疏通', '开锁', '换锁', '窗帘', '床品', '灯具', '地板', '瓷砖', '房贷', '月供', '首付', '定金', '押金', '租金', '中介费', '装修费', '建材费', '设计费', '施工费', '保洁费', '家政费', '物业费', '取暖费', '燃气费', '水费', '电费', '电梯费', '垃圾费', '停车费', '车位费', '车位', '地下室', '储藏室', '链家', '贝壳', '我爱我家', '自如', '蛋壳', '安居客', '58同城', '赶集网', '房天下', '土巴兔', '齐家网', '居然之家', '红星美凯龙', '宜家家居', '曲美', '全友', '林氏木业', '源氏木语'],
   转账: ['转账', '红包', '借钱', '还款', '收款', '发红包', '抢红包', '微信转账', '支付宝转账', '银行转账', '汇款', '借钱给', '借给', '还账', '还债', '欠款', '借款', '信用卡还款', '花呗还款', '借呗还款', '白条还款', '金条还款', '微粒贷', '网商贷', '借呗', '花呗', '白条', '信用卡', '网银', '手机银行', '网上银行', 'ATM', '存取款', '存款', '取款', '转账汇款', '跨行转账', '异地转账', '支付宝', '微信支付', '财付通', '云闪付', 'Apple Pay', '华为Pay', '小米Pay', '银联', 'VISA', 'MasterCard'],
-  其他: ['其他', '杂项', '未知', '忘了', '记不清', '不知道', '说不清'],
+  其他: ['其他', '杂项', '未知', '忘了', '记不清', '不知道', '说不清', '洗衣', '干洗', '礼物', '人情', '礼金', '随份子', '红包支出'],
 };
 
 const categoryAliases: Record<string, string[]> = {
-  餐饮: ['吃饭', '用餐', '就餐', '美食', '食品', '饮品', '吃喝', '下馆子', '搓一顿', '大餐', '便饭', '家常饭'],
+  餐饮: ['吃饭', '用餐', '就餐', '美食', '食品', '食物', '饮品', '吃喝', '下馆子', '搓一顿', '大餐', '便饭', '家常饭'],
   交通: ['出行', '通勤', '代步', '交通工具', '坐车', '开车', '骑车', '赶路', '出差交通'],
   购物: ['采购', '消费', '买东西', '逛街', '败家', '血拼', 'shopping', '剁手'],
   娱乐: ['休闲', '玩乐', '消遣', '放松', '嗨皮', '浪', '出去玩', '耍'],
@@ -92,6 +92,46 @@ const categoryAliases: Record<string, string[]> = {
   通讯: ['通信', '网络', '电话', '上网', '话费充值'],
   住房: ['居住', '生活', '居家', '过日子', '家用'],
   转账: ['支付', '结算', '往来', '还钱', '借钱'],
+};
+
+/**
+ * 收入类通用关键词 → 通用类别名。
+ * 收入语句（"发工资""退款到账"）只在本表匹配，避免被支出表中的
+ * "支付宝/转账/微信"等词误判到支出转账类别。
+ */
+const incomeKeywordCategories: Record<string, string[]> = {
+  工资: ['工资', '发工资', '工资到账', '工资收入', '月薪', '年薪', '薪水', '薪资', '绩效', '年终奖', '奖金', '提成', '加班工资', '加班费', '补贴', '津贴', '劳务费', '兼职', '稿费', '佣金', '分红', '项目奖金', '报销', '报销款'],
+  红包: ['红包', '收到红包', '红包收入', '微信红包', '转账收款', '礼金收入'],
+  退款: ['退款', '退款到账', '退货退款', '支付宝退款', '微信退款', '退货', '理赔', '保险理赔', '赔偿', '返现', '返利', '退税'],
+  理财: ['利息', '利息收入', '理财', '理财收益', '投资收益', '股票收益', '基金收益', '股息', '理财回款'],
+  其他收入: ['收入', '到账', '入账', '进账', '转账收入', '借款收回'],
+};
+
+/** 按类型取通用关键词表（智能记账只处理收入/支出两类） */
+const getKeywordCategories = (type: TransactionType): Record<string, string[]> =>
+  type === 'income' ? incomeKeywordCategories : expenseKeywordCategories;
+
+/**
+ * 用户自定义分类名 → 通用类别名 的别名表。
+ * 当用户没有标准名称（如"餐饮"）而把分类命名为"食物/美食/吃喝"时，
+ * 仍能把命中的餐饮关键词正确映射到该自定义分类。
+ */
+const categoryNameAliases: Record<string, string[]> = {
+  餐饮: ['食物', '美食', '吃喝', '伙食', '餐费', '饮食', '伙食费', '吃饭'],
+  交通: ['出行', '车费', '通勤', '交通费'],
+  购物: ['消费', '日用品', '百货', '采购', '网购'],
+  娱乐: ['休闲', '玩乐', '消遣'],
+  医疗: ['健康', '就医', '看病'],
+  教育: ['学习', '培训', '进修'],
+  通讯: ['通信', '话费网费'],
+  住房: ['居家', '居住', '家用', '房租物业'],
+  转账: ['往来', '还债'],
+  其他: ['杂项', '其他支出'],
+  工资: ['薪资', '薪水', '劳动收入', '工资收入', '薪酬'],
+  红包: ['礼金', '人情收入'],
+  退款: ['退货', '理赔收入'],
+  理财: ['投资', '收益', '利息'],
+  其他收入: ['额外收入', '其他'],
 };
 
 const merchantPatterns = [
@@ -447,9 +487,100 @@ function calculateSimilarity(str1: string, str2: string): number {
   return 1 - dp[len1][len2] / Math.max(len1, len2);
 }
 
+/** 把"元/角/分"三部分合成金额字符串，避免浮点尾差 */
+const composeAmount = (yuan: number, jiao = 0, fen = 0): string => {
+  const cents = Math.round(yuan * 100) + jiao * 10 + fen;
+  return String(cents / 100);
+};
+
+/**
+ * 金额后不能紧跟的量词/时间字（用于"2块2"省略角单位时的边界保护，
+ * 避免"2块2个包子"被误判为 2.2）
+ */
+const QUANTIFIER_NEG_AHEAD =
+  '\\d.:/年月日个只件条瓶杯盒袋箱包份顿次张本支根台双套把斤两人天岁米平趟场节门科页句首幅栋层排组队批类款种样点多月周号%';
+
+/** 毛/角 后不能紧跟的字（避免"2毛豆""3角色"误判） */
+const JIAO_NEG_AHEAD = '衣毯巾线病豆肚发色度落笔刷';
+
+/**
+ * 金额提取（通道互斥、按优先级唯一命中）：
+ * 1. 阿拉伯复合：X元/块 Y毛/角 [Z分]（"2块2毛钱"→2.2、"2元5分"→2.05）
+ * 2. 阿拉伯省略角单位：X元/块 Y（"2块2"→2.2，量词边界保护）
+ * 3. 纯角/纯分："5毛钱"→0.5、"5分钱"→0.05
+ * 4. 中文数字复合："三块五"→3.5、"二十块"→20
+ * 5. 数字 + 简单单位（长单位优先："块钱"在"块"前，"2块钱"不残留"钱"）
+ * 6. ¥/￥ 符号、中文数字、动词引导（花了/支付/合计）、裸数字兜底
+ */
 const extractAmount = (text: string): { amount: string; matchText: string } => {
-  const currencyUnits = ['元', '块', '钱', '¥', '￥', '块钱', '元整', '元人民币'];
-  
+  // 1a. X(元/块) Y(毛/角) [Z分]，尾缀可选"钱"
+  let m = text.match(
+    /(\d+(?:\.\d{1,2})?)\s*(?:元人民币|元整|块钱|元钱|元|块|圆)\s*(\d)\s*(?:毛|角)\s*钱?(?:\s*(\d)\s*分)?/,
+  );
+  if (m) {
+    const yuan = parseFloat(m[1]);
+    if (yuan > 0) {
+      return { amount: composeAmount(yuan, parseInt(m[2], 10), m[3] ? parseInt(m[3], 10) : 0), matchText: m[0] };
+    }
+  }
+
+  // 1b. X(元/块) Z分（无角）
+  m = text.match(/(\d+(?:\.\d{1,2})?)\s*(?:元人民币|元整|块钱|元钱|元|块|圆)\s*(\d)\s*分(?!钟|析|享|开|数|类|配|公司)/);
+  if (m) {
+    const yuan = parseFloat(m[1]);
+    if (yuan > 0) return { amount: composeAmount(yuan, 0, parseInt(m[2], 10)), matchText: m[0] };
+  }
+
+  // 2. X(元/块) Y（口语省略角单位，如"2块2""三块五"的阿拉伯版本）
+  m = text.match(
+    new RegExp(`(\\d+(?:\\.\\d{1,2})?)\\s*(?:元人民币|元整|块钱|元钱|元|块|圆)\\s*(\\d)(?![${QUANTIFIER_NEG_AHEAD}])`),
+  );
+  if (m) {
+    const yuan = parseFloat(m[1]);
+    if (yuan > 0) return { amount: composeAmount(yuan, parseInt(m[2], 10)), matchText: m[0] };
+  }
+
+  // 3a. 纯角/毛："2毛""2角5分""5毛钱"（前面不能是数字或小数点）
+  m = text.match(
+    new RegExp(`(?<![\\d.])(\\d)\\s*(?:毛|角)(?:\\s*(\\d)\\s*分)?\\s*钱?(?![${JIAO_NEG_AHEAD}])`),
+  );
+  if (m) {
+    const jiao = parseInt(m[1], 10);
+    if (jiao > 0) return { amount: composeAmount(0, jiao, m[2] ? parseInt(m[2], 10) : 0), matchText: m[0] };
+  }
+
+  // 3b. 纯分："5分""5分钱"（排除分钟/分析/分店/分公司等）
+  m = text.match(/(?<![\d.])(\d)\s*分\s*钱?(?!钟|析|享|开|数|类|配|隔|居|会|工|秒|店|校|部|队|行|局|院|公司)/);
+  if (m) {
+    const fen = parseInt(m[1], 10);
+    if (fen > 0) return { amount: composeAmount(0, 0, fen), matchText: m[0] };
+  }
+
+  // 4a. 中文数字 + 元/块 + 可选中文角："三块五""二十块五毛""两块五毛钱"
+  m = text.match(
+    new RegExp(
+      `([零一二两三四五六七八九十百千万亿]+)\\s*(?:块钱|元钱|块|元|圆)\\s*(?:([零一二两三四五六七八九])\\s*(?:毛|角)?\\s*钱?)?(?![${QUANTIFIER_NEG_AHEAD}])`,
+    ),
+  );
+  if (m) {
+    const yuan = chineseToNumber(m[1]);
+    if (yuan && yuan > 0) {
+      const jiao = m[2] ? chineseNumberMap[m[2]] ?? 0 : 0;
+      return { amount: composeAmount(yuan, jiao), matchText: m[0] };
+    }
+  }
+
+  // 4b. 中文数字 + 毛/角："五毛钱""九角"
+  m = text.match(
+    new RegExp(`(?<![零一二两三四五六七八九十百千万亿\\d.])([零一二两三四五六七八九])\\s*(?:毛|角)\\s*钱?(?![${JIAO_NEG_AHEAD}])`),
+  );
+  if (m) {
+    const jiao = chineseNumberMap[m[1]];
+    if (jiao) return { amount: composeAmount(0, jiao), matchText: m[0] };
+  }
+
+  // 5. 阿拉伯数字 + 简单货币单位（长单位排前面，"块钱"优先于"块"）
+  const currencyUnits = ['元人民币', '元整', '块钱', '元钱', '元', '块', '圆'];
   for (const unit of currencyUnits) {
     const pattern = new RegExp(`(\\d+(?:\\.\\d{1,2})?)\\s*${unit}`);
     const match = text.match(pattern);
@@ -461,6 +592,7 @@ const extractAmount = (text: string): { amount: string; matchText: string } => {
     }
   }
 
+  // 6a. ¥/￥ 符号金额
   const symbolPattern = /(?:¥|￥)\s*(\d+(?:\.\d{1,2})?)/;
   const symbolMatch = text.match(symbolPattern);
   if (symbolMatch) {
@@ -470,7 +602,8 @@ const extractAmount = (text: string): { amount: string; matchText: string } => {
     }
   }
 
-  const chinesePattern = /([零一二两三四五六七八九十百千万亿]+)\s*(?:块|元|钱|块钱)/;
+  // 6b. 中文数字 + 货币单位
+  const chinesePattern = /([零一二两三四五六七八九十百千万亿]+)\s*(?:块钱|元钱|块|元|圆)/;
   const chineseMatch = text.match(chinesePattern);
   if (chineseMatch) {
     const num = chineseToNumber(chineseMatch[1]);
@@ -479,12 +612,13 @@ const extractAmount = (text: string): { amount: string; matchText: string } => {
     }
   }
 
+  // 6c. 动词引导："花了30""支付12.5""一共88"
   const spokenPatterns = [
     /(?:花了|花|用了|用|消费|支付|扣了|扣|花费|花掉)\s*(\d+(?:\.\d{1,2})?)/,
     /(\d+(?:\.\d{1,2})?)\s*(?:块钱|块|元|毛钱|毛|分)/,
     /(?:一共|总共|合计|总计|花费|花了|用了|用去)\s*(\d+(?:\.\d{1,2})?)/,
   ];
-  
+
   for (const pattern of spokenPatterns) {
     const match = text.match(pattern);
     if (match) {
@@ -495,6 +629,7 @@ const extractAmount = (text: string): { amount: string; matchText: string } => {
     }
   }
 
+  // 6d. 裸数字兜底
   const genericPattern = /(\d+(?:\.\d{1,2})?)/g;
   let match;
   while ((match = genericPattern.exec(text)) !== null) {
@@ -551,8 +686,12 @@ export const parseSmartInput = (input: string, userAccounts: Account[] = [], use
     }
   }
 
-  // ★ 优先通过通用关键词匹配分类（更精准，如"午餐"→餐饮）
-  // 仅在通用关键词未匹配时，才尝试匹配用户现有分类名
+  // ★ 按收支类型选择通用关键词表：收入语句只在收入表匹配，
+  // 避免"支付宝到账100"被支出表的"支付宝→转账"误判
+  const activeCategories = getKeywordCategories(result.type);
+  const activeAliases = result.type === 'income' ? {} : categoryAliases;
+
+  // 命中策略：长词优先（"肯德基"3字优先于单字"鸡"），同长度按类别表顺序首现
   let bestMatchScore = 0;
   let bestCategoryKeyword = '';
 
@@ -565,33 +704,26 @@ export const parseSmartInput = (input: string, userAccounts: Account[] = [], use
   for (const searchText of searchTexts) {
     if (!searchText) continue;
 
-    for (const [, keywords] of Object.entries(expenseKeywordCategories)) {
+    for (const keywords of Object.values(activeCategories)) {
       for (const keyword of keywords) {
-        if (searchText.includes(keyword)) {
-          const score = keyword.length / Math.max(searchText.length, 1);
-          if (score > bestMatchScore || (score === bestMatchScore && keyword.length > bestCategoryKeyword.length)) {
-            bestMatchScore = score;
-            bestCategoryKeyword = keyword;
-          }
+        if (searchText.includes(keyword) && keyword.length > bestCategoryKeyword.length) {
+          bestCategoryKeyword = keyword;
         }
       }
     }
 
-    for (const [, aliases] of Object.entries(categoryAliases)) {
+    for (const aliases of Object.values(activeAliases)) {
       for (const alias of aliases) {
-        if (searchText.includes(alias)) {
-          const score = alias.length / Math.max(searchText.length, 1);
-          if (score > bestMatchScore || (score === bestMatchScore && alias.length > bestCategoryKeyword.length)) {
-            bestMatchScore = score;
-            bestCategoryKeyword = alias;
-          }
+        if (searchText.includes(alias) && alias.length > bestCategoryKeyword.length) {
+          bestCategoryKeyword = alias;
         }
       }
     }
   }
 
+  // 未显式命中时，按相似度模糊匹配对应类型的关键词
   if (!bestCategoryKeyword) {
-    for (const [, keywords] of Object.entries(expenseKeywordCategories)) {
+    for (const keywords of Object.values(activeCategories)) {
       for (const keyword of keywords) {
         const similarity = calculateSimilarity(searchTextForCategory, keyword);
         if (similarity > 0.5 && similarity > bestMatchScore) {
@@ -705,37 +837,58 @@ export const findCategoryByIdentifier = (
     }
   }
 
-  // 3. 通过通用关键词反查分类名
-  // 例如：keyword="午餐" 在 expenseKeywordCategories["餐饮"] 中 → 找名为"餐饮"的分类
-  for (const [categoryName, keywords] of Object.entries(expenseKeywordCategories)) {
+  // 命中通用类别（如"餐饮"）后，在用户分类中按候选链查找：
+  // 精确类别名 → 用户分类名本身是关键词/别名 → 与关键词互含
+  // → 与类别命名别名互含（用户分类叫"食物/美食"也能归到餐饮）→ 名称模糊
+  const findUserCategoryByGenericName = (
+    categoryName: string,
+    keywords: string[],
+  ): string | null => {
+    const exact = filteredCategories.find((c) => c.name === categoryName);
+    if (exact) return exact.id;
+
+    const nameAliases = categoryNameAliases[categoryName] ?? [];
+    const asKeyword = filteredCategories.find(
+      (c) => keywords.includes(c.name) || nameAliases.includes(c.name),
+    );
+    if (asKeyword) return asKeyword.id;
+
+    const containsMatch = filteredCategories.find((c) =>
+      keywords.some((kw) => c.name.includes(kw) || kw.includes(c.name)),
+    );
+    if (containsMatch) return containsMatch.id;
+
+    const aliasContains = filteredCategories.find((c) =>
+      nameAliases.some((a) => c.name.includes(a) || a.includes(c.name)),
+    );
+    if (aliasContains) return aliasContains.id;
+
+    const fuzzyFound = filteredCategories.find(
+      (c) => calculateSimilarity(c.name, categoryName) > 0.4,
+    );
+    return fuzzyFound?.id ?? null;
+  };
+
+  // 3. 通过通用关键词反查分类名（按收支类型分流）
+  // 例如：keyword="午餐" 在餐饮关键词中 → 找名为"餐饮"（或别名"食物"）的用户分类
+  const activeTable = getKeywordCategories(type);
+  for (const [categoryName, keywords] of Object.entries(activeTable)) {
     if (keywords.includes(keyword)) {
-      // 3a. 精确匹配分类名
-      const found = filteredCategories.find((c) => c.name === categoryName);
-      if (found) return found.id;
-
-      // 3b. 用户分类名是否在该类别的关键词列表中（如用户分类"吃饭"在"餐饮"关键词列表中）
-      const keywordNameMatch = filteredCategories.find(c => keywords.includes(c.name));
-      if (keywordNameMatch) return keywordNameMatch.id;
-
-      // 3c. 用户分类名是否包含该类别的某个关键词（如用户分类"午餐饭"包含"午餐"）
-      const containsMatch = filteredCategories.find(c =>
-        keywords.some(kw => c.name.includes(kw) || kw.includes(c.name))
-      );
-      if (containsMatch) return containsMatch.id;
-
-      // 3d. 模糊匹配该类别名
-      const fuzzyFound = filteredCategories.find(c =>
-        calculateSimilarity(c.name, categoryName) > 0.4
-      );
-      if (fuzzyFound) return fuzzyFound.id;
+      const hit = findUserCategoryByGenericName(categoryName, keywords);
+      if (hit) return hit;
     }
   }
 
-  // 4. 通过分类别名反查
-  for (const [categoryName, aliases] of Object.entries(categoryAliases)) {
-    if (aliases.includes(keyword)) {
-      const found = filteredCategories.find((c) => c.name === categoryName);
-      if (found) return found.id;
+  // 4. 通过输入侧分类别名反查（仅支出）
+  if (type === 'expense') {
+    for (const [categoryName, aliases] of Object.entries(categoryAliases)) {
+      if (aliases.includes(keyword)) {
+        const hit = findUserCategoryByGenericName(
+          categoryName,
+          expenseKeywordCategories[categoryName] ?? [],
+        );
+        if (hit) return hit;
+      }
     }
   }
 

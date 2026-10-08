@@ -41,6 +41,9 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
   const { t } = useTranslation();
   const [smartInput, setSmartInput] = useState('');
   const [showSmartResult, setShowSmartResult] = useState(false);
+  const smartInputRef = useRef<HTMLInputElement>(null);
+  // 记录进入时的金额，用于判断是否为 FAB 空进入（无预填）
+  const initialAmountRef = useRef(amount);
 
   useEffect(() => {
     // 滚动位置由 App.tsx 统一管理
@@ -52,6 +55,17 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
   }, [editTransaction, onTypeChange, onCategoryChange]);
 
   const isEditMode = !!editTransaction;
+
+  // FAB 空进入（无预填金额）时自动聚焦智能输入框，减少操作步骤
+  useEffect(() => {
+    if (editTransaction) return; // 编辑模式不聚焦
+    if (initialAmountRef.current) return; // 首页智能输入跳来预填时不聚焦
+    const timer = setTimeout(() => {
+      smartInputRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const categories = useStore((state) => state.categories);
   const accounts = useStore((state) => state.accounts);
@@ -216,6 +230,7 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
             <div className="flex items-center rounded-button px-3 py-2.5" style={{ background: 'var(--paper)' }}>
               <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: 'var(--primary-ink)' }} />
               <input
+                ref={smartInputRef}
                 type="text"
                 value={smartInput}
                 onChange={(e) => setSmartInput(e.target.value)}
