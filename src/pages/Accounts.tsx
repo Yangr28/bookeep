@@ -1,4 +1,4 @@
-import { useState, useRef, TouchEvent, DragEvent, useEffect } from 'react';
+import { useState, useRef, TouchEvent, DragEvent, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { todayKey, toDateKey, addMonths, parseDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
@@ -107,6 +107,11 @@ export const Accounts = ({
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<'accounts' | 'transfer' | 'deposits' | 'loans'>('accounts');
+  // 转账记录按时间倒序缓存，避免每次渲染都重排
+  const sortedTransfers = useMemo(
+    () => [...transfers].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [transfers],
+  );
   const [transferFromId, setTransferFromId] = useState<string>('');
   const [transferToId, setTransferToId] = useState<string>('');
   const [transferAmount, setTransferAmount] = useState('');
@@ -712,7 +717,7 @@ export const Accounts = ({
                 <h3 className="font-bold text-base mb-3" style={{ color: 'var(--ink)' }}>{t('accounts.transfer.recordsTitle')}</h3>
                 <div className="space-y-2">
                   {transfers.length > 0 ? (
-                    [...transfers].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((transfer) => {
+                    sortedTransfers.map((transfer) => {
                       const fromAccount = accounts.find((a) => a.id === transfer.fromAccountId);
                       const toAccount = accounts.find((a) => a.id === transfer.toAccountId);
                       return (

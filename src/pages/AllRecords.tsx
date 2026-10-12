@@ -9,6 +9,8 @@ import { formatCurrencyShort, formatDateTime } from '../utils/format';
 import { ArrowLeft, Calendar, ArrowRightLeft, Wallet, X, ChevronDown, ListChecks, FolderInput } from 'lucide-react';
 import { Transaction, Transfer, Category } from '../types';
 import { CategoryCard } from '../components/CategoryCard';
+import { useInfiniteList } from '../hooks/useInfiniteList';
+import { ListSkeleton } from '../components/Skeleton';
 
 interface AllRecordsProps {
   isTab?: boolean;
@@ -132,6 +134,13 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
 
   const sortedRecords = filteredRecords.sort((a, b) =>
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  // 增量加载：流水上千条时按 30 条增量渲染，IntersectionObserver 触底加载下一页
+  const { visibleItems: visibleRecords, sentinelRef, hasMore } = useInfiniteList(
+    sortedRecords,
+    30,
+    [startDate, endDate, categoryFilter, accountFilter, amountMin, amountMax, transactions, transfers],
   );
 
   const totalIncome = sortedRecords
@@ -422,7 +431,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
         <h2 className="section-title">{t('allRecords.transactionDetails')}</h2>
         {sortedRecords.length > 0 ? (
           <div>
-            {sortedRecords.map((record) => {
+            {visibleRecords.map((record) => {
               if (record.type === 'transaction' && record.transaction) {
                 return (
                   <TransactionCard
@@ -480,6 +489,13 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
                 </div>
               );
             })}
+            {/* 增量加载：哨兵节点进入视口加载下一页；加载期间显示骨架占位 */}
+            {hasMore && (
+              <>
+                <ListSkeleton rows={3} />
+                <div ref={sentinelRef} className="h-1" />
+              </>
+            )}
           </div>
         ) : (
           <div className="card flex flex-col items-center py-12">

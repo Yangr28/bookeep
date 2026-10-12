@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
 import { Search as SearchIcon, ArrowLeft, X, Filter, TrendingUp, TrendingDown } from 'lucide-react';
 import { TransactionType, Transaction } from '../types';
 import Empty from '../components/Empty';
 import { useTranslation } from 'react-i18next';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface SearchProps {
   onBack: () => void;
@@ -20,6 +21,8 @@ export const Search = ({ onBack, onEditTransaction, onDeleteTransaction, initial
   const transactions = useStore((state) => state.transactions);
   const deleteTransaction = useStore((state) => state.deleteTransaction);
   const inputRef = useRef<HTMLInputElement>(null);
+  // 防抖：输入停止 250ms 后才触发过滤/排序，避免每键都重算大列表
+  const debouncedQuery = useDebounce(query, 250);
 
   useEffect(() => {
     // 滚动位置由 App.tsx 统一管理
@@ -29,19 +32,19 @@ export const Search = ({ onBack, onEditTransaction, onDeleteTransaction, initial
     return () => clearTimeout(timer);
   }, []);
 
-  const filteredTransactions = transactions.filter((t) => {
+  const filteredTransactions = useMemo(() => transactions.filter((t) => {
     const matchType = filterType === 'all' || t.type === filterType;
-    
-    const searchText = query.toLowerCase();
-    const matchText = 
+
+    const searchText = debouncedQuery.toLowerCase();
+    const matchText =
       (t.note && t.note.toLowerCase().includes(searchText)) ||
       t.amount.toString().includes(searchText);
-    
+
     const category = useStore.getState().getCategoryById(t.categoryId);
     const matchCategory = category && category.name.toLowerCase().includes(searchText);
-    
+
     return matchType && (matchText || matchCategory);
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [transactions, filterType, debouncedQuery]);
 
   const clearSearch = () => {
     setQuery('');
