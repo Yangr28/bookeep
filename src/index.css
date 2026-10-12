@@ -49,8 +49,8 @@
   --radius-card: 1.25rem;   /* 20px 卡片 */
   --radius-button: 0.875rem;/* 14px 按钮 */
   --radius-sheet: 1.5rem;   /* 24px 底部弹层 */
-  --shadow-card: 0 6px 20px rgba(46, 62, 102, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  --shadow-card-hover: 0 12px 32px rgba(46, 62, 102, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --shadow-card: 0 6px 20px rgba(46, 62, 102, 0.10), 0 2px 6px rgba(46, 62, 102, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --shadow-card-hover: 0 12px 32px rgba(46, 62, 102, 0.18), 0 4px 10px rgba(46, 62, 102, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   --shadow-fab: 0 10px 26px rgba(46, 133, 222, 0.42);
   /* 骨架屏：同纸面色系的静默底 + 轻扫光（不刺眼） */
   --skeleton-base: rgba(31, 41, 59, 0.08);
@@ -163,6 +163,15 @@ body {
   filter: blur(70px);
   opacity: 0.4;
   background: radial-gradient(circle at 50% 50%, var(--ambient-3), transparent 65%);
+  animation: ambient-breathe 40s ease-in-out infinite;
+}
+/* 环境光斑极慢呼吸：opacity 与 position 微变，让玻璃折射"活"起来 */
+@keyframes ambient-breathe {
+  0%, 100% { opacity: 0.4; transform: translate(0, 0); }
+  50% { opacity: 0.55; transform: translate(2vmax, -2vmax); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb { animation: none; }
 }
 
 /* 玻璃通用面：半透明 + 背景模糊 + 饱和提升 + 顶部高光描边 */
@@ -202,7 +211,7 @@ body {
     color: var(--ink);
   }
 
-  /* 卡片：液态玻璃，20px 圆角，顶部高光 */
+  /* 卡片：液态玻璃，20px 圆角，顶部高光 + 多层立体阴影 */
   .card {
     background-color: var(--card);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
@@ -211,6 +220,19 @@ body {
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
     transition: var(--transition);
+    position: relative;
+  }
+  /* 顶部高光线：模拟玻璃边缘光折射（从透明到 80% 高光再到透明） */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+    pointer-events: none;
+    border-radius: inherit;
   }
   .card-hover {
     @apply hover:shadow-card-hover active:scale-[0.98];
@@ -258,7 +280,7 @@ body {
     box-shadow: 0 6px 18px rgba(46, 133, 222, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.18);
   }
-  .btn-primary:active { filter: brightness(0.94); }
+  .btn-primary:active { filter: brightness(0.94); box-shadow: 0 3px 10px rgba(46, 133, 222, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.15); }
   .btn-primary:disabled {
     background-image: none;
     background-color: var(--paper-deep);

@@ -675,8 +675,8 @@ const DashboardComponent = ({
       </div>
 
       {/* 今日收支 + 总资产 */}
-      <div className="px-4 mt-4 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="px-4 mt-4 space-y-2.5">
+        <div className="grid grid-cols-2 gap-2.5">
           <StatCard type="income" title={t('dashboard.todayIncome')} amount={todayIncome} onClick={() => onViewDetail('today-income')} />
           <StatCard type="expense" title={t('dashboard.todayExpense')} amount={todayExpense} onClick={() => onViewDetail('today-expense')} />
         </div>
@@ -700,7 +700,7 @@ const DashboardComponent = ({
       </div>
 
       {/* 最近记录 */}
-      <div className="px-4 mt-6">
+      <div className="px-4 mt-5">
         <h2 className="section-title">{t('dashboard.recentRecords')}</h2>
         {recentTransactions.length === 0 ? (
           <Empty icon={Wallet} title={t('dashboard.noRecords')} description={t('dashboard.noRecordsHint')} />

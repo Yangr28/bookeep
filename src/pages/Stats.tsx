@@ -241,7 +241,7 @@ export const Stats = ({ onBack }: StatsProps) => {
         </div>
 
         {/* 已获得成就 */}
-        <div className="mt-6">
+        <div className="mt-5">
           <h3 className="section-title flex items-center gap-2">
             <Trophy size={18} style={{ color: '#d9930f' }} />
             {t('stats.achievementsTitle', { earned: earnedAchievements.length, total: achievements.length })}
@@ -281,7 +281,7 @@ export const Stats = ({ onBack }: StatsProps) => {
 
         {/* 进行中成就 */}
         {progressAchievements.length > 0 && (
-          <div className="mt-6">
+          <div className="mt-5">
             <h3 className="section-title flex items-center gap-2">
               <Target size={18} style={{ color: 'var(--primary)' }} />
               {t('stats.inProgress')}
@@ -323,7 +323,7 @@ export const Stats = ({ onBack }: StatsProps) => {
         )}
 
         {/* 小贴士 */}
-        <div className="card p-4 mt-6">
+        <div className="card p-4 mt-5">
           <div className="flex items-start gap-3">
             <Zap size={20} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--primary)' }} />
             <div>
