@@ -500,8 +500,8 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
                     cursor={{ fill: CHART_COLORS.cursor }}
                   />
                   <Legend wrapperStyle={{ paddingTop: 10, fontSize: 12, color: 'var(--ink-2)' }} />
-                  <Bar dataKey="income" name={t('common.income')} fill={CHART_COLORS.income} radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="expense" name={t('common.expense')} fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="income" name={t('common.income')} fill={CHART_COLORS.income} radius={[6, 6, 0, 0]} isAnimationActive animationDuration={700} animationEasing="ease-out" />
+                  <Bar dataKey="expense" name={t('common.expense')} fill={CHART_COLORS.expense} radius={[6, 6, 0, 0]} isAnimationActive animationDuration={700} animationEasing="ease-out" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

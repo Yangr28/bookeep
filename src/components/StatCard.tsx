@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown, ChevronRight } from 'lucide-react';
 import { formatCurrencyShort } from '../utils/format';
+import { useCountUp } from '../hooks/useCountUp';
 
 interface StatCardProps {
   type: 'income' | 'expense';
@@ -13,6 +14,8 @@ export const StatCard = ({ type, title, amount, onClick }: StatCardProps) => {
   const Icon = isIncome ? TrendingUp : TrendingDown;
   const color = isIncome ? 'var(--primary)' : 'var(--expense)';
   const softBg = isIncome ? 'var(--primary-soft)' : 'var(--expense-soft)';
+  const animatedAmount = useCountUp(amount);
+  const displayAmount = Math.abs(animatedAmount - amount) < 0.005 ? amount : animatedAmount;
 
   return (
     <button
@@ -31,7 +34,7 @@ export const StatCard = ({ type, title, amount, onClick }: StatCardProps) => {
           className="font-bold amount-num mt-0.5 truncate"
           style={{ color, fontSize: amount >= 1000000 ? '13px' : '15px' }}
         >
-          {isIncome ? '+' : '-'}{formatCurrencyShort(amount)}
+          {isIncome ? '+' : '-'}{formatCurrencyShort(displayAmount)}
         </p>
       </div>
       {onClick && <ChevronRight size={16} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />}

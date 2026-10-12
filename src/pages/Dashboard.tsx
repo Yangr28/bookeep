@@ -13,6 +13,7 @@ import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, 
 import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle, History } from 'lucide-react';
 import Empty from '../components/Empty';
 import { getNoteSuggestions } from '../utils/recommender';
+import { useCountUp } from '../hooks/useCountUp';
 import { TransactionType, Transaction } from '../types';
 
 // 仅首次启动进入首页时自动聚焦智能记账输入框；返回首页时不再弹出键盘
@@ -365,6 +366,8 @@ const DashboardComponent = ({
   );
 
   const balance = monthIncome - monthExpense;
+  const animatedBalance = useCountUp(balance);
+  const animatedTotalAssets = useCountUp(totalAssets);
 
   const quickTools = [
     { icon: ArrowLeftRight, labelKey: 'dashboard.toolTransfer', onClick: onGoToTransfer, color: 'var(--accent-transfer)', bg: 'var(--accent-transfer-soft)' },
@@ -411,7 +414,7 @@ const DashboardComponent = ({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.monthBalance')}</p>
               <p className="text-3xl font-bold mt-1.5 amount-num" style={{ color: 'var(--ink)' }}>
-                {formatCurrencyShort(balance)}
+                {formatCurrencyShort(Math.abs(animatedBalance - balance) < 0.005 ? balance : animatedBalance)}
               </p>
             </div>
             {/* 资产趋势 sparkline：点击查看详细趋势明细 */}
@@ -682,7 +685,7 @@ const DashboardComponent = ({
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.totalAssets')}</p>
-              <p className="text-2xl font-bold mt-1 amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(totalAssets)}</p>
+              <p className="text-2xl font-bold mt-1 amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(Math.abs(animatedTotalAssets - totalAssets) < 0.005 ? totalAssets : animatedTotalAssets)}</p>
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-xs" style={{ color: 'var(--ink-2)' }}>

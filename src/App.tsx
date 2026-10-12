@@ -37,6 +37,7 @@ import { useUpdateCheck } from './hooks/useUpdateCheck';
 import { useToast } from './hooks/useToast';
 import { useUndoableDelete } from './hooks/useUndoableDelete';
 import Toast from './components/Toast';
+import { SaveSuccessOverlay } from './components/SaveSuccessOverlay';
 import { OnboardingModal } from './components/OnboardingModal';
 import { isFirstLaunch, markOnboarded } from './utils/storage';
 import { initialTransactions } from './data/initialData';
@@ -80,6 +81,8 @@ export default function App() {
   // 连续记账（保存并继续）：开关在新增会话内保持；resetSignal 自增通知 Record 重新预选分类
   const [recordContinueMode, setRecordContinueMode] = useState(false);
   const [recordResetSignal, setRecordResetSignal] = useState(0);
+  // 保存成功对勾动画触发键：每次保存成功 +1 重放
+  const [saveSuccessTick, setSaveSuccessTick] = useState(0);
 
   // 存储写入失败时提示用户导出备份（防止数据丢失）
   useEffect(() => {
@@ -231,6 +234,7 @@ export default function App() {
       resetHistory('/');
     }
     showToast(editTransaction ? t('app.toast.edited') : t('app.toast.saved'));
+    setSaveSuccessTick((n) => n + 1);
     setEditTransaction(null);
     setRecordAmount('');
     setRecordCategoryId('');
@@ -564,6 +568,7 @@ export default function App() {
       setRecordCategoryId(null);
       setRecordDateTime(new Date());
       setRecordResetSignal((n) => n + 1);
+      setSaveSuccessTick((n) => n + 1);
       showToast(t('app.toast.savedContinue'));
     } else {
       handleRecordSuccess();
@@ -602,6 +607,7 @@ export default function App() {
     // 记账成功后回到页面顶部，确保余额卡片在可视区域内
     window.scrollTo(0, 0);
 
+    setSaveSuccessTick((n) => n + 1);
     showToast(t('app.toast.saved'));
   }, [quickRecordAmount, quickRecordCategoryId, quickRecordAccountId, quickRecordType, quickRecordNote, quickRecordDateTime, quickRecordCurrency, addTransaction, showToast, t]);
 
@@ -636,6 +642,7 @@ export default function App() {
       }),
     });
     window.scrollTo(0, 0);
+    setSaveSuccessTick((n) => n + 1);
     showToast(t('app.toast.saved'));
   }, [addTransaction, showToast, t]);
 
@@ -1003,6 +1010,9 @@ export default function App() {
           onSkip={skipUpdate}
         />
       )}
+
+      {/* 保存成功全屏对勾动画 */}
+      <SaveSuccessOverlay triggerKey={saveSuccessTick} />
 
       {toast && (
         <Toast

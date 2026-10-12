@@ -7,6 +7,5 @@
   "setupSubtitle": "Create a 4-digit PIN to keep your accounts secure",
   "unlockSubtitle": "Enter your PIN to unlock the app",
   "hidePassword": "Hide PIN",
-  "showPassword": "Show PIN",
-  "skip": "Skip (not recommended)"
+  "showPassword": "Show PIN"
 }

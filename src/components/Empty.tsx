@@ -21,7 +21,7 @@ export default function Empty({
   return (
     <div className={cn('card empty-state', className)}>
       <div
-        className="w-16 h-16 rounded-full flex items-center justify-center animate-fade-in"
+        className="w-16 h-16 rounded-full flex items-center justify-center animate-empty-float"
         style={{ background: 'var(--paper-deep)' }}
       >
         {Icon ? (

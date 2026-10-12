@@ -7,6 +7,5 @@
   "setupSubtitle": "设置4位数字密码保护您的账户安全",
   "unlockSubtitle": "输入密码解锁应用",
   "hidePassword": "隐藏密码",
-  "showPassword": "显示密码",
-  "skip": "跳过（不推荐）"
+  "showPassword": "显示密码"
 }

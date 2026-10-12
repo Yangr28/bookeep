@@ -100,7 +100,7 @@ const categoryAliases: Record<string, string[]> = {
  * "支付宝/转账/微信"等词误判到支出转账类别。
  */
 const incomeKeywordCategories: Record<string, string[]> = {
-  工资: ['工资', '发工资', '工资到账', '工资收入', '月薪', '年薪', '薪水', '薪资', '绩效', '年终奖', '奖金', '提成', '加班工资', '加班费', '补贴', '津贴', '劳务费', '兼职', '稿费', '佣金', '分红', '项目奖金', '报销', '报销款'],
+  工资: ['工资', '发工资', '工资到账', '工资收入', '月薪', '年薪', '薪水', '薪资', '绩效', '年终奖', '奖金', '提成', '加班工资', '加班费', '补贴', '津贴', '劳务费', '兼职', '稿费', '佣金', '分红', '项目奖金', '报销', '报销款', '剪辑', '剪辑费', '设计', '设计费', '外快', '副业', '接单', '文案', '外包'],
   红包: ['红包', '收到红包', '红包收入', '微信红包', '转账收款', '礼金收入'],
   退款: ['退款', '退款到账', '退货退款', '支付宝退款', '微信退款', '退货', '理赔', '保险理赔', '赔偿', '返现', '返利', '退税'],
   理财: ['利息', '利息收入', '理财', '理财收益', '投资收益', '股票收益', '基金收益', '股息', '理财回款'],
@@ -679,11 +679,36 @@ export const parseSmartInput = (input: string, userAccounts: Account[] = [], use
   const merchant = extractMerchant(trimmedInput);
   result.merchant = merchant;
 
+  let hasIncomeSignal = false;
   for (const keyword of incomeKeywords) {
     if (trimmedInput.includes(keyword)) {
       result.type = 'income';
+      hasIncomeSignal = true;
       break;
     }
+  }
+
+  // 从搜索文本中移除已识别的账户关键词，避免"支付宝"被误识别为分类
+  const searchTextForCategory = accountKeyword
+    ? trimmedInput.replace(new RegExp(accountKeyword, 'g'), '')
+    : trimmedInput;
+  const searchTexts = [searchTextForCategory, merchant];
+
+  // ★ 最高优先级：输入中逐字出现用户分类名时直接采用（如输入"剪辑收入500"
+  // 且用户有收入分类"剪辑收入"），不被"收入"等兜底泛词抢先命中
+  const matchedUserCategory = [...userCategories]
+    .filter((c) => c.name && c.name.length >= 2)
+    .sort((a, b) => b.name.length - a.name.length)
+    .find((c) => searchTextForCategory.includes(c.name));
+  if (matchedUserCategory) {
+    if (matchedUserCategory.type === result.type) {
+      result.categoryKeyword = matchedUserCategory.name;
+    } else if (!hasIncomeSignal && matchedUserCategory.type === 'income') {
+      // 无显式收入词但命中收入分类名 → 以用户分类纠正类型（如"二手闲置300"）
+      result.type = 'income';
+      result.categoryKeyword = matchedUserCategory.name;
+    }
+    // 类型冲突（有收入信号但命中支出分类名）：以显式收入信号为准，落入通用匹配
   }
 
   // ★ 按收支类型选择通用关键词表：收入语句只在收入表匹配，
@@ -695,57 +720,42 @@ export const parseSmartInput = (input: string, userAccounts: Account[] = [], use
   let bestMatchScore = 0;
   let bestCategoryKeyword = '';
 
-  // 从搜索文本中移除已识别的账户关键词，避免"支付宝"被误识别为分类
-  const searchTextForCategory = accountKeyword
-    ? trimmedInput.replace(new RegExp(accountKeyword, 'g'), '')
-    : trimmedInput;
-  const searchTexts = [searchTextForCategory, merchant];
-
-  for (const searchText of searchTexts) {
-    if (!searchText) continue;
-
-    for (const keywords of Object.values(activeCategories)) {
-      for (const keyword of keywords) {
-        if (searchText.includes(keyword) && keyword.length > bestCategoryKeyword.length) {
-          bestCategoryKeyword = keyword;
-        }
-      }
-    }
-
-    for (const aliases of Object.values(activeAliases)) {
-      for (const alias of aliases) {
-        if (searchText.includes(alias) && alias.length > bestCategoryKeyword.length) {
-          bestCategoryKeyword = alias;
-        }
-      }
-    }
-  }
-
-  // 未显式命中时，按相似度模糊匹配对应类型的关键词
-  if (!bestCategoryKeyword) {
-    for (const keywords of Object.values(activeCategories)) {
-      for (const keyword of keywords) {
-        const similarity = calculateSimilarity(searchTextForCategory, keyword);
-        if (similarity > 0.5 && similarity > bestMatchScore) {
-          bestMatchScore = similarity;
-          bestCategoryKeyword = keyword;
-        }
-      }
-    }
-  }
-
-  if (bestCategoryKeyword) {
-    result.categoryKeyword = bestCategoryKeyword;
-  }
-
-  // 如果通用关键词未匹配，尝试匹配用户现有分类名
   if (!result.categoryKeyword) {
-    const matchedUserCategory = [...userCategories]
-      .filter(c => c.type === result.type && c.name && c.name.length >= 2)
-      .sort((a, b) => b.name.length - a.name.length)
-      .find(c => searchTextForCategory.includes(c.name));
-    if (matchedUserCategory) {
-      result.categoryKeyword = matchedUserCategory.name;
+    for (const searchText of searchTexts) {
+      if (!searchText) continue;
+
+      for (const keywords of Object.values(activeCategories)) {
+        for (const keyword of keywords) {
+          if (searchText.includes(keyword) && keyword.length > bestCategoryKeyword.length) {
+            bestCategoryKeyword = keyword;
+          }
+        }
+      }
+
+      for (const aliases of Object.values(activeAliases)) {
+        for (const alias of aliases) {
+          if (searchText.includes(alias) && alias.length > bestCategoryKeyword.length) {
+            bestCategoryKeyword = alias;
+          }
+        }
+      }
+    }
+
+    // 未显式命中时，按相似度模糊匹配对应类型的关键词
+    if (!bestCategoryKeyword) {
+      for (const keywords of Object.values(activeCategories)) {
+        for (const keyword of keywords) {
+          const similarity = calculateSimilarity(searchTextForCategory, keyword);
+          if (similarity > 0.5 && similarity > bestMatchScore) {
+            bestMatchScore = similarity;
+            bestCategoryKeyword = keyword;
+          }
+        }
+      }
+    }
+
+    if (bestCategoryKeyword) {
+      result.categoryKeyword = bestCategoryKeyword;
     }
   }
 
@@ -935,34 +945,4 @@ export const findCategoryByIdentifier = (
   }
 
   return bestCategoryId;
-};
-
-export const guessCategoryFromNote = (
-  note: string,
-  categories: { id: string; type: TransactionType; name: string; color: string; icon: string }[],
-  type: TransactionType = 'expense'
-): { categoryId: string | null; confidence: number } => {
-  const filteredCategories = categories.filter(c => c.type === type);
-  const lowerNote = note.toLowerCase();
-
-  for (const [categoryName, keywords] of Object.entries(expenseKeywordCategories)) {
-    for (const keyword of keywords) {
-      if (lowerNote.includes(keyword.toLowerCase())) {
-        const found = filteredCategories.find(c => c.name === categoryName);
-        if (found) {
-          const confidence = Math.min(0.95, 0.5 + (keyword.length / note.length) * 0.5);
-          return { categoryId: found.id, confidence };
-        }
-      }
-    }
-  }
-
-  for (const category of filteredCategories) {
-    const similarity = calculateSimilarity(lowerNote, category.name.toLowerCase());
-    if (similarity > 0.4) {
-      return { categoryId: category.id, confidence: similarity };
-    }
-  }
-
-  return { categoryId: null, confidence: 0 };
 };

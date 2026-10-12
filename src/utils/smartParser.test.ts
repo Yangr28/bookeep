@@ -221,3 +221,57 @@ describe('parseSmartInput 分类识别', () => {
     expect(findCategoryByIdentifier(cats, r.type, r.categoryKeyword)).toBe('e-餐饮');
   });
 });
+
+describe('parseSmartInput 自定义分类名直命中（最高优先级）', () => {
+  it('"剪辑收入500" + 收入分类"剪辑收入" → 命中该分类，不被兜底词"收入"抢先', () => {
+    const cats = [
+      ...makeCategories(),
+      { id: 'i-剪辑收入', name: '剪辑收入', type: 'income' as TransactionType, color: '#000', icon: 'tag' },
+    ];
+    const r = parseSmartInput('剪辑收入500', accounts, cats);
+    expect(r.type).toBe('income');
+    expect(r.amount).toBe('500');
+    expect(findCategoryByIdentifier(cats, r.type, r.categoryKeyword)).toBe('i-剪辑收入');
+  });
+
+  it('"剪辑费收入300"（无自定义分类）→ 归到工资', () => {
+    const cats = makeCategories();
+    const r = parseSmartInput('剪辑费收入300', accounts, cats);
+    expect(r.type).toBe('income');
+    expect(findCategoryByIdentifier(cats, r.type, r.categoryKeyword)).toBe('i-工资');
+  });
+
+  it('支出侧同类修复：自定义分类"水果捞"输入"水果捞20" → 不被"水果"抢到餐饮', () => {
+    const cats = [
+      ...makeCategories(),
+      { id: 'e-水果捞', name: '水果捞', type: 'expense' as TransactionType, color: '#000', icon: 'tag' },
+    ];
+    const r = parseSmartInput('水果捞20', accounts, cats);
+    expect(findCategoryByIdentifier(cats, r.type, r.categoryKeyword)).toBe('e-水果捞');
+  });
+
+  it('无收入词但命中收入分类名 → 纠正类型："二手闲置300" → income + 该分类', () => {
+    const cats = [
+      ...makeCategories(),
+      { id: 'i-二手闲置', name: '二手闲置', type: 'income' as TransactionType, color: '#000', icon: 'tag' },
+    ];
+    const r = parseSmartInput('二手闲置300', accounts, cats);
+    expect(r.type).toBe('income');
+    expect(findCategoryByIdentifier(cats, r.type, r.categoryKeyword)).toBe('i-二手闲置');
+  });
+
+  it('有收入信号但命中支出分类名 → 以收入信号为准："退款50" → income', () => {
+    const cats = makeCategories();
+    const r = parseSmartInput('退款50', accounts, cats);
+    expect(r.type).toBe('income');
+    expect(findCategoryByIdentifier(cats, r.type, r.categoryKeyword)).toBe('i-退款');
+  });
+
+  it('回归："支付宝到账100" 仍归其他收入/红包', () => {
+    const cats = makeCategories();
+    const r = parseSmartInput('支付宝到账100', accounts, cats);
+    expect(r.type).toBe('income');
+    const id = findCategoryByIdentifier(cats, r.type, r.categoryKeyword);
+    expect(['i-其他收入', 'i-红包']).toContain(id);
+  });
+});
