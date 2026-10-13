@@ -39,19 +39,20 @@ export default function Toast({ message, variant = 'success', actionLabel, onAct
       role="status"
       aria-live="polite"
       className={cn(
-        'fixed top-1/2 left-1/2 z-[110] flex items-center gap-3 px-6 py-4 rounded-card animate-bounce-in',
+        'fixed left-1/2 z-[110] flex items-center gap-3 px-5 py-3.5 rounded-card animate-bounce-in',
         className,
       )}
       style={{
-        transform: 'translate(-50%, -50%)',
+        // 定位到屏幕顶部状态栏下方：避免遮挡弹窗内容（弹窗居中）与底部按钮区
+        top: 'calc(env(safe-area-inset-top) + 0.75rem)',
+        transform: 'translateX(-50%)',
         background: 'var(--glass-strong)',
         WebkitBackdropFilter: 'blur(24px) saturate(1.8)',
         backdropFilter: 'blur(24px) saturate(1.8)',
         border: '1px solid var(--glass-border)',
         boxShadow: 'var(--shadow-card-hover)',
-        minWidth: 180,
-        maxWidth: 'calc(100vw - 2rem)',
-        justifyContent: 'center',
+        maxWidth: 'calc(100vw - 1.5rem)',
+        whiteSpace: 'nowrap',
       }}
     >
       <Icon size={24} style={{ color: VARIANT_COLOR[variant] }} />
