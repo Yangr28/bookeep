@@ -479,18 +479,20 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
 
       {/* 撤销提示 */}
       {recentDeleted && (
-        <div
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 pl-5 pr-2 py-2.5 rounded-full z-[95] flex items-center gap-3 animate-slide-up"
-          style={{ background: 'var(--ink)', color: 'var(--paper)', boxShadow: 'var(--shadow-card-hover)' }}
-        >
-          <span className="text-sm whitespace-nowrap">{t('categories.deletedToast', { name: recentDeleted.category.name })}</span>
-          <button
-            onClick={handleUndoDelete}
-            className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap"
-            style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
+        <div className="fixed inset-x-0 bottom-24 z-[95] flex justify-center px-4 pointer-events-none">
+          <div
+            className="pl-5 pr-2 py-2.5 rounded-full flex items-center gap-3 animate-slide-up pointer-events-auto"
+            style={{ background: 'var(--ink)', color: 'var(--paper)', boxShadow: 'var(--shadow-card-hover)' }}
           >
-            {t('categories.undo')}
-          </button>
+            <span className="text-sm whitespace-nowrap">{t('categories.deletedToast', { name: recentDeleted.category.name })}</span>
+            <button
+              onClick={handleUndoDelete}
+              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap"
+              style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
+            >
+              {t('categories.undo')}
+            </button>
+          </div>
         </div>
       )}
     </div>

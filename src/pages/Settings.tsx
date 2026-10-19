@@ -1100,9 +1100,9 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
 
       {/* 操作反馈 Toast */}
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[120] animate-slide-up">
+        <div className="fixed inset-x-0 bottom-24 z-[120] flex justify-center px-4 pointer-events-none">
           <div
-            className="card flex items-center gap-3 px-4 py-3 shadow-lg"
+            className="card flex items-center gap-3 px-4 py-3 shadow-lg animate-slide-up pointer-events-auto"
             style={{ minWidth: '280px', maxWidth: '90vw' }}
           >
             <div
