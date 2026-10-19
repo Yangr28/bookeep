@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -39,7 +40,7 @@ export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerPr
     setMinutes(m);
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in"
       style={{ background: 'rgba(43,41,37,0.45)' }}
@@ -130,6 +131,7 @@ export const TimePicker = ({ selectedTime, onTimeChange, onClose }: TimePickerPr
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

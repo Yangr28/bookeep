@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
@@ -23,7 +24,7 @@ export const MonthPicker = ({ selectedMonth, onMonthChange, onClose }: MonthPick
     onClose();
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in"
       style={{ background: 'rgba(43,41,37,0.45)' }}
@@ -91,6 +92,7 @@ export const MonthPicker = ({ selectedMonth, onMonthChange, onClose }: MonthPick
           </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

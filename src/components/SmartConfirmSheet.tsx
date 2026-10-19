@@ -6,6 +6,7 @@
  * 备注可就地编辑；点「确认记账」才真正保存，点「再改改」携带预填数据跳完整记账页。
  */
 import { useEffect, useState, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { X, Check, Pencil, Tag, CreditCard as CreditCardIcon, StickyNote, Clock } from 'lucide-react';
 import { Account, Category, TransactionType } from '../types';
@@ -85,7 +86,7 @@ export const SmartConfirmSheet = ({
     month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
   });
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in sheet-scrim"
       onClick={onClose}
@@ -227,7 +228,8 @@ export const SmartConfirmSheet = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

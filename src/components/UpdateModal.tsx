@@ -1,5 +1,6 @@
 import { Zap, Package, X, RefreshCw, AlertCircle, CheckCircle, Loader2, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { compareVersions, type UpdateCheckResult } from '../utils/update';
 import type { UpdateFlowState } from '../hooks/useUpdateCheck';
@@ -26,7 +27,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
     if (closable) onClose();
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[110] flex items-center justify-center animate-fade-in"
       style={{ background: 'rgba(43,41,37,0.45)' }}
@@ -276,6 +277,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/useStore';
 import {
@@ -846,9 +847,9 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
         </div>
       </div>
 
-      {showChangelog && (
+      {showChangelog && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-fade-in sheet-scrim"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center animate-fade-in sheet-scrim"
           onClick={() => setShowChangelog(false)}
         >
           <div
@@ -916,11 +917,12 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* 回退版本确认/进度弹窗（由更新日志中某个版本后的「回退」按钮触发） */}
-      {rollbackTarget && (
+      {rollbackTarget && createPortal(
         <div
           className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in sheet-scrim"
           onClick={closeRollback}
@@ -1035,13 +1037,14 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
       </>
       )}
 
       {/* 导入数据确认弹窗 */}
-      {importConfirm && (
+      {importConfirm && createPortal(
         <div
           className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in"
           style={{ background: 'rgba(43,41,37,0.45)' }}
@@ -1091,7 +1094,8 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* 操作反馈 Toast */}

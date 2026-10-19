@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/useStore';
 import { TransactionType, Category } from '../types';
@@ -279,9 +280,9 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
       </div>
 
       {/* 添加分类底部弹层 */}
-      {showAddModal && (
+      {showAddModal && createPortal(
         <div
-          className="fixed inset-0 z-[90] flex items-end justify-center"
+          className="fixed inset-0 z-[100] flex items-end justify-center"
           style={{ background: 'rgba(43,41,37,0.45)' }}
           onClick={() => setShowAddModal(false)}
         >
@@ -435,13 +436,14 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* 删除确认弹窗 */}
-      {categoryToDelete && (
+      {categoryToDelete && createPortal(
         <div
-          className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           style={{ background: 'rgba(43,41,37,0.45)' }}
           onClick={() => setCategoryToDelete(null)}
         >
@@ -471,7 +473,8 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* 撤销提示 */}

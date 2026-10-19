@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowDownUp, Globe, RefreshCw, Search as SearchIcon, X as XIcon, Check as CheckIcon, Edit3 } from 'lucide-react';
 import {
@@ -37,9 +38,9 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
     onClose();
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
+      className="fixed inset-0 z-[100] flex items-end justify-center"
       style={{ background: 'rgba(43,41,37,0.45)' }}
       onClick={handleClose}
     >
@@ -102,7 +103,8 @@ const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange,
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 });
 CurrencyPickerModal.displayName = 'CurrencyPickerModal';

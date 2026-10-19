@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Dashboard } from './pages/Dashboard';
 import { Record } from './pages/Record';
@@ -912,7 +913,7 @@ export default function App() {
         />
       )}
 
-      {showAccountPicker && (
+      {showAccountPicker && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in"
           style={{ background: 'rgba(43,41,37,0.45)' }}
@@ -971,10 +972,11 @@ export default function App() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {showExitConfirm && (
+      {showExitConfirm && createPortal(
         <div
           className="fixed inset-0 flex items-center justify-center z-[100] animate-fade-in"
           style={{ background: 'rgba(43,41,37,0.45)' }}
@@ -993,7 +995,8 @@ export default function App() {
               <button onClick={handleConfirmExit} className="btn-danger flex-1">{t('app.exit.confirm')}</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {showOCRModal && (

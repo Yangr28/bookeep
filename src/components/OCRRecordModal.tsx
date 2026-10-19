@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { X, Upload, Check, AlertCircle, Loader2, ChevronRight, Download, Calendar, Clock } from 'lucide-react';
 import { useStore } from '../store/useStore';
@@ -141,7 +142,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
     setError('');
   }, []);
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in sheet-scrim"
       onClick={onClose}
@@ -482,6 +483,7 @@ export const OCRRecordModal = ({ onClose }: OCRRecordModalProps) => {
           onClose={() => setTimePickerIndex(null)}
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
 };

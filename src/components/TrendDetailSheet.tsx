@@ -5,6 +5,7 @@
  * 下半部：逐月明细列表（月末总资产 / 当月结余 / 环比涨跌）
  */
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { X, TrendingUp, TrendingDown } from 'lucide-react';
 import {
@@ -49,7 +50,7 @@ export const TrendDetailSheet = ({ open, data, onClose }: TrendDetailSheetProps)
     ? ((totalChange / Math.abs(first.assets)) * 100)
     : 0;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in sheet-scrim"
       onClick={onClose}
@@ -204,6 +205,7 @@ export const TrendDetailSheet = ({ open, data, onClose }: TrendDetailSheetProps)
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

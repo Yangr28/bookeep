@@ -996,8 +996,8 @@ export const Accounts = ({
       </div>
 
       {/* 添加账户弹层 */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-[90] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowAddModal(false)}>
+      {showAddModal && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowAddModal(false)}>
           <div className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 z-10 p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', background: 'var(--card)' }}>
               <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('accounts.form.addTitle')}</h3>
@@ -1092,12 +1092,13 @@ export const Accounts = ({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* 编辑账户弹层 */}
-      {showEditModal && editingAccount && (
-        <div className="fixed inset-0 z-[90] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowEditModal(false)}>
+      {showEditModal && editingAccount && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowEditModal(false)}>
           <div className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 z-10 p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', background: 'var(--card)' }}>
               <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('accounts.form.editTitle')}</h3>
@@ -1192,12 +1193,13 @@ export const Accounts = ({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* 添加定期存款弹层 */}
-      {showDepositModal && (
-        <div className="fixed inset-0 z-[90] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowDepositModal(false)}>
+      {showDepositModal && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowDepositModal(false)}>
           <div className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 z-10 p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', background: 'var(--card)' }}>
               <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('accounts.deposit.formTitle')}</h3>
@@ -1359,12 +1361,13 @@ export const Accounts = ({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* 添加贷款弹层 */}
-      {showLoanModal && (
-        <div className="fixed inset-0 z-[90] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowLoanModal(false)}>
+      {showLoanModal && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowLoanModal(false)}>
           <div className="sheet w-full max-w-md max-h-[85vh] overflow-y-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 z-10 p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', background: 'var(--card)' }}>
               <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{editingLoan ? t('accounts.loan.editFormTitle') : t('accounts.loan.formTitle')}</h3>
@@ -1517,7 +1520,8 @@ export const Accounts = ({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* 贷款还款弹层 */}
@@ -1601,8 +1605,8 @@ export const Accounts = ({
       )}
 
       {/* 自定义颜色弹层 */}
-      {showCustomColorPicker && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowCustomColorPicker(false)}>
+      {showCustomColorPicker && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in" style={{ background: 'rgba(43,41,37,0.45)' }} onClick={() => setShowCustomColorPicker(false)}>
           <div className="w-full max-w-sm mx-4 rounded-card p-5 animate-bounce-in" style={{ background: 'var(--card)', boxShadow: 'var(--shadow-card)' }} onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold mb-4" style={{ color: 'var(--ink)' }}>{t('accounts.form.customColorTitle')}</h3>
             <div className="flex items-center gap-3 mb-4">
@@ -1642,7 +1646,8 @@ export const Accounts = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       <VersionInfo />
