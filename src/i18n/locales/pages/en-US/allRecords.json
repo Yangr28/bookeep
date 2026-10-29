@@ -25,5 +25,11 @@
   "selectAll": "Select all",
   "deselectAll": "Clear",
   "moveToCategory": "Move to category",
-  "pickCategoryTitle": "Select category"
+  "pickCategoryTitle": "Select category",
+  "searchPlaceholder": "Search notes, categories, accounts or amounts",
+  "clearSearch": "Clear search",
+  "noSearchResult": "No matching records",
+  "copyRecord": "Copy as new entry",
+  "saveAsTemplate": "Save as template",
+  "templateCreated": "Saved as template \"{{name}}\""
 }

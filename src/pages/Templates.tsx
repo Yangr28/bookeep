@@ -9,7 +9,7 @@ import { RecordTemplate, Transaction } from '../types';
 const TEMPLATE_ICONS = ['Bookmark', 'Coffee', 'UtensilsCrossed', 'Car', 'ShoppingBag', 'Laptop', 'Heart', 'Gift', 'Wallet', 'Briefcase'];
 const TEMPLATE_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'];
 
-const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplate?: (transaction: Transaction) => void }) => {
+const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplate?: () => void }) => {
   const { t } = useTranslation();
   const { templates, categories, accounts, addTemplate, updateTemplate, deleteTemplate, addTransaction } = useStore();
   const [showModal, setShowModal] = useState(false);
@@ -93,7 +93,7 @@ const Templates = ({ onBack, onUseTemplate }: { onBack: () => void; onUseTemplat
       createdAt: new Date().toISOString(),
     };
     addTransaction(transaction);
-    onUseTemplate?.(transaction);
+    onUseTemplate?.();
   };
 
   return (

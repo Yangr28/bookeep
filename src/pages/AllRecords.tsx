@@ -6,10 +6,11 @@ import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { formatCurrencyShort, formatDateTime } from '../utils/format';
-import { ArrowLeft, Calendar, ArrowRightLeft, Wallet, X, ChevronDown, ListChecks, FolderInput } from 'lucide-react';
+import { ArrowLeft, Calendar, ArrowRightLeft, Wallet, X, ChevronDown, ListChecks, FolderInput, Search as SearchIcon, Copy, Bookmark, Edit3, Trash2 } from 'lucide-react';
 import { Transaction, Transfer, Category } from '../types';
 import { CategoryCard } from '../components/CategoryCard';
 import { useInfiniteList } from '../hooks/useInfiniteList';
+import { useDebounce } from '../hooks/useDebounce';
 import { ListSkeleton } from '../components/Skeleton';
 
 interface AllRecordsProps {
@@ -17,10 +18,14 @@ interface AllRecordsProps {
   onBack?: () => void;
   onEditTransaction?: (transaction: Transaction) => void;
   onDeleteTransaction?: (transaction: Transaction) => void;
+  /** 以该记录为模板复制记一笔（跳转记账页并预填） */
+  onDuplicateTransaction?: (transaction: Transaction) => void;
+  /** 将记录保存为记账模板 */
+  onCreateTemplate?: (transaction: Transaction) => void;
   onToast?: (message: string) => void;
 }
 
-export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteTransaction, onToast }: AllRecordsProps) => {
+export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteTransaction, onDuplicateTransaction, onCreateTemplate, onToast }: AllRecordsProps) => {
   const { t } = useTranslation();
 
   const transactions = useStore((state) => state.transactions);
@@ -42,6 +47,11 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
   const [amountMax, setAmountMax] = useState('');
   // 日期选择弹窗
   const [showDatePicker, setShowDatePicker] = useState<null | 'start' | 'end'>(null);
+  // 关键词搜索：备注 / 分类 / 账户 / 金额
+  const [query, setQuery] = useState('');
+  const debouncedQuery = useDebounce(query, 250);
+  // 记录操作菜单（编辑 / 复制记一笔 / 存为模板 / 删除）
+  const [actionRecord, setActionRecord] = useState<Transaction | null>(null);
 
   // 批量管理：多选记录并批量移动到其他分类（转账无分类，不参与）
   const [batchMode, setBatchMode] = useState(false);
@@ -129,6 +139,23 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     if (amountMin && record.amount < parseFloat(amountMin)) return false;
     if (amountMax && record.amount > parseFloat(amountMax)) return false;
 
+    // 关键词搜索：备注、分类名、账户名、金额数字
+    const q = debouncedQuery.trim().toLowerCase();
+    if (q) {
+      const accountName = record.transaction
+        ? getAccountById(record.transaction.accountId)?.name || ''
+        : '';
+      const haystack = [
+        record.note,
+        record.categoryName,
+        record.relatedAccountName,
+        accountName,
+        record.amount.toString(),
+        record.amount.toFixed(2),
+      ].filter(Boolean).join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+
     return true;
   });
 
@@ -140,7 +167,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
   const { visibleItems: visibleRecords, sentinelRef, hasMore } = useInfiniteList(
     sortedRecords,
     30,
-    [startDate, endDate, categoryFilter, accountFilter, amountMin, amountMax, transactions, transfers],
+    [startDate, endDate, categoryFilter, accountFilter, amountMin, amountMax, debouncedQuery, transactions, transfers],
   );
 
   const totalIncome = sortedRecords
@@ -151,7 +178,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     .filter((r) => r.type === 'transaction' && r.direction === 'out')
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const hasFilter = !!(startDate || endDate || categoryFilter !== 'all' || accountFilter !== 'all' || amountMin || amountMax);
+  const hasFilter = !!(startDate || endDate || categoryFilter !== 'all' || accountFilter !== 'all' || amountMin || amountMax || query);
 
   const handleResetFilter = () => {
     setStartDate('');
@@ -160,6 +187,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     setAccountFilter('all');
     setAmountMin('');
     setAmountMax('');
+    setQuery('');
   };
 
   // 当前筛选结果中可参与批量操作的记录（仅收支记录，转账无分类）
@@ -247,6 +275,31 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
           </button>
         )}
       </div>
+
+      {/* 关键词搜索 */}
+      {!batchMode && (
+        <div className="px-4 mt-3">
+          <div
+            className="flex items-center gap-2 rounded-card px-3 py-2.5"
+            style={{ background: 'var(--card-solid)', boxShadow: 'var(--shadow-card)' }}
+          >
+            <SearchIcon size={17} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('allRecords.searchPlaceholder')}
+              className="flex-1 bg-transparent outline-none text-sm"
+              style={{ color: 'var(--ink)' }}
+            />
+            {query && (
+              <button onClick={() => setQuery('')} className="flex-shrink-0" aria-label={t('allRecords.clearSearch')}>
+                <X size={15} style={{ color: 'var(--ink-2)' }} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 收支概览 */}
       <div className="px-4 mt-3">
@@ -439,6 +492,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
                     transaction={record.transaction}
                     onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(record.transaction!)}
                     onEdit={onEditTransaction ? () => onEditTransaction(record.transaction!) : undefined}
+                    onPress={!batchMode ? () => setActionRecord(record.transaction!) : undefined}
                     selectMode={batchMode}
                     selected={selectedIds.has(record.id)}
                     onToggleSelect={() => toggleSelect(record.id)}
@@ -502,10 +556,96 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
             <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--paper-deep)' }}>
               <Wallet size={28} style={{ color: 'var(--ink-2)' }} />
             </div>
-            <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('allRecords.noRecords')}</p>
+            <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
+              {debouncedQuery.trim() ? t('allRecords.noSearchResult') : t('allRecords.noRecords')}
+            </p>
           </div>
         )}
       </div>
+
+      {/* 记录操作菜单：编辑 / 复制记一笔 / 存为模板 / 删除 */}
+      {actionRecord && createPortal(
+        <>
+          <div
+            className="fixed inset-0 z-[100] animate-fade-in"
+            style={{ background: 'rgba(43,41,37,0.45)' }}
+            onClick={() => setActionRecord(null)}
+          />
+          <div
+            className="fixed left-0 right-0 bottom-0 z-[101] animate-slide-up rounded-t-card px-4 pt-4"
+            style={{
+              background: 'var(--card-solid)',
+              boxShadow: '0 -8px 40px rgba(15,17,24,0.25)',
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="min-w-0">
+                <p className="font-semibold truncate" style={{ color: 'var(--ink)' }}>
+                  {categories.find((c) => c.id === actionRecord.categoryId)?.name || t('common.unclassified')}
+                </p>
+                <p className="text-xs mt-0.5 amount-num" style={{ color: 'var(--ink-2)' }}>
+                  {formatDateTime(actionRecord.createdAt)}
+                </p>
+              </div>
+              <p
+                className="font-bold amount-num flex-shrink-0 ml-3"
+                style={{ color: actionRecord.type === 'income' ? 'var(--primary)' : 'var(--expense)' }}
+              >
+                {actionRecord.type === 'income' ? '+' : '-'}{formatCurrencyShort(actionRecord.amount)}
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              {onDuplicateTransaction && (
+                <button
+                  onClick={() => { onDuplicateTransaction(actionRecord); setActionRecord(null); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-button text-sm font-medium text-left active:scale-[0.99] transition-transform"
+                  style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
+                >
+                  <Copy size={18} style={{ color: 'var(--primary)' }} />
+                  {t('allRecords.copyRecord')}
+                </button>
+              )}
+              {onCreateTemplate && (
+                <button
+                  onClick={() => { onCreateTemplate(actionRecord); setActionRecord(null); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-button text-sm font-medium text-left active:scale-[0.99] transition-transform"
+                  style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
+                >
+                  <Bookmark size={18} style={{ color: 'var(--primary)' }} />
+                  {t('allRecords.saveAsTemplate')}
+                </button>
+              )}
+              {onEditTransaction && (
+                <button
+                  onClick={() => { onEditTransaction(actionRecord); setActionRecord(null); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-button text-sm font-medium text-left active:scale-[0.99] transition-transform"
+                  style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
+                >
+                  <Edit3 size={18} style={{ color: 'var(--ink-2)' }} />
+                  {t('common.edit')}
+                </button>
+              )}
+              {onDeleteTransaction && (
+                <button
+                  onClick={() => { onDeleteTransaction(actionRecord); setActionRecord(null); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-button text-sm font-medium text-left active:scale-[0.99] transition-transform"
+                  style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}
+                >
+                  <Trash2 size={18} />
+                  {t('common.delete')}
+                </button>
+              )}
+            </div>
+
+            <button onClick={() => setActionRecord(null)} className="btn-ghost w-full mt-3">
+              {t('common.cancel')}
+            </button>
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* 批量操作底栏：覆盖在底部导航之上 */}
       {batchMode && createPortal(

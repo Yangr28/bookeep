@@ -139,7 +139,9 @@ export default function App() {
   } = useModal();
 
   const accounts = useStore((state) => state.accounts);
+  const categories = useStore((state) => state.categories);
   const addTransaction = useStore((state) => state.addTransaction);
+  const addTemplate = useStore((state) => state.addTemplate);
   const updateTransaction = useStore((state) => state.updateTransaction);
   const setTransactions = useStore((state) => state.setTransactions);
   const generateRecurringTransactions = useStore((state) => state.generateRecurringTransactions);
@@ -243,6 +245,29 @@ export default function App() {
     setRecordType('expense');
     setShowKeypad(false);
   }, [resetHistory, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setShowKeypad, editTransaction, t, showToast]);
+
+  // 模板一键记账成功反馈：Toast + 保存成功对勾动画，与普通记账保持一致
+  const handleUseTemplateRecord = useCallback(() => {
+    showToast(t('app.toast.saved'));
+    setSaveSuccessTick((n) => n + 1);
+  }, [showToast, t]);
+
+  // 从已有记录生成模板：沿用其分类的图标与配色，名称优先取备注，其次分类名
+  const handleCreateTemplateFromTransaction = useCallback((transaction: Transaction) => {
+    const category = categories.find((c) => c.id === transaction.categoryId);
+    const name = transaction.note?.trim() || category?.name || t('common.unclassified');
+    addTemplate({
+      name: name.slice(0, 20),
+      type: transaction.type,
+      amount: transaction.amount,
+      categoryId: transaction.categoryId,
+      note: transaction.note || '',
+      accountId: transaction.accountId,
+      icon: category?.icon || 'Bookmark',
+      color: category?.color || '#6366f1',
+    });
+    showToast(t('allRecords.templateCreated', { name: name.slice(0, 20) }));
+  }, [addTemplate, categories, t, showToast]);
 
   const handleViewDetail = useCallback((filterType: FilterType) => {
     setDetailFilter(filterType);
@@ -742,6 +767,8 @@ export default function App() {
             onBack={handleBack}
             onEditTransaction={handleEditTransaction}
             onDeleteTransaction={handleDeleteTransactionWithUndo}
+            onDuplicateTransaction={handleCopyTransaction}
+            onCreateTemplate={handleCreateTemplateFromTransaction}
             onToast={(msg) => showToast(msg)}
           />
         );
@@ -785,6 +812,8 @@ export default function App() {
             onBack={handleBack}
             onEditTransaction={handleEditTransaction}
             onDeleteTransaction={handleDeleteTransactionWithUndo}
+            onDuplicateTransaction={handleCopyTransaction}
+            onCreateTemplate={handleCreateTemplateFromTransaction}
             onToast={(msg) => showToast(msg)}
           />
         );
@@ -811,7 +840,7 @@ export default function App() {
       case '/recurring':
         return <RecurringRecords onBack={handleBack} />;
       case '/templates':
-        return <Templates onBack={handleBack} />;
+        return <Templates onBack={handleBack} onUseTemplate={handleUseTemplateRecord} />;
       case '/currency-converter':
         return <CurrencyConverter onBack={handleBack} />;
       default:

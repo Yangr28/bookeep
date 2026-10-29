@@ -12,6 +12,8 @@ interface TransactionCardProps {
   transaction: Transaction;
   onDelete?: () => void;
   onEdit?: () => void;
+  /** 点击卡片（非多选模式）时触发，用于打开记录操作菜单 */
+  onPress?: () => void;
   disabled?: boolean;
   /** 多选模式：禁用滑动/编辑，整卡点击切换选中，左侧显示勾选圈 */
   selectMode?: boolean;
@@ -19,7 +21,7 @@ interface TransactionCardProps {
   onToggleSelect?: () => void;
 }
 
-const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, selectMode = false, selected = false, onToggleSelect }: TransactionCardProps) => {
+const TransactionCardComponent = ({ transaction, onDelete, onEdit, onPress, disabled, selectMode = false, selected = false, onToggleSelect }: TransactionCardProps) => {
   const { t } = useTranslation();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [translateX, setTranslateX] = useState(0);
@@ -27,6 +29,8 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
   const startY = useRef(0);
   const currentX = useRef(0);
   const axis = useRef<'x' | 'y' | null>(null);
+  // 侧滑过程中不触发点击，避免滑动结束误开操作菜单
+  const moved = useRef(false);
 
   // 多选模式下禁用滑动手势
   const gestureDisabled = disabled || selectMode;
@@ -40,6 +44,7 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
     startY.current = e.touches[0].clientY;
     currentX.current = translateX;
     axis.current = null;
+    moved.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -51,6 +56,7 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
       else if (Math.abs(dx) > 8) { axis.current = 'x'; }
     }
     if (axis.current !== 'x') return;
+    moved.current = true;
     let newTranslate = currentX.current + dx;
     newTranslate = Math.max(-64, Math.min(64, newTranslate));
     setTranslateX(newTranslate);
@@ -88,9 +94,20 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, disabled, sel
         </div>
       )}
       <div
-        role={selectMode ? 'button' : undefined}
+        role={selectMode ? 'button' : onPress ? 'button' : undefined}
         aria-pressed={selectMode ? selected : undefined}
-        onClick={selectMode ? onToggleSelect : undefined}
+        onClick={
+          selectMode
+            ? onToggleSelect
+            : onPress
+              ? () => {
+                  // 侧滑已展开时先收起，本次点击不打开菜单
+                  if (translateX !== 0) { setTranslateX(0); return; }
+                  if (moved.current) return;
+                  onPress();
+                }
+              : undefined
+        }
         className={`relative p-3 transition-transform duration-200 ease-out ${selectMode ? 'cursor-pointer active:opacity-80' : ''}`}
         style={{
           transform: `translateX(${selectMode ? 0 : translateX}px)`,

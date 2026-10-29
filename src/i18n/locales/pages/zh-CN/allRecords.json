@@ -25,5 +25,11 @@
   "selectAll": "全选",
   "deselectAll": "取消全选",
   "moveToCategory": "移动到分类",
-  "pickCategoryTitle": "选择目标分类"
+  "pickCategoryTitle": "选择目标分类",
+  "searchPlaceholder": "搜索备注、分类、账户或金额",
+  "clearSearch": "清除搜索",
+  "noSearchResult": "没有匹配的记录",
+  "copyRecord": "复制记一笔",
+  "saveAsTemplate": "存为模板",
+  "templateCreated": "已保存为模板「{{name}}」"
 }
