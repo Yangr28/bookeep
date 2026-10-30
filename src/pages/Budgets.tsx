@@ -81,13 +81,13 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
           <button onClick={onBack} className="icon-btn" aria-label={t('budgets.back')}>
             <ArrowLeft size={20} />
           </button>
-          <div>
+          <div className="min-w-0 flex-1">
             <h1 className="page-title">{t('budgets.title')}</h1>
             <p className="page-subtitle">{t('budgets.monthFormat', { year: selectedMonth.slice(0, 4), month: Number(selectedMonth.slice(5)) })}</p>
           </div>
         </div>
 
-        <div className="card mt-4 p-4" style={{ background: 'var(--primary-soft)' }}>
+        <div className="card mt-3 p-4" style={{ background: 'var(--primary-soft)' }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm" style={{ color: 'var(--primary-ink)' }}>{t('budgets.totalUsage')}</span>
             <span className="text-sm font-medium amount-num" style={{ color: 'var(--primary-ink)' }}>
@@ -112,12 +112,12 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
         </div>
       </div>
 
-      <div className="px-4 mt-4">
-        <div className="flex items-center justify-between mb-3">
+      <div className="px-4 mt-3">
+        <div className="flex items-center justify-between mb-2.5">
           <label className="section-title">{t('budgets.selectMonth')}</label>
           <button
             onClick={() => setShowMonthPicker(true)}
-            className="rounded-button px-3 py-2 text-sm flex items-center gap-1 amount-num"
+            className="rounded-button px-3 py-2 text-sm flex items-center gap-1 amount-num whitespace-nowrap"
             style={{ background: 'var(--card)', color: 'var(--ink)', boxShadow: 'var(--shadow-card)' }}
           >
             {t('budgets.monthFormat', { year: selectedMonth.slice(0, 4), month: selectedMonth.slice(5) })}
@@ -135,19 +135,19 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
             return (
               <div
                 key={category.id}
-                className="card mb-3 p-4"
+                className="card mb-2.5 p-4"
                 style={isOverBudget ? { border: '1.5px solid var(--expense)' } : undefined}
               >
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-2.5">
                   <div
                     className="p-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: `${category.color}30` }}
                   >
                     <IconComponent size={20} style={{ color: category.color }} />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium" style={{ color: 'var(--ink)' }}>{category.name}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium truncate" style={{ color: 'var(--ink)' }}>{category.name}</span>
                       {isOverBudget && (
                         <span className="text-xs flex items-center gap-1" style={{ color: 'var(--expense)' }}>
                           <AlertCircle size={12} />
@@ -166,7 +166,7 @@ export const Budgets = ({ onBack, onToast }: BudgetsProps) => {
                   </div>
                 </div>
 
-                <div className="h-2 rounded-full overflow-hidden mb-3" style={{ background: 'var(--paper-deep)' }}>
+                <div className="h-2 rounded-full overflow-hidden mb-2.5" style={{ background: 'var(--paper-deep)' }}>
                   <div
                     className="h-full transition-all duration-500"
                     style={{ width: `${usage.percentage}%`, background: getBudgetColor(usage.percentage) }}

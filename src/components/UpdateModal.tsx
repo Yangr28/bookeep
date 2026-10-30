@@ -98,7 +98,7 @@ export const UpdateModal = ({ result, flow, onUpdate, onClose, onSkip, onApkUpda
             <div className="py-4">
               <div className="flex items-center gap-3 mb-4">
                 <Loader2 size={22} className="animate-spin flex-shrink-0" style={{ color: 'var(--primary)' }} />
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="font-semibold" style={{ color: 'var(--ink)' }}>
                     {isHot ? t('update.downloadingHot') : t('update.downloadingFull')}
                   </p>

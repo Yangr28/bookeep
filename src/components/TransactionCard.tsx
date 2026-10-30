@@ -76,7 +76,7 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, onPress, disa
   const amountColor = isIncome ? 'var(--primary)' : 'var(--expense)';
 
   return (
-    <div className="relative overflow-hidden rounded-card mb-2">
+    <div className="relative overflow-hidden rounded-card mb-1.5">
       {!selectMode && (
         <div className="absolute inset-0 flex items-center">
           <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-16" style={{ background: 'var(--expense)' }}>
@@ -108,7 +108,7 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, onPress, disa
                 }
               : undefined
         }
-        className={`relative p-3 transition-transform duration-200 ease-out ${selectMode ? 'cursor-pointer active:opacity-80' : ''}`}
+        className={`relative p-2.5 transition-transform duration-200 ease-out ${selectMode ? 'cursor-pointer active:opacity-80' : ''}`}
         style={{
           transform: `translateX(${selectMode ? 0 : translateX}px)`,
           // 侧滑操作按钮在本层正下方，必须用不透明面，否则编辑/删除会透过玻璃卡面叠在图标与金额上
@@ -144,9 +144,9 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, onPress, disa
                 )}
               </span>
             </div>
-            <div className="flex items-center gap-2 mt-1">
-              {transaction.note && <p className="text-xs truncate flex-1 max-w-[120px]" style={{ color: 'var(--ink-2)' }}>{transaction.note}</p>}
-              <span className="text-xs amount-num flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{formatDateTime(transaction.createdAt)}</span>
+            <div className="flex items-center gap-2 mt-0.5">
+              {transaction.note && <p className="text-xs truncate flex-1 min-w-0" style={{ color: 'var(--ink-2)' }}>{transaction.note}</p>}
+              <span className="text-xs amount-num flex-shrink-0 whitespace-nowrap" style={{ color: 'var(--ink-2)' }}>{formatDateTime(transaction.createdAt)}</span>
             </div>
           </div>
         </div>

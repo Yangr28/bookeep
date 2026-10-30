@@ -287,17 +287,17 @@ const ProfileComponent = ({ onGoToSettings, selectedDate, onInsightClick }: Prof
   return (
     <div className="page-root pb-nav page-enter">
       {/* 页头 */}
-      <div className="safe-top px-4 pt-3 pb-1 flex items-center justify-between">
-        <div>
+      <div className="safe-top px-4 pt-3 pb-1 flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <h1 className="page-title">{t('nav.profile')}</h1>
           <p className="page-subtitle">{t('profile.headerSubtitle', { year: selectedYear, month: t(`calendar.month${selectedMonth + 1}`) })}</p>
         </div>
-        <button onClick={onGoToSettings} className="icon-btn" aria-label={t('dashboard.settings')}>
+        <button onClick={onGoToSettings} className="icon-btn flex-shrink-0" aria-label={t('dashboard.settings')}>
           <SettingsIcon size={22} />
         </button>
       </div>
 
-      <div className="px-4 mt-3 space-y-3">
+      <div className="px-4 mt-3 space-y-2.5">
         {/* 月度报表（可展开/收起）——财务概览前置 */}
         <div className="card p-4">
           <button
@@ -318,7 +318,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate, onInsightClick }: Prof
           </button>
 
           {showReport && (
-            <div className="mt-4 space-y-3 animate-stagger-in">
+            <div className="mt-3 space-y-3 animate-stagger-in">
               {/* 智能洞察（仅当前自然月） */}
               {isViewingCurrentMonth && (
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
@@ -508,15 +508,15 @@ const ProfileComponent = ({ onGoToSettings, selectedDate, onInsightClick }: Prof
           </div>
           {expenseData.length > 0 ? (
             <div className="flex flex-col items-center">
-              <div className="relative w-full" style={{ height: 200 }}>
+              <div className="relative w-full" style={{ height: 170 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={expenseData.map((item) => ({ name: item.category.name, value: item.total, color: item.category.color }))}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={85}
+                      innerRadius={44}
+                      outerRadius={72}
                       paddingAngle={3}
                       dataKey="value"
                       isAnimationActive={true}
@@ -569,7 +569,7 @@ const ProfileComponent = ({ onGoToSettings, selectedDate, onInsightClick }: Prof
               </div>
             </div>
           ) : (
-            <p className="text-center text-sm py-8" style={{ color: 'var(--ink-2)' }}>{t('profile.noExpenseData')}</p>
+            <p className="text-center text-sm py-6" style={{ color: 'var(--ink-2)' }}>{t('profile.noExpenseData')}</p>
           )}
         </div>
 
@@ -581,15 +581,15 @@ const ProfileComponent = ({ onGoToSettings, selectedDate, onInsightClick }: Prof
               <span className="text-sm font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(monthIncome)}</span>
             </div>
             <div className="flex flex-col items-center">
-              <div className="relative w-full" style={{ height: 200 }}>
+              <div className="relative w-full" style={{ height: 170 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={incomeData.map((item) => ({ name: item.category.name, value: item.total, color: item.category.color }))}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={85}
+                      innerRadius={44}
+                      outerRadius={72}
                       paddingAngle={3}
                       dataKey="value"
                       isAnimationActive={true}

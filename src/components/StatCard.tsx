@@ -20,7 +20,7 @@ export const StatCard = ({ type, title, amount, onClick }: StatCardProps) => {
   return (
     <button
       onClick={onClick}
-      className="card card-hover w-full flex items-center gap-3 p-3.5 text-left"
+      className="card card-hover w-full flex items-center gap-2.5 p-3 text-left"
     >
       <div
         className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
@@ -29,7 +29,7 @@ export const StatCard = ({ type, title, amount, onClick }: StatCardProps) => {
         <Icon size={19} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>{title}</p>
+        <p className="text-xs font-medium truncate" style={{ color: 'var(--ink-2)' }}>{title}</p>
         <p
           className="font-bold amount-num mt-0.5 truncate"
           style={{ color, fontSize: amount >= 1000000 ? '13px' : '15px' }}

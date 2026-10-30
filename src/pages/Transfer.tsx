@@ -77,7 +77,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
         <button onClick={onBack} className="icon-btn" aria-label={t('transfer.back')}>
           <ArrowLeft size={20} />
         </button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="page-title">{t('transfer.title')}</h1>
           <p className="page-subtitle">{t('transfer.subtitle')}</p>
         </div>
@@ -85,7 +85,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
 
       {/* 转账金额 */}
       <div className="px-4 mt-3">
-        <div className="card p-5">
+        <div className="card p-4">
           <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('transfer.amountLabel')}</p>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-2xl font-semibold amount-num" style={{ color: 'var(--ink-2)' }}>¥</span>
@@ -102,7 +102,7 @@ export const Transfer = ({ onBack, onSuccess }: TransferProps) => {
         </div>
       </div>
 
-      <div className="px-4 mt-4 space-y-4 pb-28">
+      <div className="px-4 mt-3 space-y-3 pb-28">
         {/* 转出账户 */}
         <div className="card p-4">
           <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>{t('transfer.fromAccount')}</p>

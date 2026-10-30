@@ -361,14 +361,14 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             <button onClick={() => setSubPage(null)} className="icon-btn" aria-label={t('settings.back')}>
               <ArrowLeft size={20} />
             </button>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h1 className="page-title">{t('settings.help.title')}</h1>
             </div>
           </div>
-          <div className="px-4 mt-3 space-y-3">
-            <div className="card p-4">
-              <h3 className="font-bold mb-3" style={{ color: 'var(--ink)' }}>{t('settings.help.quickStart')}</h3>
-              <div className="space-y-3 text-sm" style={{ color: 'var(--ink-2)' }}>
+          <div className="px-4 mt-3 space-y-2.5">
+            <div className="card p-3.5">
+              <h3 className="font-bold mb-2.5" style={{ color: 'var(--ink)' }}>{t('settings.help.quickStart')}</h3>
+              <div className="space-y-2.5 text-sm" style={{ color: 'var(--ink-2)' }}>
                 <div>
                   <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{t('settings.help.recordTitle')}</p>
                   <p>{t('settings.help.recordBody')}</p>
@@ -388,9 +388,9 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               </div>
             </div>
 
-            <div className="card p-4">
-              <h3 className="font-bold mb-3" style={{ color: 'var(--ink)' }}>{t('settings.help.faqTitle')}</h3>
-              <div className="space-y-3 text-sm" style={{ color: 'var(--ink-2)' }}>
+            <div className="card p-3.5">
+              <h3 className="font-bold mb-2.5" style={{ color: 'var(--ink)' }}>{t('settings.help.faqTitle')}</h3>
+              <div className="space-y-2.5 text-sm" style={{ color: 'var(--ink-2)' }}>
                 <div>
                   <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{t('settings.help.faq1q')}</p>
                   <p>{t('settings.help.faq1a')}</p>
@@ -406,9 +406,9 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               </div>
             </div>
 
-            <div className="card p-4">
-              <h3 className="font-bold mb-3" style={{ color: 'var(--ink)' }}>{t('settings.help.feedbackTitle')}</h3>
-              <p className="text-sm mb-3" style={{ color: 'var(--ink-2)' }}>{t('settings.help.feedbackIntro')}</p>
+            <div className="card p-3.5">
+              <h3 className="font-bold mb-2.5" style={{ color: 'var(--ink)' }}>{t('settings.help.feedbackTitle')}</h3>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>{t('settings.help.feedbackIntro')}</p>
               <div className="space-y-2">
                 {GITHUB_REPO && (
                   <a
@@ -441,12 +441,12 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             <button onClick={() => setSubPage(null)} className="icon-btn" aria-label={t('settings.back')}>
               <ArrowLeft size={20} />
             </button>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h1 className="page-title">{t('settings.about.privacy')}</h1>
             </div>
           </div>
-          <div className="px-4 mt-3 space-y-3 pb-6">
-            <div className="card p-4 space-y-4 text-sm" style={{ color: 'var(--ink-2)' }}>
+          <div className="px-4 mt-3 space-y-2.5 pb-6">
+            <div className="card p-3.5 space-y-3 text-sm" style={{ color: 'var(--ink-2)' }}>
               <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('settings.privacy.updated')}</p>
 
               <div>
@@ -516,17 +516,17 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             <button onClick={() => setSubPage(null)} className="icon-btn" aria-label={t('settings.back')}>
               <ArrowLeft size={20} />
             </button>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h1 className="page-title">{t('settings.backupPage.title')}</h1>
             </div>
           </div>
-          <div className="px-4 mt-3 space-y-3 pb-6">
-            <div className="card p-4 text-sm" style={{ color: 'var(--ink-2)' }}>
+          <div className="px-4 mt-3 space-y-2.5 pb-6">
+            <div className="card p-3.5 text-sm" style={{ color: 'var(--ink-2)' }}>
               {t('settings.backupPage.intro')}
             </div>
 
             {backups.length === 0 ? (
-              <div className="card p-8 flex flex-col items-center text-center">
+              <div className="card p-6 flex flex-col items-center text-center">
                 <div
                   className="w-14 h-14 rounded-full flex items-center justify-center mb-3"
                   style={{ background: 'var(--paper-deep)' }}
@@ -534,7 +534,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                   <FileText size={28} style={{ color: 'var(--ink-2)' }} />
                 </div>
                 <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{t('settings.backupPage.emptyTitle')}</p>
-                <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.backupPage.emptyHint')}</p>
+                <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.backupPage.emptyHint')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -616,35 +616,35 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             <ArrowLeft size={20} />
           </button>
         )}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="page-title">{isTab ? t('settings.profileTitle') : t('settings.title')}</h1>
         </div>
       </div>
 
-      <div className="px-4 mt-3 space-y-3">
+      <div className="px-4 mt-3 space-y-2.5">
         {/* 数据管理 */}
         <div className="card overflow-hidden">
-          <div className="p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+          <div className="px-4 py-2.5" style={{ borderBottom: '1px solid var(--line)' }}>
             <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('settings.data.sectionTitle')}</h3>
           </div>
 
           <button
             onClick={handleExport}
-            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
           >
             <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
               <Download size={21} />
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.data.export')}</p>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.data.exportDesc')}</p>
+              <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.data.exportDesc')}</p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
 
           <button
             onClick={handleImport}
-            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
             style={{ borderTop: '1px solid var(--line)' }}
           >
             <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
@@ -652,14 +652,14 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.data.import')}</p>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.data.importDesc')}</p>
+              <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.data.importDesc')}</p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
 
           <button
             onClick={() => setSubPage('backups')}
-            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
             style={{ borderTop: '1px solid var(--line)' }}
           >
             <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
@@ -667,7 +667,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.data.backups')}</p>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
+              <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>
                 {backups.length > 0 ? t('settings.data.backupCount', { count: backups.length }) : t('settings.data.backupsDesc')}
               </p>
             </div>
@@ -676,7 +676,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
 
           <button
             onClick={handleRecalculate}
-            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
             style={{ borderTop: '1px solid var(--line)' }}
           >
             <div
@@ -700,19 +700,19 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
         {/* 分类管理（仅当传入回调时显示） */}
         {onGoToCategories && (
           <div className="card overflow-hidden">
-            <div className="p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+            <div className="px-4 py-2.5" style={{ borderBottom: '1px solid var(--line)' }}>
               <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('settings.manage.sectionTitle')}</h3>
             </div>
             <button
               onClick={onGoToCategories}
-              className="w-full flex items-center gap-4 p-4 active:brightness-95"
+              className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
             >
               <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
                 <Tags size={21} />
               </div>
               <div className="flex-1 text-left min-w-0">
                 <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.manage.categories')}</p>
-                <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.manage.categoriesDesc')}</p>
+                <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.manage.categoriesDesc')}</p>
               </div>
               <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
             </button>
@@ -721,13 +721,13 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
 
         {/* 外观 */}
         <div className="card overflow-hidden">
-          <div className="p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+          <div className="px-4 py-2.5" style={{ borderBottom: '1px solid var(--line)' }}>
             <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('settings.appearance.sectionTitle')}</h3>
           </div>
 
           <button
             onClick={onToggleTheme}
-            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
           >
             <div
               className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0"
@@ -739,7 +739,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.appearance.darkMode')}</p>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{isDark ? t('settings.appearance.darkOn') : t('settings.appearance.darkOff')}</p>
+              <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{isDark ? t('settings.appearance.darkOn') : t('settings.appearance.darkOff')}</p>
             </div>
             <div
               className="relative w-12 h-6 rounded-full transition-colors flex-shrink-0"
@@ -753,7 +753,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
           </button>
 
           {/* 语言选择：跟随系统 / 中文 / English */}
-          <div className="w-full flex items-center gap-4 p-4" style={{ borderTop: '1px solid var(--line)' }}>
+          <div className="w-full flex items-center gap-3 p-3.5" style={{ borderTop: '1px solid var(--line)' }}>
             <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}>
               <FileText size={21} />
             </div>
@@ -776,20 +776,20 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
 
         {/* 关于 */}
         <div className="card overflow-hidden">
-          <div className="p-4" style={{ borderBottom: '1px solid var(--line)' }}>
+          <div className="px-4 py-2.5" style={{ borderBottom: '1px solid var(--line)' }}>
             <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('settings.about.sectionTitle')}</h3>
           </div>
 
           <button
             onClick={() => setShowChangelog(true)}
-            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
           >
             <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
               <Info size={21} />
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.about.version')}</p>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
+              <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>
                 {t('settings.about.currentVersion', { version: appVersion })}
                 {hotVersion && nativeVersion && (
                   <span style={{ color: 'var(--primary)' }}>{t('settings.about.hotVersion', { version: nativeVersion })}</span>
@@ -817,7 +817,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
 
           <button
             onClick={() => setSubPage('help')}
-            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
             style={{ borderTop: '1px solid var(--line)' }}
           >
             <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}>
@@ -825,14 +825,14 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.about.help')}</p>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.about.helpDesc')}</p>
+              <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.about.helpDesc')}</p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
 
           <button
             onClick={() => setSubPage('privacy')}
-            className="w-full flex items-center gap-4 p-4 active:brightness-95"
+            className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
             style={{ borderTop: '1px solid var(--line)' }}
           >
             <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}>
@@ -840,7 +840,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.about.privacy')}</p>
-              <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.about.privacyDesc')}</p>
+              <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.about.privacyDesc')}</p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
@@ -908,7 +908,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                 );
               })}
             </div>
-            <div className="p-4 space-y-3" style={{ borderTop: '1px solid var(--line)' }}>
+            <div className="p-3.5 space-y-2.5" style={{ borderTop: '1px solid var(--line)' }}>
               <button
                 onClick={() => setShowChangelog(false)}
                 className="btn-primary w-full py-3 font-medium"
@@ -941,7 +941,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                 </div>
                 <div>
                   <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{t('settings.rollback.title')}</h3>
-                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.rollback.subtitle', { version: rollbackTarget.version })}</p>
+                  <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.rollback.subtitle', { version: rollbackTarget.version })}</p>
                 </div>
               </div>
             </div>
@@ -951,9 +951,9 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                 <div className="py-2">
                   <div className="flex items-center gap-3 mb-4">
                     <Loader2 size={22} className="animate-spin flex-shrink-0" style={{ color: 'var(--expense)' }} />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.rollback.downloading')}</p>
-                      <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.rollback.downloadProgress', { percent: rollbackFlow.percent })}</p>
+                      <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.rollback.downloadProgress', { percent: rollbackFlow.percent })}</p>
                     </div>
                   </div>
                   <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
@@ -972,7 +972,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                     <AlertCircle size={28} style={{ color: 'var(--expense)' }} />
                   </div>
                   <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{t('settings.rollback.failed')}</p>
-                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{rollbackFlow.error}</p>
+                  <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{rollbackFlow.error}</p>
                 </div>
               ) : rollbackStarted && rollbackFlow?.phase === 'done' ? (
                 <div className="flex flex-col items-center text-center py-4">
@@ -983,7 +983,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                     <RotateCcw size={28} style={{ color: 'var(--primary)' }} />
                   </div>
                   <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{t('settings.rollback.done')}</p>
-                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.rollback.doneHint')}</p>
+                  <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.rollback.doneHint')}</p>
                 </div>
               ) : (
                 <div className="py-2">
@@ -1064,7 +1064,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                 </div>
                 <div>
                   <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{t('settings.importConfirm.title')}</h3>
-                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('settings.importConfirm.subtitle')}</p>
+                  <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.importConfirm.subtitle')}</p>
                 </div>
               </div>
             </div>

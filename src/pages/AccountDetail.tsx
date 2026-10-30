@@ -156,9 +156,9 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
 
       {/* 账户余额 */}
       <div className="px-4 mt-3">
-        <div className="card p-5">
+        <div className="card p-4">
           <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.balance')}</p>
-          <p className="text-3xl font-bold amount-num mt-1.5" style={{ color: 'var(--ink)' }}>
+          <p className="text-3xl font-bold amount-num mt-1.5 truncate" style={{ color: 'var(--ink)' }}>
             {formatCurrencyShort(currentAccount.balance)}
           </p>
         </div>
@@ -166,24 +166,24 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
 
       {/* 收支概览 */}
       <div className="px-4 mt-3">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="card p-3.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
                 <TrendingUp size={16} />
               </div>
-              <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.totalIncome')}</span>
+              <span className="text-sm truncate min-w-0" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.totalIncome')}</span>
             </div>
-            <p className="text-lg font-bold amount-num" style={{ color: 'var(--primary)' }}>+{formatCurrencyShort(accountIncome)}</p>
+            <p className="text-lg font-bold amount-num truncate" style={{ color: 'var(--primary)' }}>+{formatCurrencyShort(accountIncome)}</p>
           </div>
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}>
+          <div className="card p-3.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}>
                 <TrendingDown size={16} />
               </div>
-              <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.totalExpense')}</span>
+              <span className="text-sm truncate min-w-0" style={{ color: 'var(--ink-2)' }}>{t('accountDetail.totalExpense')}</span>
             </div>
-            <p className="text-lg font-bold amount-num" style={{ color: 'var(--expense)' }}>-{formatCurrencyShort(accountExpense)}</p>
+            <p className="text-lg font-bold amount-num truncate" style={{ color: 'var(--expense)' }}>-{formatCurrencyShort(accountExpense)}</p>
           </div>
         </div>
       </div>
@@ -251,7 +251,7 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
 
       <div className="px-4 mt-4">
         {/* 日期筛选 */}
-        <div className="card p-4 mb-4">
+        <div className="card p-3.5 mb-3">
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={18} style={{ color: 'var(--ink-2)' }} />
             <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t('accountDetail.dateFilter')}</span>

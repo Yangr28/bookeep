@@ -482,16 +482,16 @@ const DashboardComponent = ({
   return (
     <div className="page-root pb-nav overflow-y-auto">
       {/* 头部：问候 + 快捷图标 */}
-      <div className="safe-top px-5 pt-2 pb-1 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--ink)' }}>
+      <div className="safe-top px-5 pt-2 pb-1 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-bold tracking-tight truncate" style={{ color: 'var(--ink)' }}>
             {t(greetingKey())}
           </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>
+          <p className="text-sm mt-0.5 truncate" style={{ color: 'var(--ink-2)' }}>
             {new Date().toLocaleDateString(i18n.language.startsWith('en') ? 'en-US' : 'zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <button onClick={onGoToSearch} className="icon-btn" aria-label={t('dashboard.search')}>
             <Search size={19} />
           </button>
@@ -511,12 +511,12 @@ const DashboardComponent = ({
           tabIndex={0}
           onClick={() => onViewDetail('month-balance')}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewDetail('month-balance'); } }}
-          className="card card-hover w-full p-5 text-left block cursor-pointer"
+          className="card card-hover w-full p-4 text-left block cursor-pointer"
         >
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.monthBalance')}</p>
-              <p className="text-3xl font-bold mt-1.5 amount-num" style={{ color: 'var(--ink)' }}>
+              <p className="text-3xl font-bold mt-1 amount-num truncate" style={{ color: 'var(--ink)' }}>
                 {formatCurrencyShort(Math.abs(animatedBalance - balance) < 0.005 ? balance : animatedBalance)}
               </p>
             </div>
@@ -531,24 +531,24 @@ const DashboardComponent = ({
               <span className="text-[10px] mt-1" style={{ color: 'var(--ink-2)' }}>{t('dashboard.trend6m')}</span>
             </button>
           </div>
-          <div className="flex items-center gap-5 mt-3">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full" style={{ background: 'var(--primary)' }} />
-              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('dashboard.income')}</span>
-              <span className="text-sm font-semibold amount-num" style={{ color: 'var(--primary)' }}>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--primary)' }} />
+              <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-2)' }}>{t('dashboard.income')}</span>
+              <span className="text-sm font-semibold amount-num truncate" style={{ color: 'var(--primary)' }}>
                 {formatCurrencyShort(monthIncome)}
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full" style={{ background: 'var(--expense)' }} />
-              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('dashboard.expense')}</span>
-              <span className="text-sm font-semibold amount-num" style={{ color: 'var(--expense)' }}>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--expense)' }} />
+              <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-2)' }}>{t('dashboard.expense')}</span>
+              <span className="text-sm font-semibold amount-num truncate" style={{ color: 'var(--expense)' }}>
                 {formatCurrencyShort(-monthExpense)}
               </span>
             </div>
           </div>
           {/* 收支对比堆叠条 + 结余率 */}
-          <div className="mt-3">
+          <div className="mt-2.5">
             <StackedBar income={monthIncome} expense={monthExpense} height={6} />
           </div>
         </div>
@@ -556,7 +556,7 @@ const DashboardComponent = ({
         {budgetSummary.totalBudget > 0 && (
           <button
             onClick={() => onGoToBudgets?.()}
-            className="card card-hover w-full p-4 mt-2 text-left block animate-stagger-in"
+            className="card card-hover w-full p-3.5 mt-2 text-left block animate-stagger-in"
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex flex-col gap-0.5">
@@ -666,7 +666,7 @@ const DashboardComponent = ({
           {/* 智能解析预览：输入时实时显示识别到的金额/分类/账户，可直接保存 */}
           {preview && (preview.amount || preview.categoryName || preview.accountName) && (
             <div
-              className="rounded-button px-3 py-2.5 mb-4 animate-stagger-in"
+              className="rounded-button px-3 py-2.5 mb-3 animate-stagger-in"
               style={{ background: 'var(--paper-deep)', border: '1px solid var(--line)' }}
             >
               <div className="flex items-center gap-2 flex-wrap text-xs">
@@ -757,20 +757,20 @@ const DashboardComponent = ({
       </div>
 
       {/* 快捷工具 */}
-      <div className="px-4 mt-4">
-        <div className="card p-3 grid grid-cols-4 gap-1">
+      <div className="px-4 mt-3">
+        <div className="card p-2.5 grid grid-cols-4 gap-1">
           {quickTools.map((tool) => {
             const Icon = tool.icon;
             return (
               <button
                 key={tool.labelKey}
                 onClick={tool.onClick}
-                className="flex flex-col items-center gap-1.5 py-2 rounded-button transition-colors active:scale-95"
+                className="flex flex-col items-center gap-1 py-2 rounded-button transition-colors active:scale-95 min-w-0"
               >
                 <div className="w-10 h-10 rounded-button flex items-center justify-center" style={{ background: tool.bg }}>
                   <Icon size={19} style={{ color: tool.color }} />
                 </div>
-                <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>{t(tool.labelKey)}</span>
+                <span className="text-xs font-medium w-full text-center truncate" style={{ color: 'var(--ink)' }}>{t(tool.labelKey)}</span>
               </button>
             );
           })}
@@ -778,13 +778,13 @@ const DashboardComponent = ({
       </div>
 
       {/* 今日收支 + 总资产 */}
-      <div className="px-4 mt-4 space-y-2.5">
+      <div className="px-4 mt-3 space-y-2.5">
         <div className="grid grid-cols-2 gap-2.5">
           <StatCard type="income" title={t('dashboard.todayIncome')} amount={todayIncome} onClick={() => onViewDetail('today-income')} />
           <StatCard type="expense" title={t('dashboard.todayExpense')} amount={todayExpense} onClick={() => onViewDetail('today-expense')} />
         </div>
 
-        <button onClick={() => onViewDetail('total-balance')} className="card card-hover w-full p-4 text-left block">
+        <button onClick={() => onViewDetail('total-balance')} className="card card-hover w-full p-3.5 text-left block">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.totalAssets')}</p>
@@ -803,7 +803,7 @@ const DashboardComponent = ({
       </div>
 
       {/* 近三日记录 */}
-      <div className="px-4 mt-5">
+      <div className="px-4 mt-4">
         <h2 className="section-title">{t('dashboard.recentRecords')}</h2>
         {recentTransactions.length === 0 ? (
           <Empty icon={Wallet} title={t('dashboard.noRecords')} description={t('dashboard.noRecordsHint')} />

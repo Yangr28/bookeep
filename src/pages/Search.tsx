@@ -58,7 +58,7 @@ export const Search = ({ onBack, onEditTransaction, onDeleteTransaction, initial
           <button onClick={onBack} className="icon-btn" aria-label={t('search.back')}>
             <ArrowLeft size={20} />
           </button>
-          <div className="flex-1 relative">
+          <div className="flex-1 min-w-0 relative">
             <SearchIcon
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2"
@@ -84,7 +84,7 @@ export const Search = ({ onBack, onEditTransaction, onDeleteTransaction, initial
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-3">
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
           <Filter size={15} style={{ color: 'var(--ink-2)' }} />
           <div className="flex gap-1.5">
             <button

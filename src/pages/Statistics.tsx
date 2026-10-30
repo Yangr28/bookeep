@@ -157,7 +157,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
     <div className="page-root pb-nav">
       {/* 页头 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="page-title">{t('statistics.title')}</h1>
           <p className="page-subtitle">{t('statistics.subtitle')}</p>
         </div>
@@ -165,10 +165,10 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
 
       <div className="px-4 mt-3">
         {/* 月份选择 + 收支概览 */}
-        <div className="card p-5">
+        <div className="card p-4">
           <button
             onClick={onShowCalendar}
-            className="flex items-center justify-start gap-3 w-full mb-5"
+            className="flex items-center justify-start gap-3 w-full mb-3"
           >
             <div className="p-2.5 rounded-button" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
               <Calendar size={20} />
@@ -181,25 +181,25 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
             </div>
           </button>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="text-center p-4 rounded-button" style={{ background: 'var(--paper)' }}>
-              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('statistics.monthIncome')}</p>
-              <p className="text-2xl font-bold amount-num mt-2" style={{ color: 'var(--primary)' }}>
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="text-center p-3.5 rounded-button" style={{ background: 'var(--paper)' }}>
+              <p className="text-sm font-medium truncate" style={{ color: 'var(--ink-2)' }}>{t('statistics.monthIncome')}</p>
+              <p className="text-2xl font-bold amount-num mt-1.5 truncate" style={{ color: 'var(--primary)' }}>
                 {formatCurrencyShort(monthIncome)}
               </p>
             </div>
-            <div className="text-center p-4 rounded-button" style={{ background: 'var(--paper)' }}>
-              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('statistics.monthExpense')}</p>
-              <p className="text-2xl font-bold amount-num mt-2" style={{ color: 'var(--expense)' }}>
+            <div className="text-center p-3.5 rounded-button" style={{ background: 'var(--paper)' }}>
+              <p className="text-sm font-medium truncate" style={{ color: 'var(--ink-2)' }}>{t('statistics.monthExpense')}</p>
+              <p className="text-2xl font-bold amount-num mt-1.5 truncate" style={{ color: 'var(--expense)' }}>
                 {formatCurrencyShort(monthExpense)}
               </p>
             </div>
           </div>
 
-          <div className="mt-3 p-4 rounded-button" style={{ background: 'var(--paper)' }}>
+          <div className="mt-2.5 p-3.5 rounded-button" style={{ background: 'var(--paper)' }}>
             <p className="text-sm text-center font-medium" style={{ color: 'var(--ink-2)' }}>{t('statistics.monthBalance')}</p>
             <p
-              className="text-3xl font-bold text-center amount-num mt-2"
+              className="text-3xl font-bold text-center amount-num mt-1.5 truncate"
               style={{ color: monthBalance >= 0 ? 'var(--primary)' : 'var(--expense)' }}
             >
               {formatCurrencyShort(monthBalance)}
@@ -227,13 +227,13 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
           </button>
 
           {showReport && (
-            <div className="mt-4 space-y-3 animate-stagger-in">
+            <div className="mt-3 space-y-2.5 animate-stagger-in">
               {/* 环比变化 */}
               {(() => {
                 const incomeColor = reportData.incomeChange >= 0 ? 'var(--primary)' : 'var(--expense)';
                 const expenseColor = reportData.expenseChange > 0 ? 'var(--expense)' : 'var(--primary)';
                 return (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div className="p-3 rounded-button flex flex-col" style={{ background: 'var(--paper)' }}>
                   <div className="flex items-center gap-1.5 mb-1">
                     <TrendingUp size={14} style={{ color: 'var(--primary)' }} />
@@ -290,7 +290,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
               })()}
 
               {/* 日均支出 + 最大单笔 */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div className="p-3 rounded-button" style={{ background: 'var(--paper)' }}>
                   <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('statistics.avgDaily')}</p>
                   <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--ink)' }}>
@@ -365,7 +365,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
           <h2 className="section-title">{t('statistics.expenseDistribution')}</h2>
           {expenseData.length > 0 ? (
             <div className="flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={240}>
+              <ResponsiveContainer width="100%" height={210}>
                 <PieChart>
                   <Pie
                     data={expenseData.map((item) => ({
@@ -418,7 +418,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
           <h2 className="section-title">{t('statistics.incomeDistribution')}</h2>
           {incomeData.length > 0 ? (
             <div className="flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={240}>
+              <ResponsiveContainer width="100%" height={210}>
                 <PieChart>
                   <Pie
                     data={incomeData.map((item) => ({
@@ -467,8 +467,8 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
         </div>
 
         {/* 收支趋势 */}
-        <div className="card p-4 mt-3 mb-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="card p-4 mt-3 mb-3">
+          <div className="flex items-center justify-between mb-3">
             <h2 className="section-title mb-0">{t('statistics.trend')}</h2>
             <button
               onClick={() => setShowFullYear(!showFullYear)}
@@ -484,7 +484,7 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
           </div>
           <div className="overflow-x-auto pb-2">
             <div className="min-w-max px-1">
-              <ResponsiveContainer width={showFullYear ? 520 : 320} height={240}>
+              <ResponsiveContainer width={showFullYear ? 520 : 320} height={210}>
                 <BarChart data={displayedChartData} barSize={showFullYear ? 22 : 30}>
                   <XAxis
                     dataKey="monthShort"

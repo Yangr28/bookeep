@@ -113,7 +113,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
           <button onClick={onBack} className="icon-btn" aria-label={t('recurringRecords.back')}>
             <ArrowLeft size={20} />
           </button>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h1 className="page-title">{t('recurringRecords.title')}</h1>
             <p className="page-subtitle">{t('recurringRecords.subtitle')}</p>
           </div>
@@ -142,7 +142,7 @@ const RecurringRecords = ({ onBack }: { onBack: () => void }) => {
 
       <div className="px-4 mt-4">
         {recurringRecords.length === 0 ? (
-          <div className="card text-center p-8">
+          <div className="card text-center p-6">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
               style={{ background: 'var(--paper-deep)' }}

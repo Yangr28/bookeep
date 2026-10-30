@@ -290,7 +290,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
             <ArrowLeft size={20} />
           </button>
         ) : null}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="page-title">
             {batchMode
               ? t('allRecords.selectedCount', { count: selectedIds.size })
@@ -304,7 +304,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
           <button
             onClick={toggleSelectAll}
             disabled={selectableIds.length === 0}
-            className="text-sm font-medium px-1 py-1 disabled:opacity-40"
+            className="text-sm font-medium px-1 py-1 whitespace-nowrap disabled:opacity-40"
             style={{ color: 'var(--primary)' }}
           >
             {allSelected ? t('allRecords.deselectAll') : t('allRecords.selectAll')}
@@ -329,7 +329,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('allRecords.searchPlaceholder')}
-              className="flex-1 bg-transparent outline-none text-sm"
+              className="flex-1 min-w-0 bg-transparent outline-none text-sm"
               style={{ color: 'var(--ink)' }}
             />
             {query && (
@@ -343,18 +343,18 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
 
       {/* 收支概览 */}
       <div className="px-4 mt-3">
-        <div className="card p-4">
+        <div className="card p-3.5">
           <div className="flex items-center justify-around">
-            <div className="text-center flex-1">
+            <div className="text-center flex-1 min-w-0">
               <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('common.income')}</p>
-              <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--primary)' }}>
+              <p className="text-lg font-bold amount-num mt-0.5 truncate" style={{ color: 'var(--primary)' }}>
                 +{formatCurrencyShort(totalIncome)}
               </p>
             </div>
             <div className="w-px self-stretch" style={{ background: 'var(--line)' }} />
-            <div className="text-center flex-1">
+            <div className="text-center flex-1 min-w-0">
               <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('common.expense')}</p>
-              <p className="text-lg font-bold amount-num mt-1" style={{ color: 'var(--expense)' }}>
+              <p className="text-lg font-bold amount-num mt-0.5 truncate" style={{ color: 'var(--expense)' }}>
                 -{formatCurrencyShort(totalExpense)}
               </p>
             </div>
@@ -363,9 +363,9 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
       </div>
 
       {/* 筛选 */}
-      <div className="px-4 mt-4">
-        <div className="card p-4">
-          <div className="flex items-center gap-2 mb-3">
+      <div className="px-4 mt-3">
+        <div className="card p-3.5">
+          <div className="flex items-center gap-2 mb-2.5">
             <Calendar size={16} style={{ color: 'var(--ink-2)' }} />
             <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t('allRecords.filter')}</span>
             {hasFilter && (
@@ -375,7 +375,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
               </button>
             )}
           </div>
-          <div className="flex flex-wrap gap-2 mb-3">
+          <div className="flex flex-wrap gap-2 mb-2.5">
             {[
               { label: t('allRecords.presetToday'), days: 0 },
               { label: t('allRecords.presetLast7'), days: 7 },
@@ -411,27 +411,27 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
             ))}
           </div>
           <div className="flex gap-2">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>{t('allRecords.startDate')}</label>
               <button
                 onClick={() => setShowDatePicker('start')}
                 className="input-field w-full py-2 text-sm flex items-center justify-between"
                 style={{ textAlign: 'left' }}
               >
-                <span style={{ color: startDate ? 'var(--ink)' : 'var(--ink-2)' }}>
+                <span className="truncate" style={{ color: startDate ? 'var(--ink)' : 'var(--ink-2)' }}>
                   {startDate || t('allRecords.pleaseSelect')}
                 </span>
                 <ChevronDown size={16} style={{ color: 'var(--ink-2)' }} />
               </button>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>{t('allRecords.endDate')}</label>
               <button
                 onClick={() => setShowDatePicker('end')}
                 className="input-field w-full py-2 text-sm flex items-center justify-between"
                 style={{ textAlign: 'left' }}
               >
-                <span style={{ color: endDate ? 'var(--ink)' : 'var(--ink-2)' }}>
+                <span className="truncate" style={{ color: endDate ? 'var(--ink)' : 'var(--ink-2)' }}>
                   {endDate || t('allRecords.pleaseSelect')}
                 </span>
                 <ChevronDown size={16} style={{ color: 'var(--ink-2)' }} />
@@ -439,7 +439,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
             </div>
           </div>
 
-          <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+          <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--line)' }}>
             <div className="flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
               {categoryFilterChips.map((chip) => {
                 const active = categoryFilter === chip.value;
@@ -463,7 +463,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
           </div>
 
           {/* 账户筛选 */}
-          <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+          <div className="flex items-center gap-2 mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--line)' }}>
             <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('common.account')}</span>
             <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
               <button
@@ -492,7 +492,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
           </div>
 
           {/* 金额范围 */}
-          <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
+          <div className="flex items-center gap-2 mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--line)' }}>
             <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('common.amount')}</span>
             <div className="flex-1 flex items-center gap-2">
               <input
@@ -520,7 +520,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
       </div>
 
       {/* 明细列表 */}
-      <div className="px-4 mt-5">
+      <div className="px-4 mt-4">
         <h2 className="section-title">{t('allRecords.transactionDetails')}</h2>
         {sortedRecords.length > 0 ? (
           <div>

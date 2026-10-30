@@ -89,11 +89,11 @@ function NavButton({
   return (
     <button
       onClick={onClick}
-      className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors"
+      className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1.5 transition-colors"
       style={{ color: active ? 'var(--primary)' : 'var(--ink-2)' }}
     >
       <Icon size={22} strokeWidth={active ? 2.3 : 1.9} />
-      <span className={`text-label ${active ? 'font-bold' : 'font-medium'}`}>{label}</span>
+      <span className={`text-label truncate max-w-full px-0.5 ${active ? 'font-bold' : 'font-medium'}`}>{label}</span>
     </button>
   );
 }

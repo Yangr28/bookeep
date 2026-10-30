@@ -1043,7 +1043,7 @@ export default function App() {
           style={{ background: 'rgba(43,41,37,0.45)' }}
           onClick={() => setShowExitConfirm(false)}
         >
-          <div className="card w-full max-w-sm mx-4 p-5 animate-bounce-in" onClick={(e) => e.stopPropagation()}>
+          <div className="card w-full max-w-sm mx-4 p-4 animate-bounce-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{t('app.exit.title')}</h3>
               <button onClick={() => setShowExitConfirm(false)} className="icon-btn w-9 h-9">

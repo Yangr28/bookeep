@@ -163,7 +163,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
     <div className="page-root pb-nav">
       {/* 页头 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="page-title">{t('categories.title')}</h1>
           <p className="page-subtitle">{t('categories.subtitle')}</p>
         </div>
@@ -304,7 +304,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
               </button>
             </div>
 
-            <div className="p-5 pb-8 space-y-5">
+            <div className="p-4 pb-6 space-y-3">
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>{t('categories.nameLabel')}</label>
                 <input
@@ -448,7 +448,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
           onClick={() => setCategoryToDelete(null)}
         >
           <div
-            className="card w-full max-w-sm p-6 animate-bounce-in"
+            className="card w-full max-w-sm p-5 animate-bounce-in"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>{t('categories.deleteCategory')}</h3>
@@ -458,7 +458,7 @@ export const Categories = ({ onViewCategoryDetail, onColorPickerOpenChange }: Ca
             <p className="text-sm mt-2" style={{ color: 'var(--expense)' }}>
               {t('categories.deleteWarning', { count: recordCountOf(categoryToDelete.id), unclassified: t('categories.unclassified') })}
             </p>
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 mt-4">
               <button
                 onClick={() => setCategoryToDelete(null)}
                 className="btn-ghost flex-1"

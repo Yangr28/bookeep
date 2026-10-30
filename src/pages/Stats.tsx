@@ -205,20 +205,20 @@ export const Stats = ({ onBack }: StatsProps) => {
         <button onClick={onBack} className="icon-btn" aria-label={t('stats.back')}>
           <ArrowLeft size={20} />
         </button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="page-title">{t('stats.title')}</h1>
           <p className="page-subtitle">{t('stats.subtitle')}</p>
         </div>
       </div>
 
-      <div className="px-4 mt-4">
+      <div className="px-4 mt-3">
         {/* 数据概览 */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {statCards.map((card) => {
             const IconComponent = card.icon;
             return (
-              <div key={card.label} className="card p-4">
-                <div className="flex items-center gap-2 mb-2">
+              <div key={card.label} className="card p-3.5">
+                <div className="flex items-center gap-2 mb-1.5">
                   <div
                     className="p-1.5 rounded-button flex items-center justify-center"
                     style={
@@ -229,9 +229,9 @@ export const Stats = ({ onBack }: StatsProps) => {
                   >
                     <IconComponent size={14} />
                   </div>
-                  <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{card.label}</p>
+                  <p className="text-sm truncate min-w-0" style={{ color: 'var(--ink-2)' }}>{card.label}</p>
                 </div>
-                <p className="text-2xl font-bold amount-num" style={{ color: 'var(--ink)' }}>
+                <p className="text-2xl font-bold amount-num truncate" style={{ color: 'var(--ink)' }}>
                   {card.value}
                   {card.unit && <span className="text-sm font-normal" style={{ color: 'var(--ink-2)' }}> {card.unit}</span>}
                 </p>
@@ -241,7 +241,7 @@ export const Stats = ({ onBack }: StatsProps) => {
         </div>
 
         {/* 已获得成就 */}
-        <div className="mt-5">
+        <div className="mt-4">
           <h3 className="section-title flex items-center gap-2">
             <Trophy size={18} style={{ color: '#d9930f' }} />
             {t('stats.achievementsTitle', { earned: earnedAchievements.length, total: achievements.length })}
@@ -253,7 +253,7 @@ export const Stats = ({ onBack }: StatsProps) => {
               description={t('stats.emptyDescription')}
             />
           ) : (
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-2.5">
               {earnedAchievements.map((achievement) => {
                 const IconComponent = achievement.icon;
                 return (
@@ -281,17 +281,17 @@ export const Stats = ({ onBack }: StatsProps) => {
 
         {/* 进行中成就 */}
         {progressAchievements.length > 0 && (
-          <div className="mt-5">
+          <div className="mt-4">
             <h3 className="section-title flex items-center gap-2">
               <Target size={18} style={{ color: 'var(--primary)' }} />
               {t('stats.inProgress')}
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {progressAchievements.map((achievement) => {
                 const IconComponent = achievement.icon;
                 const progress = getProgress(achievement);
                 return (
-                  <div key={achievement.id} className="card p-4">
+                  <div key={achievement.id} className="card p-3.5">
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center opacity-50 flex-shrink-0"
@@ -304,8 +304,8 @@ export const Stats = ({ onBack }: StatsProps) => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium" style={{ color: 'var(--ink)' }}>{getAchievementName(achievement)}</span>
-                          <span className="text-sm amount-num flex-shrink-0 ml-2" style={{ color: 'var(--ink-2)' }}>{progress.toFixed(0)}%</span>
+                          <span className="font-medium truncate" style={{ color: 'var(--ink)' }}>{getAchievementName(achievement)}</span>
+                          <span className="text-sm amount-num flex-shrink-0 ml-2 whitespace-nowrap" style={{ color: 'var(--ink-2)' }}>{progress.toFixed(0)}%</span>
                         </div>
                         <div className="h-2 rounded-full overflow-hidden mt-2" style={{ background: 'var(--paper-deep)' }}>
                           <div
@@ -323,10 +323,10 @@ export const Stats = ({ onBack }: StatsProps) => {
         )}
 
         {/* 小贴士 */}
-        <div className="card p-4 mt-5">
+        <div className="card p-3.5 mt-4">
           <div className="flex items-start gap-3">
             <Zap size={20} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--primary)' }} />
-            <div>
+            <div className="min-w-0">
               <h3 className="font-medium" style={{ color: 'var(--ink)' }}>{t('stats.tipTitle')}</h3>
               <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>
                 {t('stats.tipBody')}

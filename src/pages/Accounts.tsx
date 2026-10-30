@@ -432,7 +432,7 @@ export const Accounts = ({
     <div className="page-root pb-nav">
       {/* 页头 */}
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="page-title">{t('accounts.title')}</h1>
           <p className="page-subtitle">{t('accounts.subtitle')}</p>
         </div>
@@ -440,12 +440,12 @@ export const Accounts = ({
 
       {/* 总资产卡 */}
       <div className="px-4 mt-3">
-        <div className="card p-5">
+        <div className="card p-4">
           <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('accounts.totalAssets')}</p>
-          <p className="text-3xl font-bold mt-2 amount-num truncate" style={{ color: 'var(--ink)' }}>
+          <p className="text-3xl font-bold mt-1.5 amount-num truncate" style={{ color: 'var(--ink)' }}>
             {formatCurrencyShort(totalAssetsValue)}
           </p>
-          <div className="flex flex-wrap gap-x-5 gap-y-1 mt-4 text-sm">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm">
             <span style={{ color: 'var(--ink-2)' }}>
               {t('accounts.liquid')} <span className="font-semibold amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(liquidAssets)}</span>
             </span>
@@ -460,29 +460,29 @@ export const Accounts = ({
       </div>
 
       {/* Tab 切换 */}
-      <div className="px-4 mt-4">
-        <div className="seg mb-4">
+      <div className="px-4 mt-3">
+        <div className="seg mb-3">
           <button
             onClick={() => setActiveTab('accounts')}
-            className={`seg-item text-xs ${activeTab === 'accounts' ? 'seg-item-active' : ''}`}
+            className={`seg-item text-xs px-1 truncate ${activeTab === 'accounts' ? 'seg-item-active' : ''}`}
           >
             {t('accounts.tabs.accounts')}
           </button>
           <button
             onClick={() => setActiveTab('transfer')}
-            className={`seg-item text-xs ${activeTab === 'transfer' ? 'seg-item-active' : ''}`}
+            className={`seg-item text-xs px-1 truncate ${activeTab === 'transfer' ? 'seg-item-active' : ''}`}
           >
             {t('accounts.tabs.transfer')}
           </button>
           <button
             onClick={() => setActiveTab('deposits')}
-            className={`seg-item text-xs ${activeTab === 'deposits' ? 'seg-item-active' : ''}`}
+            className={`seg-item text-xs px-1 truncate ${activeTab === 'deposits' ? 'seg-item-active' : ''}`}
           >
             {t('accounts.tabs.deposits')}
           </button>
           <button
             onClick={() => setActiveTab('loans')}
-            className={`seg-item text-xs ${activeTab === 'loans' ? 'seg-item-active' : ''}`}
+            className={`seg-item text-xs px-1 truncate ${activeTab === 'loans' ? 'seg-item-active' : ''}`}
           >
             {t('accounts.tabs.loans')}
           </button>
@@ -490,7 +490,7 @@ export const Accounts = ({
 
         {activeTab === 'accounts' && (
           <>
-            <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center justify-between mb-2.5 px-1">
               <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('accounts.dragHint')}</span>
               <ArrowUpDown size={16} style={{ color: 'var(--ink-2)' }} />
             </div>
@@ -591,7 +591,7 @@ export const Accounts = ({
 
         {activeTab === 'transfer' && (
           <>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="card p-4">
                 <label className="block text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>{t('accounts.transfer.from')}</label>
                 <div className="grid grid-cols-2 gap-2">
@@ -781,9 +781,9 @@ export const Accounts = ({
               {fixedDeposits.map((deposit) => (
                 <div
                   key={deposit.id}
-                  className="card card-hover p-5"
+                  className="card card-hover p-4"
                 >
-                  <div className="flex items-start justify-between mb-3 gap-2">
+                  <div className="flex items-start justify-between mb-2.5 gap-2">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold truncate" style={{ color: 'var(--ink)' }}>{deposit.name}</h3>
@@ -809,7 +809,7 @@ export const Accounts = ({
                     </button>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="grid grid-cols-2 gap-2.5 mb-2.5">
                     <div className="rounded-button p-3" style={{ background: 'var(--paper)' }}>
                       <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.principal')}</p>
                       <p className="font-semibold mt-1 truncate amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(deposit.principal)}</p>
@@ -875,9 +875,9 @@ export const Accounts = ({
               {loans.map((loan) => (
                 <div
                   key={loan.id}
-                  className="card card-hover p-5"
+                  className="card card-hover p-4"
                 >
-                  <div className="flex items-start justify-between mb-3 gap-2">
+                  <div className="flex items-start justify-between mb-2.5 gap-2">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold truncate" style={{ color: 'var(--ink)' }}>{loan.name}</h3>
@@ -898,7 +898,7 @@ export const Accounts = ({
                       {loan.status === 'active' && (
                         <button
                           onClick={() => openRepaymentModal(loan)}
-                          className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+                          className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
                           style={{ background: 'var(--expense-soft)', color: 'var(--expense)' }}
                         >
                           {t('accounts.loan.repayTitle')}
@@ -921,7 +921,7 @@ export const Accounts = ({
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="grid grid-cols-2 gap-2.5 mb-2.5">
                     <div className="rounded-button p-3" style={{ background: 'var(--paper)' }}>
                       <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.principalTotal')}</p>
                       <p className="font-semibold mt-1 truncate amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(loan.principal)}</p>
@@ -932,7 +932,7 @@ export const Accounts = ({
                     </div>
                   </div>
 
-                  <div className="rounded-button p-3 mb-3" style={{ background: 'var(--paper)' }}>
+                  <div className="rounded-button p-3 mb-2.5" style={{ background: 'var(--paper)' }}>
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.progress')}</span>
                       <span className="font-medium amount-num" style={{ color: 'var(--ink)' }}>{((loan.paidAmount / loan.principal) * 100).toFixed(1)}%</span>
@@ -1006,7 +1006,7 @@ export const Accounts = ({
               </button>
             </div>
 
-            <div className="p-4 space-y-5">
+            <div className="p-4 space-y-3.5">
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.form.nameLabel')}</label>
                 <input
@@ -1107,7 +1107,7 @@ export const Accounts = ({
               </button>
             </div>
 
-            <div className="p-4 space-y-5">
+            <div className="p-4 space-y-3.5">
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.form.nameLabel')}</label>
                 <input
@@ -1208,7 +1208,7 @@ export const Accounts = ({
               </button>
             </div>
 
-            <div className="p-4 space-y-5">
+            <div className="p-4 space-y-3.5">
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.deposit.nameLabel')}</label>
                 <input
@@ -1376,7 +1376,7 @@ export const Accounts = ({
               </button>
             </div>
 
-            <div className="p-4 space-y-5">
+            <div className="p-4 space-y-3.5">
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{t('accounts.loan.nameLabel')}</label>
                 <input
@@ -1542,7 +1542,7 @@ export const Accounts = ({
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-3">
               <div className="rounded-button p-3" style={{ background: 'var(--paper)' }}>
                 <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{repaymentLoan.name}</p>
                 <p className="text-lg font-bold amount-num" style={{ color: 'var(--expense)' }}>

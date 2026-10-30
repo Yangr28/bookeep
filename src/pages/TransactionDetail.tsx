@@ -249,9 +249,9 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
 
       {/* mom-compare 视图：上月 vs 本月支出左右并排对比 + 两列明细 */}
       {isMoMCompare && insightMoMData && (
-        <div className="px-4 mt-3 pb-6 space-y-4">
+        <div className="px-4 mt-3 pb-6 space-y-3">
           {/* 对比卡片：两列并排，中间分隔线 */}
-          <div className="card p-5">
+          <div className="card p-4">
             <p className="text-sm font-medium text-center" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.momCompareSubtitle')}</p>
             <div className="flex mt-4">
               <div className="flex-1 text-center px-1">
@@ -334,7 +334,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
       {/* 汇总卡片 */}
       <div className="px-4 mt-3">
         {isCategoryDetail && selectedCategory ? (
-          <div className="card p-5">
+          <div className="card p-4">
             <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>
               {t('transactionDetail.totalByType', { type: t(`common.${selectedCategory.type}`) })}
             </p>
@@ -347,7 +347,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
             <p className="text-sm mt-2" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.recordCountCompact', { count: filteredTransactions.length })}</p>
           </div>
         ) : isTotalBalance ? (
-          <div className="card p-5">
+          <div className="card p-4">
             <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.assetsTotal')}</p>
             <p className="text-3xl font-bold amount-num mt-1.5" style={{ color: 'var(--ink)' }}>
               {formatCurrencyShort(totalIncome - totalExpense)}
@@ -364,7 +364,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
             </div>
           </div>
         ) : isMonthBalance ? (
-          <div className="card p-5">
+          <div className="card p-4">
             <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.monthBalance')}</p>
             <p
               className="text-3xl font-bold amount-num mt-1.5"
@@ -384,7 +384,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
             </div>
           </div>
         ) : (
-          <div className="card p-5">
+          <div className="card p-4">
             <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.periodTotal', { period: t(config.periodKey) })}</p>
             <p
               className="text-3xl font-bold amount-num mt-1.5"
@@ -398,7 +398,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
 
       <div className={`px-4 mt-4 ${isMultiSelect ? 'pb-28' : 'pb-6'}`}>
         {/* 筛选 */}
-        <div className="card p-4 mb-4">
+        <div className="card p-3.5 mb-3">
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={18} style={{ color: 'var(--ink-2)' }} />
             <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t('transactionDetail.dateFilter')}</span>
@@ -450,7 +450,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
             </div>
           )}
           <div className="flex gap-2">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.startDate')}</label>
               <button
                 onClick={() => setShowPicker('start')}
@@ -461,7 +461,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
                 </span>
               </button>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <label className="block text-xs mb-1" style={{ color: 'var(--ink-2)' }}>{t('transactionDetail.endDate')}</label>
               <button
                 onClick={() => setShowPicker('end')}
@@ -633,7 +633,7 @@ export const TransactionDetail = ({ onBack, filterType, categoryId, insightTrans
                       )}
                     </button>
                   )}
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <TransactionCard
                       transaction={transaction}
                       onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}

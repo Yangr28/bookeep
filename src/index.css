@@ -116,6 +116,8 @@ html, body, #root {
 }
 
 body {
+  overflow-x: hidden;
+  overflow-wrap: break-word;
   background-color: var(--paper);
   background-image:
     radial-gradient(120% 60% at 80% -10%, var(--ambient-1), transparent 60%),
@@ -242,17 +244,17 @@ body {
   .page-header {
     background-color: transparent;
     color: var(--ink);
-    @apply px-5 pt-6 pb-3 safe-top;
+    @apply px-4 pt-5 pb-2 safe-top;
   }
   .page-title {
-    @apply text-2xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight truncate;
   }
   .page-subtitle {
-    @apply text-sm mt-1;
+    @apply text-sm mt-0.5 truncate;
     color: var(--ink-2);
   }
   .section-title {
-    @apply text-base font-semibold mb-3;
+    @apply text-base font-semibold mb-2.5 leading-snug;
     color: var(--ink);
   }
 
@@ -341,7 +343,7 @@ body {
 
   /* 列表项 */
   .list-item {
-    @apply flex items-center gap-3 p-3 transition-all duration-200;
+    @apply flex items-center gap-2.5 p-2.5 transition-all duration-200;
     background-color: var(--card);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
@@ -410,7 +412,7 @@ body {
   /* === 空态：克制的垂直居中排布，避免大卡片占位 === */
   .empty-state {
     @apply flex flex-col items-center justify-center text-center;
-    padding: 2.5rem 1rem;
+    padding: 1.75rem 1rem;
   }
   .empty-state-title {
     @apply text-sm font-semibold mt-3;
@@ -451,7 +453,7 @@ summary:focus-visible {
 
 /* 底部导航占位高度 */
 .pb-nav {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6.5rem);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem);
 }
 
 .status-bar-scrim {

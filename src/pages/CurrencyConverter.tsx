@@ -348,7 +348,7 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
 
         {/* 按地区分组显示 */}
         {Object.entries(groupedCurrencies).map(([region, regionCurrencies]) => (
-          <div key={region} className="mb-4">
+          <div key={region} className="mb-3">
             <p className="text-xs font-medium mb-2 px-1" style={{ color: 'var(--ink-2)' }}>{region}</p>
             <div className="card overflow-hidden p-0">
               {regionCurrencies.map((currency, index) => {

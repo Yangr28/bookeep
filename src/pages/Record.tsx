@@ -213,7 +213,7 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
         {isEditMode && editTransaction && onCopyTransaction && (
           <button
             onClick={() => onCopyTransaction(editTransaction)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-button text-sm font-medium active:opacity-80 transition-opacity"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-button text-sm font-medium whitespace-nowrap active:opacity-80 transition-opacity"
             style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
             aria-label={t('common.copyRecord')}
           >
@@ -223,7 +223,7 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
         )}
       </div>
 
-      <div className="flex-1 px-4 pb-36 space-y-3">
+      <div className="flex-1 px-4 pb-36 space-y-2.5">
         {/* 智能记账（仅新增） */}
         {!isEditMode && (
           <div className="card p-3">
@@ -285,8 +285,8 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
         </div>
 
         {/* 分类 */}
-        <div className="card p-4">
-          <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>{t('record.selectCategory')}</p>
+        <div className="card p-3.5">
+          <p className="text-sm font-medium mb-2.5" style={{ color: 'var(--ink-2)' }}>{t('record.selectCategory')}</p>
           <div className="grid grid-cols-4 gap-2">
             {orderedCategories.map((category) => (
               <CategoryCard
@@ -305,7 +305,7 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
         </div>
 
         {/* 金额 */}
-        <div className="card p-4">
+        <div className="card p-3.5">
           <div className="flex items-center px-2">
             <span
               className="text-3xl font-bold mr-2 amount-num flex-shrink-0"
@@ -350,7 +350,7 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
 
         {/* 账户 / 日期 / 时间 / 备注 */}
         <div className="card overflow-hidden">
-          <button onClick={onShowAccountPicker} className="w-full flex items-center gap-3 p-4 active:brightness-95">
+          <button onClick={onShowAccountPicker} className="w-full flex items-center gap-3 p-3.5 active:brightness-95">
             <div
               className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
               style={selectedAccount
@@ -368,39 +368,39 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
 
-          <button onClick={onShowDatePicker} className="w-full flex items-center gap-3 p-4 active:brightness-95" style={{ borderTop: '1px solid var(--line)' }}>
+          <button onClick={onShowDatePicker} className="w-full flex items-center gap-3 p-3.5 active:brightness-95" style={{ borderTop: '1px solid var(--line)' }}>
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--paper-deep)', color: 'var(--primary)' }}>
               <Calendar size={19} />
             </div>
-            <div className="flex-1 text-left">
+            <div className="flex-1 text-left min-w-0">
               <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('record.date')}</p>
-              <p className="text-sm font-semibold mt-0.5" style={{ color: 'var(--ink)' }}>
+              <p className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'var(--ink)' }}>
                 {isToday() ? t('record.today') : formatDateTime(selectedDateTime.toISOString()).split(' ')[0]}
               </p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
 
-          <button onClick={onShowTimePicker} className="w-full flex items-center gap-3 p-4 active:brightness-95" style={{ borderTop: '1px solid var(--line)' }}>
+          <button onClick={onShowTimePicker} className="w-full flex items-center gap-3 p-3.5 active:brightness-95" style={{ borderTop: '1px solid var(--line)' }}>
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--paper-deep)', color: 'var(--primary)' }}>
               <Clock size={19} />
             </div>
-            <div className="flex-1 text-left">
+            <div className="flex-1 text-left min-w-0">
               <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('record.time')}</p>
-              <p className="text-sm font-semibold mt-0.5" style={{ color: 'var(--ink)' }}>
+              <p className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'var(--ink)' }}>
                 {formatDateTime(selectedDateTime.toISOString()).split(' ')[1]}
               </p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
 
-          <div className="flex items-center gap-3 p-4" style={{ borderTop: '1px solid var(--line)' }}>
+          <div className="flex items-center gap-3 p-3.5" style={{ borderTop: '1px solid var(--line)' }}>
             <input
               type="text"
               value={note}
               onChange={(e) => onNoteChange(e.target.value)}
               placeholder={t('record.notePlaceholder')}
-              className="flex-1 bg-transparent outline-none text-sm"
+              className="flex-1 min-w-0 bg-transparent outline-none text-sm"
               style={{ color: 'var(--ink)' }}
             />
           </div>
