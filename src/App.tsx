@@ -23,7 +23,6 @@ import { UpdateModal } from './components/UpdateModal';
 import { AppLock, isAppLocked } from './components/AppLock';
 import { CalendarPicker } from './components/CalendarPicker';
 import { TimePicker } from './components/TimePicker';
-import { OCRRecordModal } from './components/OCRRecordModal';
 import { Transaction, TransactionType } from './types';
 import { X, Wallet, CheckCircle } from 'lucide-react';
 import { App as CapApp } from '@capacitor/app';
@@ -72,7 +71,6 @@ export default function App() {
   const [quickRecordCurrency, setQuickRecordCurrency] = useState('CNY');
   const [showQuickRecordDatePicker, setShowQuickRecordDatePicker] = useState(false);
   const [showQuickRecordTimePicker, setShowQuickRecordTimePicker] = useState(false);
-  const [showOCRModal, setShowOCRModal] = useState(false);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   // 首次启动新手引导（应用锁解锁后才显示，避免在锁屏期间弹出）
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -115,6 +113,7 @@ export default function App() {
     recordNote,
     recordCategoryId,
     recordType,
+    recordCurrency,
     editTransaction,
     detailFilter,
     selectedCategoryId,
@@ -132,6 +131,7 @@ export default function App() {
     setRecordNote,
     setRecordCategoryId,
     setRecordType,
+    setRecordCurrency,
     setEditTransaction,
     setDetailFilter,
     setSelectedCategoryId,
@@ -330,24 +330,37 @@ export default function App() {
     setEditTransaction(transaction);
     setRecordDateTime(new Date(transaction.createdAt));
     setRecordAccountId(transaction.accountId);
-    setRecordAmount(transaction.amount.toString());
+    // 外币记录：金额回填原始币种金额，保存时再按汇率折算
+    setRecordCurrency(transaction.currency || 'CNY');
+    setRecordAmount(
+      (transaction.currency && transaction.currency !== 'CNY' && transaction.originalAmount !== undefined
+        ? transaction.originalAmount
+        : transaction.amount
+      ).toString(),
+    );
     setRecordNote(transaction.note || '');
     setRecordCategoryId(transaction.categoryId);
     setRecordType(transaction.type);
     handlePageChange('/record');
-  }, [handlePageChange, setEditTransaction, setRecordDateTime, setRecordAccountId, setRecordAmount, setRecordNote, setRecordCategoryId, setRecordType]);
+  }, [handlePageChange, setEditTransaction, setRecordCurrency, setRecordDateTime, setRecordAccountId, setRecordAmount, setRecordNote, setRecordCategoryId, setRecordType]);
 
   // 复制流水：以现有交易为模板新建一笔，时间为当前（保留分类/账户/金额/备注）
   const handleCopyTransaction = useCallback((transaction: Transaction) => {
     setEditTransaction(null);
     setRecordType(transaction.type);
-    setRecordAmount(transaction.amount.toString());
+    setRecordCurrency(transaction.currency || 'CNY');
+    setRecordAmount(
+      (transaction.currency && transaction.currency !== 'CNY' && transaction.originalAmount !== undefined
+        ? transaction.originalAmount
+        : transaction.amount
+      ).toString(),
+    );
     setRecordCategoryId(transaction.categoryId);
     setRecordNote(transaction.note || '');
     setRecordAccountId(transaction.accountId);
     setRecordDateTime(new Date());
     handlePageChange('/record');
-  }, [handlePageChange, setEditTransaction, setRecordType, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordAccountId, setRecordDateTime]);
+  }, [handlePageChange, setEditTransaction, setRecordType, setRecordCurrency, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordAccountId, setRecordDateTime]);
 
   // 首页上拉无缝进账单页：记录锚点由 AllRecords 定位，期间跳过通用滚动位置恢复
   const handleGoToRecords = useCallback((anchor?: { id: string; offsetY: number }) => {
@@ -394,9 +407,10 @@ export default function App() {
     setRecordCategoryId(null);
     setRecordNote('');
     setRecordType('expense');
+    setRecordCurrency('CNY');
     setRecordDateTime(new Date());
     handlePageChange('/record');
-  }, [handlePageChange, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setRecordDateTime]);
+  }, [handlePageChange, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setRecordCurrency, setRecordDateTime]);
 
   // 首页智能输入解析后跳转到记账页并预填数据
   const handleQuickRecordToPage = useCallback((parsed: {
@@ -405,6 +419,7 @@ export default function App() {
     categoryId?: string | null;
     note?: string;
     accountId?: string | null;
+    currency?: string;
     dateTime?: Date;
   }) => {
     setEditTransaction(null);
@@ -412,10 +427,11 @@ export default function App() {
     setRecordAmount(parsed.amount || '');
     setRecordCategoryId(parsed.categoryId || null);
     setRecordNote(parsed.note || '');
+    setRecordCurrency(parsed.currency || 'CNY');
     if (parsed.accountId) setRecordAccountId(parsed.accountId);
     setRecordDateTime(parsed.dateTime || new Date());
     handlePageChange('/record');
-  }, [handlePageChange, setEditTransaction, setRecordType, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordAccountId, setRecordDateTime]);
+  }, [handlePageChange, setEditTransaction, setRecordType, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordCurrency, setRecordAccountId, setRecordDateTime]);
 
   const handleConfirmExit = useCallback(() => {
     CapApp.exitApp();
@@ -589,14 +605,22 @@ export default function App() {
   const handleRecordSubmit = useCallback(() => {
     if (!recordAmount || !recordCategoryId || !recordAccountId) return;
 
+    const originalAmount = parseFloat(recordAmount);
+    // 外币记账号按汇率折算成人民币存储；切回人民币时显式清空外币字段（编辑模式合并字段需要）
+    const currencyFields = recordCurrency !== 'CNY' && isFinite(originalAmount)
+      ? { currency: recordCurrency, originalAmount, exchangeRate: getRate(recordCurrency) }
+      : { currency: undefined, originalAmount: undefined, exchangeRate: undefined };
+    const cnyAmount = recordCurrency === 'CNY' ? originalAmount : convertToCNY(originalAmount, recordCurrency);
+
     if (editTransaction) {
       updateTransaction(editTransaction.id, {
         type: recordType,
-        amount: parseFloat(recordAmount),
+        amount: cnyAmount,
         categoryId: recordCategoryId,
         accountId: recordAccountId,
         note: recordNote,
         createdAt: recordDateTime.toISOString(),
+        ...currencyFields,
       });
       handleRecordSuccess();
       return;
@@ -604,11 +628,12 @@ export default function App() {
 
     addTransaction({
       type: recordType,
-      amount: parseFloat(recordAmount),
+      amount: cnyAmount,
       categoryId: recordCategoryId,
       accountId: recordAccountId,
       note: recordNote,
       createdAt: recordDateTime.toISOString(),
+      ...currencyFields,
     });
 
     if (recordContinueMode) {
@@ -624,7 +649,7 @@ export default function App() {
     } else {
       handleRecordSuccess();
     }
-  }, [recordAmount, recordCategoryId, recordAccountId, recordType, recordNote, recordDateTime, editTransaction, recordContinueMode, updateTransaction, addTransaction, setRecordAmount, setRecordNote, setRecordCategoryId, setRecordDateTime, setRecordResetSignal, showToast, t, handleRecordSuccess]);
+  }, [recordAmount, recordCategoryId, recordAccountId, recordType, recordNote, recordCurrency, recordDateTime, editTransaction, recordContinueMode, updateTransaction, addTransaction, setRecordAmount, setRecordNote, setRecordCategoryId, setRecordDateTime, setRecordResetSignal, showToast, t, handleRecordSuccess]);
 
   const handleQuickRecordSubmit = useCallback(() => {
     if (!quickRecordAmount || !quickRecordCategoryId || !quickRecordAccountId) return;
@@ -729,7 +754,6 @@ export default function App() {
             onGoToRecords={handleGoToRecords}
             onGoToSettings={() => handlePageChange('/settings')}
             onGoToSearch={() => handlePageChange('/search')}
-            onShowOCRModal={() => setShowOCRModal(true)}
             onGoToRecord={handleQuickRecordToPage}
             onFabRecord={handleFabRecord}
             quickRecordAmount={quickRecordAmount}
@@ -773,6 +797,8 @@ export default function App() {
             onCategoryChange={setRecordCategoryId}
             onTypeChange={setRecordType}
             onAccountChange={setRecordAccountId}
+            currency={recordCurrency}
+            onCurrencyChange={setRecordCurrency}
             onSubmit={handleRecordSubmit}
             continueMode={recordContinueMode}
             onContinueModeChange={setRecordContinueMode}
@@ -1058,10 +1084,6 @@ export default function App() {
           </div>
         </div>,
         document.body
-      )}
-
-      {showOCRModal && (
-        <OCRRecordModal onClose={() => setShowOCRModal(false)} />
       )}
 
       {updateInfo && (

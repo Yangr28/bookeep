@@ -10,7 +10,7 @@ import { TrendDetailSheet } from '../components/TrendDetailSheet';
 import { formatCurrencyShort } from '../utils/format';
 import { getMonthKey } from '../utils/date';
 import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle, History, ChevronUp } from 'lucide-react';
+import { Wallet, Settings, Plus, Sparkles, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle, History, ChevronUp } from 'lucide-react';
 import Empty from '../components/Empty';
 import { RecordActionSheet } from '../components/RecordActionSheet';
 import { getNoteSuggestions } from '../utils/recommender';
@@ -39,13 +39,13 @@ interface DashboardProps {
   onGoToRecords?: (anchor?: { id: string; offsetY: number }) => void;
   onGoToSettings?: () => void;
   onGoToSearch?: () => void;
-  onShowOCRModal?: () => void;
   onGoToRecord?: (parsed: {
     type: TransactionType;
     amount?: string;
     categoryId?: string | null;
     note?: string;
     accountId?: string | null;
+    currency?: string;
     dateTime?: Date;
   }) => void;
   onFabRecord?: () => void;
@@ -101,7 +101,6 @@ const DashboardComponent = ({
   onGoToRecords,
   onGoToSettings,
   onGoToSearch,
-  onShowOCRModal,
   onGoToRecord,
   onFabRecord,
   onSmartQuickSave,
@@ -318,6 +317,7 @@ const DashboardComponent = ({
       categoryId: autoCategoryId,
       note: result.note,
       accountId: autoAccountId,
+      currency: result.currency || undefined,
       dateTime: parsedDateTime,
     });
 
@@ -350,6 +350,7 @@ const DashboardComponent = ({
       categoryId: d.categoryId,
       note: d.note,
       accountId: d.accountId,
+      currency: d.currency,
       dateTime: d.dateTime,
     });
     setConfirmData(null);
@@ -747,12 +748,6 @@ const DashboardComponent = ({
               </div>
             </div>
           )}
-
-          {/* 拍票批量记账（完整记账统一走底部中央 +） */}
-          <button onClick={onShowOCRModal} className="btn-ghost w-full px-4 py-2.5 text-sm">
-            <Image size={16} />
-            <span>{t('dashboard.ocrShot')}</span>
-          </button>
         </div>
       </div>
 

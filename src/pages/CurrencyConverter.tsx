@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, useCallback, memo } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowDownUp, Globe, RefreshCw, Search as SearchIcon, X as XIcon, Check as CheckIcon, Edit3 } from 'lucide-react';
+import { ArrowLeft, ArrowDownUp, Globe, RefreshCw, X as XIcon, Check as CheckIcon, Edit3 } from 'lucide-react';
+import CurrencyPickerModal from '../components/CurrencyPickerModal';
 import {
   currencies, getRate, getCurrencySymbol, convertToCNY, convertFromCNY,
   getCustomRates, saveCustomRates, fetchLiveRates, getLastUpdateTime, getRateSource, isZeroDecimalCurrency
@@ -11,103 +11,6 @@ import i18n from '../i18n';
 interface CurrencyConverterProps {
   onBack: () => void;
 }
-
-// 货币选择器 Modal - 提取为外部组件避免重渲染被销毁重建
-interface CurrencyPickerModalProps {
-  open: boolean;
-  selected: string;
-  searchValue: string;
-  onSearchChange: (v: string) => void;
-  onClose: () => void;
-  onSelect: (code: string) => void;
-}
-
-const CurrencyPickerModal = memo(({ open, selected, searchValue, onSearchChange, onClose, onSelect }: CurrencyPickerModalProps) => {
-  const { t } = useTranslation();
-  if (!open) return null;
-
-  const q = searchValue.toLowerCase();
-  const filtered = !searchValue ? currencies : currencies.filter(c =>
-    c.code.toLowerCase().includes(q) ||
-    c.name.toLowerCase().includes(q) ||
-    c.region.toLowerCase().includes(q)
-  );
-
-  const handleClose = () => {
-    onSearchChange('');
-    onClose();
-  };
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[100] flex items-end justify-center"
-      style={{ background: 'rgba(43,41,37,0.45)' }}
-      onClick={handleClose}
-    >
-      <div
-        className="sheet w-full max-h-[78vh] overflow-hidden flex flex-col animate-slide-up"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--line)' }}>
-          <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('currencyConverter.pickerTitle')}</h3>
-          <button onClick={handleClose} className="icon-btn" aria-label={t('currencyConverter.ariaClose')}>
-            <XIcon size={18} />
-          </button>
-        </div>
-        <div className="p-3" style={{ borderBottom: '1px solid var(--line)' }}>
-          <div className="flex items-center gap-2 rounded-button px-3 py-2" style={{ background: 'var(--paper-deep)' }}>
-            <SearchIcon size={16} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
-            <input
-              type="text"
-              value={searchValue}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder={t('currencyConverter.searchPlaceholder')}
-              className="flex-1 bg-transparent outline-none text-sm"
-              style={{ color: 'var(--ink)' }}
-            />
-            {searchValue && (
-              <button onClick={() => onSearchChange('')} className="flex-shrink-0">
-                <XIcon size={14} style={{ color: 'var(--ink-2)' }} />
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto p-3 pb-8">
-          {filtered.length === 0 ? (
-            <p className="text-center text-sm py-8" style={{ color: 'var(--ink-2)' }}>{t('currencyConverter.noMatch')}</p>
-          ) : (
-            filtered.map((currency) => (
-              <button
-                key={currency.code}
-                onClick={() => {
-                  onSelect(currency.code);
-                  onSearchChange('');
-                  onClose();
-                }}
-                className="w-full flex items-center gap-3 p-3 rounded-card mb-1.5 transition-all"
-                style={selected === currency.code
-                  ? { background: 'var(--primary-soft)', border: '1.5px solid var(--primary)' }
-                  : { background: 'var(--paper-deep)', border: '1.5px solid transparent' }}
-              >
-                <span className="text-2xl flex-shrink-0">{currency.flag}</span>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="font-medium" style={{ color: 'var(--ink)' }}>{currency.name}</p>
-                  <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{currency.code} · {currency.region}</p>
-                </div>
-                <span className="text-sm flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{currency.symbol}</span>
-                {selected === currency.code && (
-                  <CheckIcon size={18} className="flex-shrink-0" style={{ color: 'var(--primary)' }} />
-                )}
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
-});
-CurrencyPickerModal.displayName = 'CurrencyPickerModal';
 
 export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
   const { t } = useTranslation();
@@ -123,8 +26,6 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
   const [rateVersion, setRateVersion] = useState(0); // 强制刷新汇率显示
-  const [fromPickerSearch, setFromPickerSearch] = useState('');
-  const [toPickerSearch, setToPickerSearch] = useState('');
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -440,16 +341,12 @@ export const CurrencyConverter = ({ onBack }: CurrencyConverterProps) => {
       <CurrencyPickerModal
         open={showFromPicker}
         selected={fromCurrency}
-        searchValue={fromPickerSearch}
-        onSearchChange={setFromPickerSearch}
         onClose={() => setShowFromPicker(false)}
         onSelect={selectFromCurrency}
       />
       <CurrencyPickerModal
         open={showToPicker}
         selected={toCurrency}
-        searchValue={toPickerSearch}
-        onSearchChange={setToPickerSearch}
         onClose={() => setShowToPicker(false)}
         onSelect={selectToCurrency}
       />

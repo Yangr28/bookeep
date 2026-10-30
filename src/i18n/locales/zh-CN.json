@@ -106,7 +106,6 @@
     "trendAssets": "总资产",
     "trendMoM": "环比",
     "trendMonthlyNet": "当月结余",
-    "ocrShot": "拍票",
     "record": "记一笔",
     "todayIncome": "今日收入",
     "todayExpense": "今日支出",
@@ -135,6 +134,8 @@
     "frequentBadge": "常用",
     "categoryRequired": "请选择一个分类",
     "amountInvalid": "金额必须大于 0",
+    "currency": "币种",
+    "currencyConverted": "≈ {{amount}}（1 {{code}} ≈ ¥{{rate}}）",
     "account": "账户",
     "selectAccount": "请选择账户",
     "date": "日期",
@@ -215,47 +216,6 @@
   "monthpicker": {
     "title": "选择月份",
     "selected": "已选 {{y}}年{{m}}月"
-  },
-  "ocr": {
-    "error": {
-      "notImage": "请选择图片文件",
-      "readFailed": "读取图片失败",
-      "noTransactions": "未能识别到交易记录，请尝试清晰的截图",
-      "recognizeFailed": "图片识别失败，请重试",
-      "accountRequired": "请选择账户"
-    },
-    "title": "批量记账",
-    "file": {
-      "lang": "语言数据包",
-      "worker": "识别引擎",
-      "core": "核心运行库"
-    },
-    "successCount": "成功添加 {{n}} 条记录",
-    "upload": {
-      "title": "上传支付记录截图",
-      "subtitle": "支持微信、支付宝等支付账单截图",
-      "hint": "提示：请确保截图清晰，包含交易金额和描述信息。支持识别多条交易记录。"
-    },
-    "preview": {
-      "foundCount": "识别到 {{n}} 条记录",
-      "confirmEdit": "确认并编辑",
-      "reupload": "重新上传"
-    },
-    "edit": {
-      "selectAccount": "选择账户",
-      "recordNo": "记录 {{n}}",
-      "amount": "金额",
-      "category": "分类",
-      "note": "备注",
-      "date": "日期",
-      "back": "返回",
-      "confirm": "确认记账 ({{n}})"
-    },
-    "progress": {
-      "downloading": "正在下载{{file}}...",
-      "firstTimeHint": "首次使用需要下载识别引擎，之后可离线使用",
-      "recognizing": "正在识别图片..."
-    }
   },
   "settings": {
     "language": {

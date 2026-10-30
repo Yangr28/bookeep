@@ -17,6 +17,8 @@ interface ModalState {
   recordNote: string;
   recordCategoryId: string | null;
   recordType: 'expense' | 'income';
+  /** 记账币种（记账金额按汇率折算成人民币存储） */
+  recordCurrency: string;
   editTransaction: Transaction | null;
   detailFilter: FilterType;
   selectedCategoryId: string | null;
@@ -38,6 +40,7 @@ export const useModal = () => {
     recordNote: '',
     recordCategoryId: null,
     recordType: 'expense',
+    recordCurrency: 'CNY',
     editTransaction: null,
     detailFilter: 'today-income',
     selectedCategoryId: null,
@@ -140,6 +143,10 @@ export const useModal = () => {
     setState(prev => ({ ...prev, recordType: value }));
   }, []);
 
+  const setRecordCurrency = useCallback((value: string) => {
+    setState(prev => ({ ...prev, recordCurrency: value }));
+  }, []);
+
   const setEditTransaction = useCallback((value: Transaction | null) => {
     setState(prev => ({ ...prev, editTransaction: value }));
   }, []);
@@ -177,6 +184,7 @@ export const useModal = () => {
     setRecordNote,
     setRecordCategoryId,
     setRecordType,
+    setRecordCurrency,
     setEditTransaction,
     setDetailFilter,
     setSelectedCategoryId,

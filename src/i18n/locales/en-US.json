@@ -106,7 +106,6 @@
     "trendAssets": "Total assets",
     "trendMoM": "MoM",
     "trendMonthlyNet": "Net this month",
-    "ocrShot": "Scan receipt",
     "record": "Add transaction",
     "todayIncome": "Today's income",
     "todayExpense": "Today's expense",
@@ -135,6 +134,8 @@
     "frequentBadge": "Frequent",
     "categoryRequired": "Please select a category",
     "amountInvalid": "Amount must be greater than 0",
+    "currency": "Currency",
+    "currencyConverted": "≈ {{amount}} (1 {{code}} ≈ ¥{{rate}})",
     "account": "Account",
     "selectAccount": "Select an account",
     "date": "Date",
@@ -215,47 +216,6 @@
   "monthpicker": {
     "title": "Select Month",
     "selected": "Selected {{m}}/{{y}}"
-  },
-  "ocr": {
-    "error": {
-      "notImage": "Please choose an image file",
-      "readFailed": "Failed to read image",
-      "noTransactions": "No transactions found. Try a clearer screenshot",
-      "recognizeFailed": "Recognition failed. Please try again",
-      "accountRequired": "Please select an account"
-    },
-    "title": "Batch Entry",
-    "file": {
-      "lang": "language data",
-      "worker": "recognition engine",
-      "core": "core runtime"
-    },
-    "successCount": "Added {{n}} transactions",
-    "upload": {
-      "title": "Upload payment screenshot",
-      "subtitle": "Supports WeChat, Alipay and other payment screenshots",
-      "hint": "Tip: make sure the screenshot is clear and includes amounts and descriptions. Multiple transactions are supported."
-    },
-    "preview": {
-      "foundCount": "Found {{n}} transactions",
-      "confirmEdit": "Confirm & edit",
-      "reupload": "Upload again"
-    },
-    "edit": {
-      "selectAccount": "Select account",
-      "recordNo": "Record {{n}}",
-      "amount": "Amount",
-      "category": "Category",
-      "note": "Note",
-      "date": "Date",
-      "back": "Back",
-      "confirm": "Save ({{n}})"
-    },
-    "progress": {
-      "downloading": "Downloading {{file}}...",
-      "firstTimeHint": "First use downloads the recognition engine. Offline ready afterwards",
-      "recognizing": "Recognizing image..."
-    }
   },
   "settings": {
     "language": {

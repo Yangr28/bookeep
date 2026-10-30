@@ -101,8 +101,6 @@
     "s4Title": "四、权限说明",
     "s4StorageTitle": "存储权限",
     "s4StorageBody": "：用于导出/导入数据文件",
-    "s4CameraTitle": "相机权限",
-    "s4CameraBody": "：用于拍票识别功能（OCR），图片仅在本地处理",
     "s4NotifyTitle": "通知权限",
     "s4NotifyBody": "：用于周期性记账提醒",
     "s5Title": "五、第三方服务",

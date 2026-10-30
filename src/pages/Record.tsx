@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/useStore';
 import { CategoryCard } from '../components/CategoryCard';
 import { TransactionType, Transaction } from '../types';
-import { formatDateTime } from '../utils/format';
+import { formatCurrency, formatDateTime } from '../utils/format';
 import { isSameLocalDate } from '../utils/date';
 import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
 import { getFrequentCategories, getFrequentAmounts, predictCategory, recommendAccount } from '../utils/recommender';
-import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ArrowLeft, Circle, CheckCircle2, Copy } from 'lucide-react';
+import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ChevronDown, ArrowLeft, Circle, CheckCircle2, Copy } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
+import { getCurrencySymbol, getRate, convertToCNY } from '../utils/currency';
+import CurrencyPickerModal from '../components/CurrencyPickerModal';
 
 interface RecordProps {
   editTransaction?: Transaction | null;
@@ -29,6 +31,9 @@ interface RecordProps {
   onCategoryChange: (categoryId: string | null) => void;
   onTypeChange: (type: TransactionType) => void;
   onAccountChange: (accountId: string | null) => void;
+  /** 记账币种（金额按汇率折算成人民币保存） */
+  currency: string;
+  onCurrencyChange: (currency: string) => void;
   onSubmit: () => void;
   /** 连续记账开关（仅新增态生效） */
   continueMode: boolean;
@@ -37,8 +42,9 @@ interface RecordProps {
   resetSignal: number;
 }
 
-const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, onSubmit, continueMode, onContinueModeChange, resetSignal }: RecordProps) => {
+const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, currency, onCurrencyChange, onSubmit, continueMode, onContinueModeChange, resetSignal }: RecordProps) => {
   const { t } = useTranslation();
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [smartInput, setSmartInput] = useState('');
   const [showSmartResult, setShowSmartResult] = useState(false);
   const smartInputRef = useRef<HTMLInputElement>(null);
@@ -72,6 +78,12 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
   const transactions = useStore((state) => state.transactions);
 
   const selectedAccount = accounts.find(a => a.id === selectedAccountId);
+
+  const currencySymbol = getCurrencySymbol(currency);
+  const amountValue = parseFloat(amount);
+  const cnyPreview = currency !== 'CNY' && isFinite(amountValue) && amountValue > 0
+    ? convertToCNY(amountValue, currency)
+    : null;
 
   const filteredCategories = categories.filter((c) => c.type === type);
 
@@ -307,12 +319,21 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
         {/* 金额 */}
         <div className="card p-3.5">
           <div className="flex items-center px-2">
-            <span
-              className="text-3xl font-bold mr-2 amount-num flex-shrink-0"
-              style={{ color: hasAmountError ? 'var(--expense)' : 'var(--ink-2)' }}
+            <button
+              type="button"
+              onClick={() => setShowCurrencyPicker(true)}
+              className="flex items-center gap-1 mr-2 flex-shrink-0 active:opacity-70 transition-opacity"
+              aria-label={t('record.currency')}
             >
-              ¥
-            </span>
+              <span
+                className="text-3xl font-bold amount-num"
+                style={{ color: hasAmountError ? 'var(--expense)' : 'var(--ink-2)' }}
+              >
+                {currencySymbol}
+              </span>
+              <span className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>{currency}</span>
+              <ChevronDown size={13} style={{ color: 'var(--ink-2)' }} />
+            </button>
             <input
               type="text"
               inputMode="decimal"
@@ -328,6 +349,15 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
           {hasAmountError && (
             <p className="text-xs mt-2 text-center" style={{ color: 'var(--expense)' }}>{t('record.amountInvalid')}</p>
           )}
+          {cnyPreview !== null && (
+            <p className="text-xs mt-1.5 text-center truncate" style={{ color: 'var(--ink-2)' }}>
+              {t('record.currencyConverted', {
+                amount: formatCurrency(cnyPreview),
+                code: currency,
+                rate: getRate(currency),
+              })}
+            </p>
+          )}
           {!isEditMode && frequentAmounts.length > 0 && (
             <div
               className="flex gap-2 mt-3 overflow-x-auto -mx-1 px-1 [&::-webkit-scrollbar]:hidden"
@@ -341,7 +371,7 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
                   className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium card-press amount-num"
                   style={{ background: 'var(--paper)', color: 'var(--ink-2)', border: '1px solid var(--line)' }}
                 >
-                  ¥{value}
+                  {currencySymbol}{value}
                 </button>
               ))}
             </div>
@@ -437,6 +467,13 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
           </button>
         )}
       </div>
+
+      <CurrencyPickerModal
+        open={showCurrencyPicker}
+        selected={currency}
+        onClose={() => setShowCurrencyPicker(false)}
+        onSelect={onCurrencyChange}
+      />
     </div>
   );
 };

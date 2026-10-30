@@ -101,8 +101,6 @@
     "s4Title": "4. Permissions",
     "s4StorageTitle": "Storage",
     "s4StorageBody": ": used to export/import data files",
-    "s4CameraTitle": "Camera",
-    "s4CameraBody": ": used for receipt photo recognition (OCR); images are processed only on-device",
     "s4NotifyTitle": "Notifications",
     "s4NotifyBody": ": used for recurring bookkeeping reminders",
     "s5Title": "5. Third-party services",
