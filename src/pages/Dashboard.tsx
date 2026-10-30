@@ -35,8 +35,8 @@ interface DashboardProps {
   onDuplicateTransaction?: (transaction: Transaction) => void;
   /** 将记录保存为模板 */
   onCreateTemplate?: (transaction: Transaction) => void;
-  /** 无缝上拉展开：跳转账单页，并携带首页最后一条记录作为定位锚点 */
-  onGoToRecords?: (anchorId?: string) => void;
+  /** 无缝上拉展开：跳转账单页，并携带首页最后一条记录及其在视口中的位置，用于同屏对齐 */
+  onGoToRecords?: (anchor?: { id: string; offsetY: number }) => void;
   onGoToSettings?: () => void;
   onGoToSearch?: () => void;
   onShowOCRModal?: () => void;
@@ -438,7 +438,14 @@ const DashboardComponent = ({
       const s = pullStateRef.current;
       const el = pullIndicatorRef.current;
       if (s.pull >= PULL_THRESHOLD && hasOlderRef.current) {
-        onGoToRecordsRef.current?.(lastRecordIdRef.current ?? undefined);
+        // 携带最后一条记录及其在当前视口中的位置：账单页据此把同一条记录放到同样的高度
+        const id = lastRecordIdRef.current;
+        if (id) {
+          const cardEl = document.querySelector<HTMLElement>(`[data-record-id="${id}"]`);
+          onGoToRecordsRef.current?.({ id, offsetY: cardEl ? cardEl.getBoundingClientRect().top : 0 });
+        } else {
+          onGoToRecordsRef.current?.();
+        }
       }
       s.pull = 0;
       s.active = false;
@@ -803,7 +810,7 @@ const DashboardComponent = ({
         ) : (
           <div>
             {recentTransactions.map((transaction, index) => (
-              <div key={transaction.id} className="animate-stagger-in" style={{ animationDelay: `${index * 50}ms` }}>
+              <div key={transaction.id} data-record-id={transaction.id} className="animate-stagger-in" style={{ animationDelay: `${index * 50}ms` }}>
                 <TransactionCard
                   transaction={transaction}
                   onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}

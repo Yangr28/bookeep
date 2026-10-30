@@ -163,8 +163,8 @@ export default function App() {
   const currentPageRef = useRef(currentPage);
   const scrollRafRef = useRef<number | null>(null);
   const pendingScrollYRef = useRef(0);
-  // 首页上拉进账单页的定位锚点（记录 id）与「跳过滚动恢复」标记
-  const [recordsAnchorId, setRecordsAnchorId] = useState<string | null>(null);
+  // 首页上拉进账单页的定位锚点（记录 id + 首页视口 y 偏移）与「跳过滚动恢复」标记
+  const [recordsAnchor, setRecordsAnchor] = useState<{ id: string; offsetY: number } | null>(null);
   const anchorPendingRef = useRef(false);
 
   useEffect(() => {
@@ -350,14 +350,14 @@ export default function App() {
   }, [handlePageChange, setEditTransaction, setRecordType, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordAccountId, setRecordDateTime]);
 
   // 首页上拉无缝进账单页：记录锚点由 AllRecords 定位，期间跳过通用滚动位置恢复
-  const handleGoToRecords = useCallback((anchorId?: string) => {
-    if (anchorId) {
+  const handleGoToRecords = useCallback((anchor?: { id: string; offsetY: number }) => {
+    if (anchor) {
       anchorPendingRef.current = true;
-      setRecordsAnchorId(anchorId);
+      setRecordsAnchor(anchor);
     } else {
       // 无锚点（近三日无记录）则从顶部开始
       anchorPendingRef.current = false;
-      setRecordsAnchorId(null);
+      setRecordsAnchor(null);
       scrollPositions.current.set('/records', 0);
     }
     handlePageChange('/records');
@@ -365,7 +365,7 @@ export default function App() {
 
   const handleRecordsAnchorApplied = useCallback(() => {
     anchorPendingRef.current = false;
-    setRecordsAnchorId(null);
+    setRecordsAnchor(null);
   }, []);
 
   // 可撤销删除：交易删除后 5 秒内可点击 Toast 撤销，恢复原 ID 与账户余额
@@ -797,7 +797,7 @@ export default function App() {
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onDuplicateTransaction={handleCopyTransaction}
             onCreateTemplate={handleCreateTemplateFromTransaction}
-            initialAnchorId={recordsAnchorId}
+            initialAnchor={recordsAnchor}
             onAnchorApplied={handleRecordsAnchorApplied}
             onToast={(msg) => showToast(msg)}
           />
@@ -844,7 +844,7 @@ export default function App() {
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onDuplicateTransaction={handleCopyTransaction}
             onCreateTemplate={handleCreateTemplateFromTransaction}
-            initialAnchorId={recordsAnchorId}
+            initialAnchor={recordsAnchor}
             onAnchorApplied={handleRecordsAnchorApplied}
             onToast={(msg) => showToast(msg)}
           />
