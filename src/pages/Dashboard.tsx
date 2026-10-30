@@ -35,8 +35,8 @@ interface DashboardProps {
   onDuplicateTransaction?: (transaction: Transaction) => void;
   /** 将记录保存为模板 */
   onCreateTemplate?: (transaction: Transaction) => void;
-  /** 无缝上拉展开：跳转账单页 */
-  onGoToRecords?: () => void;
+  /** 无缝上拉展开：跳转账单页，并携带首页最后一条记录作为定位锚点 */
+  onGoToRecords?: (anchorId?: string) => void;
   onGoToSettings?: () => void;
   onGoToSearch?: () => void;
   onShowOCRModal?: () => void;
@@ -391,6 +391,11 @@ const DashboardComponent = ({
   const PULL_THRESHOLD = 72;
   const onGoToRecordsRef = useRef(onGoToRecords);
   onGoToRecordsRef.current = onGoToRecords;
+  // 首页最后一条记录 id：上拉进入账单页时作为定位锚点，令两页内容无缝衔接
+  const lastRecordIdRef = useRef<string | null>(null);
+  lastRecordIdRef.current = recentTransactions.length
+    ? recentTransactions[recentTransactions.length - 1].id
+    : null;
   const hasOlderRef = useRef(hasOlderRecords);
   hasOlderRef.current = hasOlderRecords;
   // 弹窗（操作菜单/智能核对/趋势明细）打开时禁用上拉跳转，避免误触
@@ -414,10 +419,12 @@ const DashboardComponent = ({
     const onTouchMove = (e: TouchEvent) => {
       const s = pullStateRef.current;
       if (!s.active) return;
+      // 是否到底只在 touchstart 判定一次：拖动时指示器撑高会改变 scrollHeight，重复判断会抖动
       const dy = s.startY - e.touches[0].clientY;
-      s.pull = dy > 0 && atBottom() ? Math.min(dy, 140) : 0;
+      s.pull = dy > 0 ? Math.min(dy, 140) : 0;
       const el = pullIndicatorRef.current;
       if (el) {
+        el.style.transition = 'none';
         el.style.height = `${Math.min(s.pull, 72)}px`;
         el.style.opacity = `${Math.min(s.pull / 40, 1)}`;
         el.dataset.ready = s.pull >= PULL_THRESHOLD ? '1' : '0';
@@ -431,11 +438,12 @@ const DashboardComponent = ({
       const s = pullStateRef.current;
       const el = pullIndicatorRef.current;
       if (s.pull >= PULL_THRESHOLD && hasOlderRef.current) {
-        onGoToRecordsRef.current?.();
+        onGoToRecordsRef.current?.(lastRecordIdRef.current ?? undefined);
       }
       s.pull = 0;
       s.active = false;
       if (el) {
+        el.style.transition = '';
         el.style.height = '0px';
         el.style.opacity = '0';
         el.dataset.ready = '0';

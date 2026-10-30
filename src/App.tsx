@@ -163,6 +163,9 @@ export default function App() {
   const currentPageRef = useRef(currentPage);
   const scrollRafRef = useRef<number | null>(null);
   const pendingScrollYRef = useRef(0);
+  // 首页上拉进账单页的定位锚点（记录 id）与「跳过滚动恢复」标记
+  const [recordsAnchorId, setRecordsAnchorId] = useState<string | null>(null);
+  const anchorPendingRef = useRef(false);
 
   useEffect(() => {
     const onScroll = () => {
@@ -182,6 +185,9 @@ export default function App() {
 
   useLayoutEffect(() => {
     currentPageRef.current = currentPage;
+    // 首页上拉进入账单页时交由 AllRecords 按锚点定位，跳过位置恢复避免互相覆盖
+    if (anchorPendingRef.current && currentPage === '/records') return;
+    anchorPendingRef.current = false;
     const target = scrollPositions.current.get(currentPage) ?? 0;
     // 立即恢复一次避免白闪；下一帧再补一次，兼容首帧后高度才撑开的列表
     window.scrollTo(0, target);
@@ -342,6 +348,25 @@ export default function App() {
     setRecordDateTime(new Date());
     handlePageChange('/record');
   }, [handlePageChange, setEditTransaction, setRecordType, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordAccountId, setRecordDateTime]);
+
+  // 首页上拉无缝进账单页：记录锚点由 AllRecords 定位，期间跳过通用滚动位置恢复
+  const handleGoToRecords = useCallback((anchorId?: string) => {
+    if (anchorId) {
+      anchorPendingRef.current = true;
+      setRecordsAnchorId(anchorId);
+    } else {
+      // 无锚点（近三日无记录）则从顶部开始
+      anchorPendingRef.current = false;
+      setRecordsAnchorId(null);
+      scrollPositions.current.set('/records', 0);
+    }
+    handlePageChange('/records');
+  }, [handlePageChange]);
+
+  const handleRecordsAnchorApplied = useCallback(() => {
+    anchorPendingRef.current = false;
+    setRecordsAnchorId(null);
+  }, []);
 
   // 可撤销删除：交易删除后 5 秒内可点击 Toast 撤销，恢复原 ID 与账户余额
   // toastController 传入 App 的 showWithAction，确保撤销 Toast 与其它 Toast 共用同一队列
@@ -701,7 +726,7 @@ export default function App() {
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onDuplicateTransaction={handleCopyTransaction}
             onCreateTemplate={handleCreateTemplateFromTransaction}
-            onGoToRecords={() => handlePageChange('/records')}
+            onGoToRecords={handleGoToRecords}
             onGoToSettings={() => handlePageChange('/settings')}
             onGoToSearch={() => handlePageChange('/search')}
             onShowOCRModal={() => setShowOCRModal(true)}
@@ -772,6 +797,8 @@ export default function App() {
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onDuplicateTransaction={handleCopyTransaction}
             onCreateTemplate={handleCreateTemplateFromTransaction}
+            initialAnchorId={recordsAnchorId}
+            onAnchorApplied={handleRecordsAnchorApplied}
             onToast={(msg) => showToast(msg)}
           />
         );
@@ -817,6 +844,8 @@ export default function App() {
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onDuplicateTransaction={handleCopyTransaction}
             onCreateTemplate={handleCreateTemplateFromTransaction}
+            initialAnchorId={recordsAnchorId}
+            onAnchorApplied={handleRecordsAnchorApplied}
             onToast={(msg) => showToast(msg)}
           />
         );

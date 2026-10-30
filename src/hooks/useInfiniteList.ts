@@ -14,13 +14,15 @@ export function useInfiniteList<T>(
   items: T[],
   pageSize = 30,
   deps: unknown[] = [],
+  /** 首次/重置时的最小渲染条数：从别处跳来需要定位到靠后的记录时使用 */
+  minCount = 0,
 ): { visibleItems: T[]; sentinelRef: React.RefObject<HTMLDivElement>; hasMore: boolean } {
-  const [visibleCount, setVisibleCount] = useState(pageSize);
+  const [visibleCount, setVisibleCount] = useState(() => Math.max(pageSize, minCount));
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // 列表变化或筛选变化时重置
   useEffect(() => {
-    setVisibleCount(pageSize);
+    setVisibleCount(Math.max(pageSize, minCount));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 

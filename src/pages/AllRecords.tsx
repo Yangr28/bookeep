@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
@@ -23,10 +23,14 @@ interface AllRecordsProps {
   onDuplicateTransaction?: (transaction: Transaction) => void;
   /** 将记录保存为记账模板 */
   onCreateTemplate?: (transaction: Transaction) => void;
+  /** 从首页上拉进入时的锚点记录 id：列表定位到该记录的下一条 */
+  initialAnchorId?: string | null;
+  /** 锚点定位完成通知（App 用于解除滚动位置恢复的跳过标记） */
+  onAnchorApplied?: () => void;
   onToast?: (message: string) => void;
 }
 
-export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteTransaction, onDuplicateTransaction, onCreateTemplate, onToast }: AllRecordsProps) => {
+export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteTransaction, onDuplicateTransaction, onCreateTemplate, initialAnchorId, onAnchorApplied, onToast }: AllRecordsProps) => {
   const { t } = useTranslation();
 
   const transactions = useStore((state) => state.transactions);
@@ -164,12 +168,51 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
+  // 首页上拉锚点：定位到该记录的下一条（首页已展示到锚点为止），保证视觉接续
+  const anchorIndex = initialAnchorId ? sortedRecords.findIndex((r) => r.id === initialAnchorId) : -1;
+  const anchorTarget = anchorIndex >= 0
+    ? sortedRecords[Math.min(anchorIndex + 1, sortedRecords.length - 1)]
+    : null;
+  // 目标记录若在首屏 30 条之外，需先渲染到它
+  const anchorMinCount = anchorTarget
+    ? Math.max(30, sortedRecords.findIndex((r) => r.id === anchorTarget.id) + 4)
+    : 0;
+
   // 增量加载：流水上千条时按 30 条增量渲染，IntersectionObserver 触底加载下一页
   const { visibleItems: visibleRecords, sentinelRef, hasMore } = useInfiniteList(
     sortedRecords,
     30,
     [startDate, endDate, categoryFilter, accountFilter, amountMin, amountMax, debouncedQuery, transactions, transfers],
+    anchorMinCount,
   );
+
+  // 锚点定位：等目标节点渲染后滚动到其顶部（预留页面头部高度）
+  const anchorAppliedRef = useRef(false);
+  useLayoutEffect(() => {
+    if (!anchorTarget || anchorAppliedRef.current) return;
+    let frames = 0;
+    let raf = 0;
+    const tick = () => {
+      frames += 1;
+      const el = document.querySelector<HTMLElement>(`[data-record-id="${anchorTarget.id}"]`);
+      if (el) {
+        const top = el.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo(0, Math.max(0, top));
+        anchorAppliedRef.current = true;
+        onAnchorApplied?.();
+        return;
+      }
+      if (frames < 12) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        anchorAppliedRef.current = true;
+        onAnchorApplied?.();
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anchorTarget?.id]);
 
   const totalIncome = sortedRecords
     .filter((r) => r.type === 'transaction' && r.direction === 'in')
@@ -488,22 +531,24 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
             {visibleRecords.map((record) => {
               if (record.type === 'transaction' && record.transaction) {
                 return (
-                  <TransactionCard
-                    key={record.id}
-                    transaction={record.transaction}
-                    onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(record.transaction!)}
-                    onEdit={onEditTransaction ? () => onEditTransaction(record.transaction!) : undefined}
-                    onPress={!batchMode ? () => setActionRecord(record.transaction!) : undefined}
-                    selectMode={batchMode}
-                    selected={selectedIds.has(record.id)}
-                    onToggleSelect={() => toggleSelect(record.id)}
-                  />
+                  <div key={record.id} data-record-id={record.id}>
+                    <TransactionCard
+                      transaction={record.transaction}
+                      onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(record.transaction!)}
+                      onEdit={onEditTransaction ? () => onEditTransaction(record.transaction!) : undefined}
+                      onPress={!batchMode ? () => setActionRecord(record.transaction!) : undefined}
+                      selectMode={batchMode}
+                      selected={selectedIds.has(record.id)}
+                      onToggleSelect={() => toggleSelect(record.id)}
+                    />
+                  </div>
                 );
               }
 
               return (
                 <div
                   key={record.id}
+                  data-record-id={record.id}
                   className="card p-3 mb-2"
                   style={batchMode ? { opacity: 0.45 } : undefined}
                 >
