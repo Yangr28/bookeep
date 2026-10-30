@@ -601,12 +601,12 @@ const DashboardComponent = ({
       </div>
 
       {/* 记账区域（快捷入口，完整记账在独立页面） */}
-      <div className="px-4 mt-4">
-        <div className="card p-4">
+      <div className="px-4 mt-3">
+        <div className="card p-3">
           {/* 智能输入（含历史备注补全候选与语音入口） */}
-          <div ref={smartAreaRef} className="mb-3">
+          <div ref={smartAreaRef} className="mb-2">
             <div
-              className="flex items-center rounded-button px-3 py-2.5 border-2 transition-colors"
+              className="flex items-center rounded-button px-2.5 py-2 border-2 transition-colors"
               style={{ background: 'var(--paper)', borderColor: 'transparent' }}
             >
               <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: 'var(--primary-ink)' }} />
@@ -643,7 +643,7 @@ const DashboardComponent = ({
               <div
                 id="smart-suggestion-list"
                 role="listbox"
-                className="mt-1.5 mb-3 rounded-button overflow-hidden animate-fade-in divide-y divide-[color:var(--line)]"
+                className="mt-1 mb-2 rounded-button overflow-hidden animate-fade-in divide-y divide-[color:var(--line)]"
                 style={{ background: 'var(--card)', border: '1px solid var(--line)', boxShadow: 'var(--shadow-card)' }}
               >
                 {suggestions.map((s) => (
@@ -653,7 +653,7 @@ const DashboardComponent = ({
                     role="option"
                     aria-selected={false}
                     onClick={() => pickSuggestion(s)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-left transition-colors card-press hover:brightness-95"
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-left transition-colors card-press hover:brightness-95"
                     style={{ color: 'var(--ink)' }}
                   >
                     <History size={14} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
@@ -667,7 +667,7 @@ const DashboardComponent = ({
           {/* 智能解析预览：输入时实时显示识别到的金额/分类/账户，可直接保存 */}
           {preview && (preview.amount || preview.categoryName || preview.accountName) && (
             <div
-              className="rounded-button px-3 py-2.5 mb-3 animate-stagger-in"
+              className="rounded-button px-2.5 py-2 mb-2 animate-stagger-in"
               style={{ background: 'var(--paper-deep)', border: '1px solid var(--line)' }}
             >
               <div className="flex items-center gap-2 flex-wrap text-xs">
@@ -723,7 +723,7 @@ const DashboardComponent = ({
                 )}
               </div>
               {/* 操作按钮 */}
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-1.5">
                 <button
                   onClick={() => handleSmartSubmit()}
                   disabled={!(preview.amount && preview.categoryId && preview.accountId)}
@@ -753,17 +753,17 @@ const DashboardComponent = ({
 
       {/* 快捷工具 */}
       <div className="px-4 mt-3">
-        <div className="card p-2.5 grid grid-cols-4 gap-1">
+        <div className="card p-2 grid grid-cols-4 gap-1">
           {quickTools.map((tool) => {
             const Icon = tool.icon;
             return (
               <button
                 key={tool.labelKey}
                 onClick={tool.onClick}
-                className="flex flex-col items-center gap-1 py-2 rounded-button transition-colors active:scale-95 min-w-0"
+                className="flex flex-col items-center gap-1 py-1.5 rounded-button transition-colors active:scale-95 min-w-0"
               >
-                <div className="w-10 h-10 rounded-button flex items-center justify-center" style={{ background: tool.bg }}>
-                  <Icon size={19} style={{ color: tool.color }} />
+                <div className="w-9 h-9 rounded-button flex items-center justify-center" style={{ background: tool.bg }}>
+                  <Icon size={18} style={{ color: tool.color }} />
                 </div>
                 <span className="text-xs font-medium w-full text-center truncate" style={{ color: 'var(--ink)' }}>{t(tool.labelKey)}</span>
               </button>
