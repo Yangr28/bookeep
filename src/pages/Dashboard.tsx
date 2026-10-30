@@ -10,8 +10,9 @@ import { TrendDetailSheet } from '../components/TrendDetailSheet';
 import { formatCurrencyShort } from '../utils/format';
 import { getMonthKey } from '../utils/date';
 import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle, History } from 'lucide-react';
+import { Wallet, Settings, Plus, Sparkles, Image, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle, History, ChevronUp } from 'lucide-react';
 import Empty from '../components/Empty';
+import { RecordActionSheet } from '../components/RecordActionSheet';
 import { getNoteSuggestions } from '../utils/recommender';
 import { useCountUp } from '../hooks/useCountUp';
 import { TransactionType, Transaction } from '../types';
@@ -30,6 +31,12 @@ interface DashboardProps {
   onGoToCurrencyConverter?: () => void;
   onEditTransaction?: (transaction: Transaction) => void;
   onDeleteTransaction?: (transaction: Transaction) => void;
+  /** 复制记一笔（预填跳转记账页） */
+  onDuplicateTransaction?: (transaction: Transaction) => void;
+  /** 将记录保存为模板 */
+  onCreateTemplate?: (transaction: Transaction) => void;
+  /** 无缝上拉展开：跳转账单页 */
+  onGoToRecords?: () => void;
   onGoToSettings?: () => void;
   onGoToSearch?: () => void;
   onShowOCRModal?: () => void;
@@ -89,6 +96,9 @@ const DashboardComponent = ({
   onGoToCurrencyConverter,
   onEditTransaction,
   onDeleteTransaction,
+  onDuplicateTransaction,
+  onCreateTemplate,
+  onGoToRecords,
   onGoToSettings,
   onGoToSearch,
   onShowOCRModal,
@@ -357,13 +367,91 @@ const DashboardComponent = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [widgetQuickInput]);
 
-  const recentTransactions = useMemo(
-    () =>
-      [...transactions]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 5),
-    [transactions],
+  // 近三日记录（今天/昨天/前天），按时间倒序
+  const recentTransactions = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - 2);
+    return [...transactions]
+      .filter((tx) => new Date(tx.createdAt).getTime() >= cutoff.getTime())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [transactions]);
+  // 是否还有更早的记录：有则显示「上拉展开全部账单」提示并启用手势
+  const hasOlderRecords = useMemo(
+    () => transactions.length > recentTransactions.length,
+    [transactions, recentTransactions],
   );
+
+  // 记录操作菜单
+  const [actionTransaction, setActionTransaction] = useState<Transaction | null>(null);
+
+  // 上拉展开手势：页面滚动到底后继续上拉，无缝跳转账单页
+  const pullIndicatorRef = useRef<HTMLDivElement>(null);
+  const pullStateRef = useRef<{ startY: number; pull: number; active: boolean }>({ startY: 0, pull: 0, active: false });
+  const PULL_THRESHOLD = 72;
+  const onGoToRecordsRef = useRef(onGoToRecords);
+  onGoToRecordsRef.current = onGoToRecords;
+  const hasOlderRef = useRef(hasOlderRecords);
+  hasOlderRef.current = hasOlderRecords;
+  // 弹窗（操作菜单/智能核对/趋势明细）打开时禁用上拉跳转，避免误触
+  const modalOpenRef = useRef(false);
+  modalOpenRef.current = actionTransaction !== null || confirmData !== null || trendDetailOpen;
+  // 提示条文案随语言切换
+  const pullTextsRef = useRef({ pull: '', release: '' });
+  pullTextsRef.current = {
+    pull: t('dashboard.pullToAllRecords'),
+    release: t('dashboard.releaseToAllRecords'),
+  };
+
+  useEffect(() => {
+    if (!hasOlderRecords) return;
+    const atBottom = () =>
+      window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4;
+
+    const onTouchStart = (e: TouchEvent) => {
+      pullStateRef.current = { startY: e.touches[0].clientY, pull: 0, active: !modalOpenRef.current && atBottom() };
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const s = pullStateRef.current;
+      if (!s.active) return;
+      const dy = s.startY - e.touches[0].clientY;
+      s.pull = dy > 0 && atBottom() ? Math.min(dy, 140) : 0;
+      const el = pullIndicatorRef.current;
+      if (el) {
+        el.style.height = `${Math.min(s.pull, 72)}px`;
+        el.style.opacity = `${Math.min(s.pull / 40, 1)}`;
+        el.dataset.ready = s.pull >= PULL_THRESHOLD ? '1' : '0';
+        const arrow = el.firstElementChild as HTMLElement | null;
+        if (arrow) arrow.style.transform = s.pull >= PULL_THRESHOLD ? 'rotate(180deg)' : 'rotate(0deg)';
+        const label = el.lastElementChild as HTMLElement | null;
+        if (label) label.textContent = s.pull >= PULL_THRESHOLD ? pullTextsRef.current.release : pullTextsRef.current.pull;
+      }
+    };
+    const onTouchEnd = () => {
+      const s = pullStateRef.current;
+      const el = pullIndicatorRef.current;
+      if (s.pull >= PULL_THRESHOLD && hasOlderRef.current) {
+        onGoToRecordsRef.current?.();
+      }
+      s.pull = 0;
+      s.active = false;
+      if (el) {
+        el.style.height = '0px';
+        el.style.opacity = '0';
+        el.dataset.ready = '0';
+        const arrow = el.firstElementChild as HTMLElement | null;
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+      }
+    };
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [hasOlderRecords]);
 
   const balance = monthIncome - monthExpense;
   const animatedBalance = useCountUp(balance);
@@ -699,7 +787,7 @@ const DashboardComponent = ({
         </button>
       </div>
 
-      {/* 最近记录 */}
+      {/* 近三日记录 */}
       <div className="px-4 mt-5">
         <h2 className="section-title">{t('dashboard.recentRecords')}</h2>
         {recentTransactions.length === 0 ? (
@@ -712,9 +800,21 @@ const DashboardComponent = ({
                   transaction={transaction}
                   onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
                   onEdit={() => onEditTransaction?.(transaction)}
+                  onPress={() => setActionTransaction(transaction)}
                 />
               </div>
             ))}
+          </div>
+        )}
+        {/* 上拉展开提示：页面滚到底后继续上拉，无缝进入全部账单 */}
+        {hasOlderRecords && (
+          <div
+            ref={pullIndicatorRef}
+            className="flex flex-col items-center justify-center overflow-hidden transition-[height] duration-150 ease-out"
+            style={{ height: 0, opacity: 0 }}
+          >
+            <ChevronUp size={16} className="transition-transform duration-200 flex-shrink-0" style={{ color: 'var(--primary)' }} />
+            <span className="text-xs mt-1" style={{ color: 'var(--ink-2)' }}>{t('dashboard.pullToAllRecords')}</span>
           </div>
         )}
       </div>
@@ -735,6 +835,16 @@ const DashboardComponent = ({
         open={trendDetailOpen}
         data={assetsTrend}
         onClose={() => setTrendDetailOpen(false)}
+      />
+
+      {/* 记录操作菜单：编辑 / 复制记一笔 / 存为模板 / 删除 */}
+      <RecordActionSheet
+        transaction={actionTransaction}
+        onClose={() => setActionTransaction(null)}
+        onEdit={onEditTransaction}
+        onDuplicate={onDuplicateTransaction}
+        onCreateTemplate={onCreateTemplate}
+        onDelete={onDeleteTransaction}
       />
     </div>
   );

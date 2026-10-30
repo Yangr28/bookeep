@@ -699,6 +699,9 @@ export default function App() {
             onGoToCurrencyConverter={() => handlePageChange('/currency-converter')}
             onEditTransaction={handleEditTransaction}
             onDeleteTransaction={handleDeleteTransactionWithUndo}
+            onDuplicateTransaction={handleCopyTransaction}
+            onCreateTemplate={handleCreateTemplateFromTransaction}
+            onGoToRecords={() => handlePageChange('/records')}
             onGoToSettings={() => handlePageChange('/settings')}
             onGoToSearch={() => handlePageChange('/search')}
             onShowOCRModal={() => setShowOCRModal(true)}
