@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/useStore';
+import { ALWAYS_VISIBLE_CARDS } from '../store/preferencesSlice';
 import {
   exportData,
   downloadExportFile,
@@ -124,6 +125,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   const homeCards = useStore((state) => state.homeCards);
   const toggleHomeCard = useStore((state) => state.toggleHomeCard);
   const moveHomeCard = useStore((state) => state.moveHomeCard);
+  const setHomeCardLayout = useStore((state) => state.setHomeCardLayout);
   const getAccountReconciliation = useStore((state) => state.getAccountReconciliation);
   const recalculateAllBalances = useStore((state) => state.recalculateAllBalances);
   /** 余额与流水对不上的账户数 */
@@ -633,7 +635,10 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             <div className="card overflow-hidden">
               {[...homeCards]
                 .sort((a, b) => a.order - b.order)
-                .map((card, index, arr) => (
+                .map((card, index, arr) => {
+                  const alwaysVisible = ALWAYS_VISIBLE_CARDS.has(card.id);
+                  const cardLayout: '1x4' | '2x2' = card.layout === '2x2' ? '2x2' : '1x4';
+                  return (
                   <div
                     key={card.id}
                     className="flex items-center gap-3 p-3.5"
@@ -644,10 +649,29 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                         {t(`settings.home.cards.${card.id}` as const)}
                       </p>
                       <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
-                        {card.visible ? t('settings.home.visibleOn') : t('settings.home.visibleOff')}
+                        {alwaysVisible
+                          ? t('settings.home.alwaysVisible')
+                          : card.visible ? t('settings.home.visibleOn') : t('settings.home.visibleOff')}
                       </p>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
+                      {card.id === 'quickTools' && (
+                        <button
+                          onClick={() =>
+                            setHomeCardLayout(
+                              card.id,
+                              cardLayout === '1x4' ? '2x2' : '1x4'
+                            )
+                          }
+                          className="px-2 h-9 rounded-button text-xs font-semibold flex items-center justify-center active:brightness-95"
+                          style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
+                          aria-label={t('settings.home.toggleLayout')}
+                        >
+                          {cardLayout === '1x4'
+                            ? t('settings.home.layout1x4')
+                            : t('settings.home.layout2x2')}
+                        </button>
+                      )}
                       <button
                         onClick={() => moveHomeCard(card.id, 'up')}
                         disabled={index === 0}
@@ -666,22 +690,32 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                       >
                         <ChevronDown size={18} />
                       </button>
-                      <button
-                        onClick={() => toggleHomeCard(card.id)}
-                        role="switch"
-                        aria-checked={card.visible}
-                        aria-label={t('settings.home.toggleVisible')}
-                        className="relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ml-1"
-                        style={{ background: card.visible ? 'var(--primary)' : 'var(--paper-deep)' }}
-                      >
-                        <div
-                          className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform"
-                          style={{ transform: card.visible ? 'translateX(28px)' : 'translateX(4px)' }}
-                        />
-                      </button>
+                      {alwaysVisible ? (
+                        <span
+                          className="ml-1 text-xs font-medium px-2 py-1 rounded-button"
+                          style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
+                        >
+                          {t('settings.home.locked')}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => toggleHomeCard(card.id)}
+                          role="switch"
+                          aria-checked={card.visible}
+                          aria-label={t('settings.home.toggleVisible')}
+                          className="relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ml-1"
+                          style={{ background: card.visible ? 'var(--primary)' : 'var(--paper-deep)' }}
+                        >
+                          <div
+                            className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform"
+                            style={{ transform: card.visible ? 'translateX(28px)' : 'translateX(4px)' }}
+                          />
+                        </button>
+                      )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
             </div>
 
             <p className="text-xs px-1" style={{ color: 'var(--ink-2)' }}>

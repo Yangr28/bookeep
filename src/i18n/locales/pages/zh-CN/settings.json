@@ -26,6 +26,7 @@
     "title": "首页管理",
     "intro": "开启或关闭首页卡片，并通过上下箭头调整它们在首页的排列顺序。",
     "cards": {
+      "quickRecord": "快速记账",
       "monthOverview": "本月概览",
       "budget": "预算进度",
       "quickTools": "快捷工具",
@@ -34,10 +35,15 @@
     },
     "visibleOn": "已显示",
     "visibleOff": "已隐藏",
+    "alwaysVisible": "始终显示",
+    "locked": "已锁定",
+    "layout1x4": "1×4",
+    "layout2x2": "2×2",
+    "toggleLayout": "切换布局",
     "moveUp": "上移",
     "moveDown": "下移",
     "toggleVisible": "切换显示",
-    "hint": "提示：智能记账输入框始终保留在首页顶部，不可隐藏。"
+    "hint": "提示：长按首页卡片可拖拽排序；快捷工具支持 1×4 与 2×2 布局切换；快速记账始终保留，不可隐藏。"
   },
   "appearance": {
     "sectionTitle": "外观",

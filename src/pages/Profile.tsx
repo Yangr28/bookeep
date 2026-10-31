@@ -4,11 +4,12 @@ import { useStore } from '../store/useStore';
 import { formatCurrency, formatCurrencyShort } from '../utils/format';
 import { generateInsights, Insight, InsightSeverity } from '../utils/insights';
 import { PieChart, Pie, Cell, Sector, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Settings as SettingsIcon, ChevronDown, TrendingUp, TrendingDown, Award, Target, Sparkles, AlertTriangle, AlertOctagon, Zap, Repeat, Flame, ChevronRight } from 'lucide-react';
+import { Settings as SettingsIcon, ChevronDown, TrendingUp, TrendingDown, Award, Target, Sparkles, AlertTriangle, AlertOctagon, Zap, Repeat, Flame, ChevronRight, BarChart3 } from 'lucide-react';
 
 interface ProfileProps {
   onGoToSettings: () => void;
   onGoToCategories: () => void;
+  onGoToStatistics: () => void;
   onGoToDateSelect: () => void;
   isDark: boolean;
   onToggleTheme: () => void;
@@ -115,7 +116,7 @@ const TOOLTIP_STYLE = {
   boxShadow: 'var(--shadow-card)',
 };
 
-const ProfileComponent = ({ onGoToSettings, selectedDate, onInsightClick }: ProfileProps) => {
+const ProfileComponent = ({ onGoToSettings, onGoToStatistics, selectedDate, onInsightClick }: ProfileProps) => {
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -292,9 +293,14 @@ const ProfileComponent = ({ onGoToSettings, selectedDate, onInsightClick }: Prof
           <h1 className="page-title">{t('nav.profile')}</h1>
           <p className="page-subtitle">{t('profile.headerSubtitle', { year: selectedYear, month: t(`calendar.month${selectedMonth + 1}`) })}</p>
         </div>
-        <button onClick={onGoToSettings} className="icon-btn flex-shrink-0" aria-label={t('dashboard.settings')}>
-          <SettingsIcon size={22} />
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button onClick={onGoToStatistics} className="icon-btn" aria-label={t('statistics.title')}>
+            <BarChart3 size={22} />
+          </button>
+          <button onClick={onGoToSettings} className="icon-btn flex-shrink-0" aria-label={t('dashboard.settings')}>
+            <SettingsIcon size={22} />
+          </button>
+        </div>
       </div>
 
       <div className="px-4 mt-3 space-y-2.5">

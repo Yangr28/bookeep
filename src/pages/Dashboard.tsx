@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo, memo, type ReactNode, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { useStore } from '../store/useStore';
@@ -16,6 +16,20 @@ import { RecordActionSheet } from '../components/RecordActionSheet';
 import { getNoteSuggestions } from '../utils/recommender';
 import { useCountUp } from '../hooks/useCountUp';
 import { TransactionType, Transaction } from '../types';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // 仅首次启动进入首页时自动聚焦智能记账输入框；返回首页时不再弹出键盘
 let hasAutoFocusedOnLaunch = false;
@@ -87,6 +101,23 @@ const greetingKey = (): string => {
   return 'dashboard.greeting.evening';
 };
 
+/** 可排序卡片包裹器：长按拖拽整卡，松开后由 DndContext 触发 reorder */
+function SortableCard({ id, children }: { id: string; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.85 : 1,
+    zIndex: isDragging ? 50 : 'auto',
+    touchAction: 'none',
+  };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+}
+
 const DashboardComponent = ({
   onViewDetail,
   onGoToBudgets,
@@ -123,6 +154,7 @@ const DashboardComponent = ({
   const budgets = useStore((state) => state.budgets);
   const calculateBudgetUsage = useStore((state) => state.calculateBudgetUsage);
   const homeCards = useStore((state) => state.homeCards);
+  const reorderHomeCards = useStore((state) => state.reorderHomeCards);
 
   // 计算函数缓存：仅 transactions/accounts 变化时重算
   const todayIncome = useMemo(() => getTodayIncome(), [getTodayIncome, transactions]);
@@ -484,12 +516,162 @@ const DashboardComponent = ({
     [homeCards],
   );
 
+  // 长按 500ms 触发拖拽（移动端友好，避免与点击/滚动冲突）
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { delay: 500, tolerance: 8 } }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      reorderHomeCards(String(active.id), String(over.id));
+    }
+  };
+
+  const quickToolsLayoutRaw = homeCards.find((c) => c.id === 'quickTools')?.layout ?? '1x4';
+  const quickToolsLayout: '1x4' | '2x2' = quickToolsLayoutRaw === '2x2' ? '2x2' : '1x4';
+
+  // 快速记账卡片（智能输入 + 预览），作为可排序卡片渲染
+  const renderQuickRecord = () => (
+    <div className="px-4 mt-3">
+      <div className="card p-3">
+        {/* 智能输入（含历史备注补全候选与语音入口） */}
+        <div ref={smartAreaRef} className="mb-2">
+          <div
+            className="flex items-center rounded-button px-2.5 py-2 border-2 transition-colors"
+            style={{ background: 'var(--paper)', borderColor: 'transparent' }}
+          >
+            <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: 'var(--primary-ink)' }} />
+            <input
+              ref={smartInputRef}
+              type="text"
+              value={smartInput}
+              onChange={(e) => setSmartInput(e.target.value)}
+              onKeyPress={(e) => { if (e.key === 'Enter') handleSmartSubmit(); }}
+              placeholder={t('dashboard.smartInputPlaceholder')}
+              className="flex-1 min-w-0 bg-transparent outline-none text-sm"
+              style={{ color: 'var(--ink)' }}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={suggestionsOpen}
+              aria-controls="smart-suggestion-list"
+            />
+            <button
+              onClick={() => handleSmartSubmit()}
+              aria-label={t('dashboard.save')}
+              className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0"
+              style={
+                smartInput.trim()
+                  ? { background: 'var(--primary)', color: '#fff' }
+                  : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }
+              }
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+
+          {/* 历史备注前缀补全候选 */}
+          {suggestionsOpen && suggestions.length > 0 && (
+            <div
+              id="smart-suggestion-list"
+              role="listbox"
+              className="mt-1 mb-2 rounded-button overflow-hidden animate-fade-in divide-y divide-[color:var(--line)]"
+              style={{ background: 'var(--card)', border: '1px solid var(--line)', boxShadow: 'var(--shadow-card)' }}
+            >
+              {suggestions.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  role="option"
+                  aria-selected={false}
+                  onClick={() => pickSuggestion(s)}
+                  className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-left transition-colors card-press hover:brightness-95"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  <History size={14} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+                  <span className="truncate">{s}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 智能解析预览 */}
+        {preview && (preview.amount || preview.categoryName || preview.accountName) && (
+          <div
+            className="rounded-button px-2.5 py-2 mb-2 animate-stagger-in"
+            style={{ background: 'var(--paper-deep)', border: '1px solid var(--line)' }}
+          >
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold"
+                style={{
+                  background: preview.type === 'income' ? 'var(--primary-soft)' : 'var(--expense-soft)',
+                  color: preview.type === 'income' ? 'var(--primary)' : 'var(--expense)',
+                }}
+              >
+                {preview.type === 'income' ? t('common.income') : t('common.expense')}
+                {preview.amount && <span className="amount-num">¥{preview.amount}</span>}
+                {preview.currency && preview.currency !== 'CNY' && <span className="opacity-70">{preview.currency}</span>}
+              </span>
+              {preview.categoryName ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: 'var(--card)', color: 'var(--ink)' }}>
+                  <Tag size={11} style={{ color: 'var(--ink-2)' }} />{preview.categoryName}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full opacity-60" style={{ color: 'var(--ink-2)' }}>
+                  <Tag size={11} /> {t('dashboard.categoryNotFound')}
+                </span>
+              )}
+              {preview.accountName ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: 'var(--card)', color: 'var(--ink)' }}>
+                  <CreditCardIcon size={11} style={{ color: 'var(--ink-2)' }} />{preview.accountName}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full opacity-60" style={{ color: 'var(--ink-2)' }}>
+                  <CreditCardIcon size={11} /> {t('dashboard.accountNotFound')}
+                </span>
+              )}
+              {preview.note && (
+                <span className="px-2 py-0.5 rounded-full truncate max-w-[10rem]" style={{ color: 'var(--ink-2)' }}>{preview.note}</span>
+              )}
+            </div>
+            <div className="flex gap-2 mt-1.5">
+              <button
+                onClick={() => handleSmartSubmit()}
+                disabled={!(preview.amount && preview.categoryId && preview.accountId)}
+                className="flex-1 py-1.5 rounded-button text-xs font-semibold transition-all flex items-center justify-center gap-1"
+                style={
+                  preview.amount && preview.categoryId && preview.accountId
+                    ? { background: 'var(--primary)', color: '#fff' }
+                    : { background: 'var(--paper)', color: 'var(--ink-2)' }
+                }
+              >
+                <Check size={13} />
+                {preview.amount && preview.categoryId && preview.accountId ? t('dashboard.save') : t('dashboard.incomplete')}
+              </button>
+              <button
+                onClick={() => handleSmartSubmit(undefined, { forceEdit: true })}
+                className="flex-1 py-1.5 rounded-button text-xs font-medium transition-all flex items-center justify-center gap-1"
+                style={{ background: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--line)' }}
+              >
+                <Pencil size={13} />
+                {t('dashboard.edit')}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const renderHomeCard = (id: string) => {
     switch (id) {
+      case 'quickRecord':
+        return renderQuickRecord();
       case 'monthOverview':
         return (
           <MonthOverviewCard
-            key={id}
             balance={balance}
             animatedBalance={animatedBalance}
             monthIncome={monthIncome}
@@ -502,17 +684,15 @@ const DashboardComponent = ({
       case 'budget':
         return (
           <BudgetCard
-            key={id}
             budgetSummary={budgetSummary}
             onGoToBudgets={() => onGoToBudgets?.()}
           />
         );
       case 'quickTools':
-        return <QuickToolsCard key={id} tools={quickTools} />;
+        return <QuickToolsCard tools={quickTools} layout={quickToolsLayout} />;
       case 'today':
         return (
           <TodayOverviewCard
-            key={id}
             todayIncome={todayIncome}
             todayExpense={todayExpense}
             totalAssets={totalAssets}
@@ -525,7 +705,6 @@ const DashboardComponent = ({
       case 'recent':
         return (
           <RecentRecordsCard
-            key={id}
             transactions={recentTransactions}
             hasOlderRecords={hasOlderRecords}
             pullIndicatorRef={pullIndicatorRef}
@@ -564,159 +743,16 @@ const DashboardComponent = ({
         </div>
       </div>
 
-      {/* 首页可配置卡片：按 homeCards 的 order/visible 动态渲染 */}
-      {sortedHomeCards.map((card) => renderHomeCard(card.id))}
-
-      {/* 记账区域（快捷入口，完整记账在独立页面） */}
-      <div className="px-4 mt-3">
-        <div className="card p-3">
-          {/* 智能输入（含历史备注补全候选与语音入口） */}
-          <div ref={smartAreaRef} className="mb-2">
-            <div
-              className="flex items-center rounded-button px-2.5 py-2 border-2 transition-colors"
-              style={{ background: 'var(--paper)', borderColor: 'transparent' }}
-            >
-              <Sparkles size={16} className="mr-2 flex-shrink-0" style={{ color: 'var(--primary-ink)' }} />
-              <input
-                ref={smartInputRef}
-                type="text"
-                value={smartInput}
-                onChange={(e) => setSmartInput(e.target.value)}
-                onKeyPress={(e) => { if (e.key === 'Enter') handleSmartSubmit(); }}
-                placeholder={t('dashboard.smartInputPlaceholder')}
-                className="flex-1 min-w-0 bg-transparent outline-none text-sm"
-                style={{ color: 'var(--ink)' }}
-                role="combobox"
-                aria-autocomplete="list"
-                aria-expanded={suggestionsOpen}
-                aria-controls="smart-suggestion-list"
-              />
-              <button
-                onClick={() => handleSmartSubmit()}
-                aria-label={t('dashboard.save')}
-                className="ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0"
-                style={
-                  smartInput.trim()
-                    ? { background: 'var(--primary)', color: '#fff' }
-                    : { background: 'var(--paper-deep)', color: 'var(--ink-2)' }
-                }
-              >
-                <Plus size={16} />
-              </button>
-            </div>
-
-            {/* 历史备注前缀补全候选 */}
-            {suggestionsOpen && suggestions.length > 0 && (
-              <div
-                id="smart-suggestion-list"
-                role="listbox"
-                className="mt-1 mb-2 rounded-button overflow-hidden animate-fade-in divide-y divide-[color:var(--line)]"
-                style={{ background: 'var(--card)', border: '1px solid var(--line)', boxShadow: 'var(--shadow-card)' }}
-              >
-                {suggestions.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    role="option"
-                    aria-selected={false}
-                    onClick={() => pickSuggestion(s)}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-left transition-colors card-press hover:brightness-95"
-                    style={{ color: 'var(--ink)' }}
-                  >
-                    <History size={14} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
-                    <span className="truncate">{s}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 智能解析预览：输入时实时显示识别到的金额/分类/账户，可直接保存 */}
-          {preview && (preview.amount || preview.categoryName || preview.accountName) && (
-            <div
-              className="rounded-button px-2.5 py-2 mb-2 animate-stagger-in"
-              style={{ background: 'var(--paper-deep)', border: '1px solid var(--line)' }}
-            >
-              <div className="flex items-center gap-2 flex-wrap text-xs">
-                {/* 金额 + 类型 */}
-                <span
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold"
-                  style={{
-                    background: preview.type === 'income' ? 'var(--primary-soft)' : 'var(--expense-soft)',
-                    color: preview.type === 'income' ? 'var(--primary)' : 'var(--expense)',
-                  }}
-                >
-                  {preview.type === 'income' ? t('common.income') : t('common.expense')}
-                  {preview.amount && (
-                    <span className="amount-num">¥{preview.amount}</span>
-                  )}
-                  {preview.currency && preview.currency !== 'CNY' && (
-                    <span className="opacity-70">{preview.currency}</span>
-                  )}
-                </span>
-                {/* 分类 */}
-                {preview.categoryName ? (
-                  <span
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
-                    style={{ background: 'var(--card)', color: 'var(--ink)' }}
-                  >
-                    <Tag size={11} style={{ color: 'var(--ink-2)' }} />
-                    {preview.categoryName}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full opacity-60" style={{ color: 'var(--ink-2)' }}>
-                    <Tag size={11} /> {t('dashboard.categoryNotFound')}
-                  </span>
-                )}
-                {/* 账户 */}
-                {preview.accountName ? (
-                  <span
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
-                    style={{ background: 'var(--card)', color: 'var(--ink)' }}
-                  >
-                    <CreditCardIcon size={11} style={{ color: 'var(--ink-2)' }} />
-                    {preview.accountName}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full opacity-60" style={{ color: 'var(--ink-2)' }}>
-                    <CreditCardIcon size={11} /> {t('dashboard.accountNotFound')}
-                  </span>
-                )}
-                {/* 备注 */}
-                {preview.note && (
-                  <span className="px-2 py-0.5 rounded-full truncate max-w-[10rem]" style={{ color: 'var(--ink-2)' }}>
-                    {preview.note}
-                  </span>
-                )}
-              </div>
-              {/* 操作按钮 */}
-              <div className="flex gap-2 mt-1.5">
-                <button
-                  onClick={() => handleSmartSubmit()}
-                  disabled={!(preview.amount && preview.categoryId && preview.accountId)}
-                  className="flex-1 py-1.5 rounded-button text-xs font-semibold transition-all flex items-center justify-center gap-1"
-                  style={
-                    preview.amount && preview.categoryId && preview.accountId
-                      ? { background: 'var(--primary)', color: '#fff' }
-                      : { background: 'var(--paper)', color: 'var(--ink-2)' }
-                  }
-                >
-                  <Check size={13} />
-                  {preview.amount && preview.categoryId && preview.accountId ? t('dashboard.save') : t('dashboard.incomplete')}
-                </button>
-                <button
-                  onClick={() => handleSmartSubmit(undefined, { forceEdit: true })}
-                  className="flex-1 py-1.5 rounded-button text-xs font-medium transition-all flex items-center justify-center gap-1"
-                  style={{ background: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--line)' }}
-                >
-                  <Pencil size={13} />
-                  {t('dashboard.edit')}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* 首页可配置卡片：长按拖拽排序，按 order/visible 渲染 */}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={sortedHomeCards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+          {sortedHomeCards.map((card) => (
+            <SortableCard key={card.id} id={card.id}>
+              {renderHomeCard(card.id)}
+            </SortableCard>
+          ))}
+        </SortableContext>
+      </DndContext>
 
       {/* 智能记账核对浮层：确认后才入账，或跳完整记账页再改 */}
       <SmartConfirmSheet

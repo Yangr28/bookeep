@@ -2,11 +2,18 @@ import { StateCreator } from 'zustand';
 import i18n, { LanguagePreference, resolveLanguage } from '../i18n';
 import { loadPreferences, savePreferences } from '../utils/storage';
 
+/** 首页卡片布局：快捷工具支持 1×4 或 2×2，其余卡片用 default */
+export type HomeCardLayout = 'default' | '1x4' | '2x2';
+
 export interface HomeCardConfig {
   id: string;
   visible: boolean;
   order: number;
+  layout?: HomeCardLayout;
 }
+
+/** 始终可见、不可隐藏的卡片（如快速记账入口） */
+export const ALWAYS_VISIBLE_CARDS = new Set(['quickRecord']);
 
 export interface PreferencesSlice {
   lastUsedAccountId: string | null;
@@ -15,7 +22,7 @@ export interface PreferencesSlice {
   quickAmounts: string[];
   /** 界面语言：system 跟随系统，否则固定中/英 */
   language: LanguagePreference;
-  /** 首页卡片配置（顺序 + 显隐），按 order 升序渲染 */
+  /** 首页卡片配置（顺序 + 显隐 + 布局），按 order 升序渲染 */
   homeCards: HomeCardConfig[];
   setLastUsedAccountId: (id: string | null) => void;
   setLastUsedCategoryId: (id: string | null) => void;
@@ -27,15 +34,19 @@ export interface PreferencesSlice {
   setHomeCards: (cards: HomeCardConfig[]) => void;
   toggleHomeCard: (id: string) => void;
   moveHomeCard: (id: string, direction: 'up' | 'down') => void;
+  /** 拖拽排序：把 activeId 移到 overId 的位置 */
+  reorderHomeCards: (activeId: string, overId: string) => void;
+  setHomeCardLayout: (id: string, layout: HomeCardLayout) => void;
 }
 
-/** 默认首页卡片顺序与显隐：与历史首页渲染顺序一致，老用户无感升级 */
+/** 默认首页卡片顺序与显隐：快速记账置顶，其余与历史首页渲染顺序一致 */
 export const DEFAULT_HOME_CARDS: HomeCardConfig[] = [
-  { id: 'monthOverview', visible: true, order: 0 },
-  { id: 'budget', visible: true, order: 1 },
-  { id: 'quickTools', visible: true, order: 2 },
-  { id: 'today', visible: true, order: 3 },
-  { id: 'recent', visible: true, order: 4 },
+  { id: 'quickRecord', visible: true, order: 0 },
+  { id: 'monthOverview', visible: true, order: 1 },
+  { id: 'budget', visible: true, order: 2 },
+  { id: 'quickTools', visible: true, order: 3, layout: '1x4' },
+  { id: 'today', visible: true, order: 4 },
+  { id: 'recent', visible: true, order: 5 },
 ];
 
 const PREFERENCES_DEFAULTS = {
@@ -66,7 +77,9 @@ const normalizeHomeCards = (stored: HomeCardConfig[] | undefined): HomeCardConfi
   const map = new Map((stored ?? []).map((c) => [c.id, c]));
   const merged = DEFAULT_HOME_CARDS.map((dc) => {
     const sc = map.get(dc.id);
-    return sc ? { ...dc, visible: sc.visible, order: sc.order } : dc;
+    return sc
+      ? { ...dc, visible: sc.visible, order: sc.order, layout: sc.layout ?? dc.layout }
+      : dc;
   });
   merged.sort((a, b) => a.order - b.order);
   return merged.map((c, i) => ({ ...c, order: i }));
@@ -114,6 +127,8 @@ export const createPreferencesSlice: StateCreator<PreferencesSlice> = (set, get)
     setHomeCards: (cards) => persist({ homeCards: normalizeHomeCards(cards) }),
 
     toggleHomeCard: (id) => {
+      // 始终可见的卡片（如快速记账）不允许隐藏
+      if (ALWAYS_VISIBLE_CARDS.has(id)) return;
       const next = get().homeCards.map((c) => (c.id === id ? { ...c, visible: !c.visible } : c));
       persist({ homeCards: next });
     },
@@ -126,6 +141,22 @@ export const createPreferencesSlice: StateCreator<PreferencesSlice> = (set, get)
       if (target < 0 || target >= list.length) return;
       [list[idx], list[target]] = [list[target], list[idx]];
       persist({ homeCards: list.map((c, i) => ({ ...c, order: i })) });
+    },
+
+    reorderHomeCards: (activeId, overId) => {
+      if (activeId === overId) return;
+      const list = [...get().homeCards].sort((a, b) => a.order - b.order);
+      const fromIdx = list.findIndex((c) => c.id === activeId);
+      const toIdx = list.findIndex((c) => c.id === overId);
+      if (fromIdx < 0 || toIdx < 0) return;
+      const [moved] = list.splice(fromIdx, 1);
+      list.splice(toIdx, 0, moved);
+      persist({ homeCards: list.map((c, i) => ({ ...c, order: i })) });
+    },
+
+    setHomeCardLayout: (id, layout) => {
+      const next = get().homeCards.map((c) => (c.id === id ? { ...c, layout } : c));
+      persist({ homeCards: next });
     },
   };
 };

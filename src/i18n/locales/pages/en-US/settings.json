@@ -26,6 +26,7 @@
     "title": "Home cards",
     "intro": "Toggle cards on or off, and use the arrows to reorder them on the Home screen.",
     "cards": {
+      "quickRecord": "Quick record",
       "monthOverview": "Month overview",
       "budget": "Budget progress",
       "quickTools": "Quick tools",
@@ -34,10 +35,15 @@
     },
     "visibleOn": "Shown",
     "visibleOff": "Hidden",
+    "alwaysVisible": "Always visible",
+    "locked": "Locked",
+    "layout1x4": "1×4",
+    "layout2x2": "2×2",
+    "toggleLayout": "Toggle layout",
     "moveUp": "Move up",
     "moveDown": "Move down",
     "toggleVisible": "Toggle visibility",
-    "hint": "Note: The quick record input always stays at the top of Home and cannot be hidden."
+    "hint": "Tip: Long-press a card on Home to drag & reorder; Quick tools supports 1×4 and 2×2 layouts; Quick record always stays and cannot be hidden."
   },
   "appearance": {
     "sectionTitle": "Appearance",

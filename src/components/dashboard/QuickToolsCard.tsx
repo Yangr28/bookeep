@@ -11,15 +11,17 @@ interface QuickTool {
 
 interface QuickToolsCardProps {
   tools: QuickTool[];
+  layout?: '1x4' | '2x2';
 }
 
-/** 快捷工具四宫格：转账 / 周期记账 / 模板 / 预算 */
-export const QuickToolsCard = ({ tools }: QuickToolsCardProps) => {
+/** 快捷工具：支持 1×4（默认）或 2×2 布局 */
+export const QuickToolsCard = ({ tools, layout = '1x4' }: QuickToolsCardProps) => {
   const { t } = useTranslation();
+  const cols = layout === '2x2' ? 'grid-cols-2' : 'grid-cols-4';
 
   return (
     <div className="px-4 mt-3">
-      <div className="card p-2 grid grid-cols-4 gap-1">
+      <div className={`card p-2 grid ${cols} gap-1`}>
         {tools.map((tool) => {
           const Icon = tool.icon;
           return (
