@@ -1,0 +1,18 @@
+{
+  "title": "Year review",
+  "subtitle": "{{year}} financial overview",
+  "prevYear": "Previous year",
+  "nextYear": "Next year",
+  "income": "Income",
+  "expense": "Expense",
+  "balance": "Balance",
+  "avgMonthly": "Avg. monthly spend",
+  "txCount": "Transactions",
+  "monthlyTrend": "Monthly income vs expense",
+  "topCategories": "Top spending categories",
+  "maxSingle": "Largest transactions",
+  "maxExpense": "Largest expense",
+  "maxIncome": "Largest income",
+  "uncategorized": "Uncategorized",
+  "noData": "No records for this year"
+}

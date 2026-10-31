@@ -18,7 +18,26 @@
   "manage": {
     "sectionTitle": "记账管理",
     "categories": "分类管理",
-    "categoriesDesc": "自定义收入/支出分类"
+    "categoriesDesc": "自定义收入/支出分类",
+    "homeCards": "首页管理",
+    "homeCardsDesc": "自定义首页卡片的显示与顺序"
+  },
+  "home": {
+    "title": "首页管理",
+    "intro": "开启或关闭首页卡片，并通过上下箭头调整它们在首页的排列顺序。",
+    "cards": {
+      "monthOverview": "本月概览",
+      "budget": "预算进度",
+      "quickTools": "快捷工具",
+      "today": "今日收支",
+      "recent": "近三日记录"
+    },
+    "visibleOn": "已显示",
+    "visibleOff": "已隐藏",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "toggleVisible": "切换显示",
+    "hint": "提示：智能记账输入框始终保留在首页顶部，不可隐藏。"
   },
   "appearance": {
     "sectionTitle": "外观",

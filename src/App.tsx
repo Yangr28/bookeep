@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Record } from './pages/Record';
 import { Categories } from './pages/Categories';
 import { Statistics } from './pages/Statistics';
+import { YearReview } from './pages/YearReview';
 import { TransactionDetail } from './pages/TransactionDetail';
 import { Accounts } from './pages/Accounts';
 import { AccountDetail } from './pages/AccountDetail';
@@ -812,8 +813,11 @@ export default function App() {
           <Statistics 
             selectedDate={calendarSelectedDate}
             onShowCalendar={() => setShowCalendar(true)}
+            onGoToYearReview={() => handlePageChange('/year-review')}
           />
         );
+      case '/year-review':
+        return <YearReview onBack={handleBack} />;
       case '/records':
         return (
           <AllRecords

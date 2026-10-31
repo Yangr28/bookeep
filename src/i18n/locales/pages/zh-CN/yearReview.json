@@ -1,0 +1,18 @@
+{
+  "title": "年度账本",
+  "subtitle": "{{year}} 年财务全景",
+  "prevYear": "上一年",
+  "nextYear": "下一年",
+  "income": "全年收入",
+  "expense": "全年支出",
+  "balance": "年度结余",
+  "avgMonthly": "月均消费",
+  "txCount": "交易笔数",
+  "monthlyTrend": "月度收支对比",
+  "topCategories": "支出分类排行",
+  "maxSingle": "年度最大单笔",
+  "maxExpense": "最大单笔支出",
+  "maxIncome": "最大单笔收入",
+  "uncategorized": "未分类",
+  "noData": "该年度暂无记录"
+}

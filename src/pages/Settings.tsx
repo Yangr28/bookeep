@@ -35,6 +35,9 @@ import {
   History,
   CheckCircle2,
   Scale,
+  LayoutGrid,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 
 interface SettingsProps {
@@ -73,7 +76,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   const [rollbackVersion, setRollbackVersion] = useState<string | null>(null);
   // 本次回退是否已点击「确认回退」开始下载（区分确认态与流程进度态）
   const [rollbackStarted, setRollbackStarted] = useState(false);
-  const [subPage, setSubPage] = useState<'help' | 'privacy' | 'backups' | null>(null);
+  const [subPage, setSubPage] = useState<'help' | 'privacy' | 'backups' | 'home' | null>(null);
   const [nativeVersion, setNativeVersion] = useState('');
   const [hotVersion, setHotVersion] = useState('');
 
@@ -118,6 +121,9 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   const setBudgets = useStore((state) => state.setBudgets);
   const setFixedDeposits = useStore((state) => state.setFixedDeposits);
   const setLoans = useStore((state) => state.setLoans);
+  const homeCards = useStore((state) => state.homeCards);
+  const toggleHomeCard = useStore((state) => state.toggleHomeCard);
+  const moveHomeCard = useStore((state) => state.moveHomeCard);
   const getAccountReconciliation = useStore((state) => state.getAccountReconciliation);
   const recalculateAllBalances = useStore((state) => state.recalculateAllBalances);
   /** 余额与流水对不上的账户数 */
@@ -608,6 +614,83 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
         </>
       )}
 
+      {/* 首页管理子页面 */}
+      {subPage === 'home' && (
+        <>
+          <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
+            <button onClick={() => setSubPage(null)} className="icon-btn" aria-label={t('settings.back')}>
+              <ArrowLeft size={20} />
+            </button>
+            <div className="flex-1 min-w-0">
+              <h1 className="page-title">{t('settings.home.title')}</h1>
+            </div>
+          </div>
+          <div className="px-4 mt-3 space-y-2.5 pb-6">
+            <div className="card p-3.5 text-sm" style={{ color: 'var(--ink-2)' }}>
+              {t('settings.home.intro')}
+            </div>
+
+            <div className="card overflow-hidden">
+              {[...homeCards]
+                .sort((a, b) => a.order - b.order)
+                .map((card, index, arr) => (
+                  <div
+                    key={card.id}
+                    className="flex items-center gap-3 p-3.5"
+                    style={index > 0 ? { borderTop: '1px solid var(--line)' } : undefined}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate" style={{ color: 'var(--ink)' }}>
+                        {t(`settings.home.cards.${card.id}` as const)}
+                      </p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
+                        {card.visible ? t('settings.home.visibleOn') : t('settings.home.visibleOff')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => moveHomeCard(card.id, 'up')}
+                        disabled={index === 0}
+                        className="w-9 h-9 rounded-button flex items-center justify-center active:brightness-95 disabled:opacity-30"
+                        style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
+                        aria-label={t('settings.home.moveUp')}
+                      >
+                        <ChevronUp size={18} />
+                      </button>
+                      <button
+                        onClick={() => moveHomeCard(card.id, 'down')}
+                        disabled={index === arr.length - 1}
+                        className="w-9 h-9 rounded-button flex items-center justify-center active:brightness-95 disabled:opacity-30"
+                        style={{ background: 'var(--paper-deep)', color: 'var(--ink-2)' }}
+                        aria-label={t('settings.home.moveDown')}
+                      >
+                        <ChevronDown size={18} />
+                      </button>
+                      <button
+                        onClick={() => toggleHomeCard(card.id)}
+                        role="switch"
+                        aria-checked={card.visible}
+                        aria-label={t('settings.home.toggleVisible')}
+                        className="relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ml-1"
+                        style={{ background: card.visible ? 'var(--primary)' : 'var(--paper-deep)' }}
+                      >
+                        <div
+                          className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform"
+                          style={{ transform: card.visible ? 'translateX(28px)' : 'translateX(4px)' }}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            <p className="text-xs px-1" style={{ color: 'var(--ink-2)' }}>
+              {t('settings.home.hint')}
+            </p>
+          </div>
+        </>
+      )}
+
       {!subPage && (
       <>
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
@@ -697,12 +780,12 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
           </button>
         </div>
 
-        {/* 分类管理（仅当传入回调时显示） */}
-        {onGoToCategories && (
-          <div className="card overflow-hidden">
-            <div className="px-4 py-2.5" style={{ borderBottom: '1px solid var(--line)' }}>
-              <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('settings.manage.sectionTitle')}</h3>
-            </div>
+        {/* 记账管理 */}
+        <div className="card overflow-hidden">
+          <div className="px-4 py-2.5" style={{ borderBottom: '1px solid var(--line)' }}>
+            <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('settings.manage.sectionTitle')}</h3>
+          </div>
+          {onGoToCategories && (
             <button
               onClick={onGoToCategories}
               className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
@@ -716,8 +799,22 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               </div>
               <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
             </button>
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => setSubPage('home')}
+            className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
+            style={onGoToCategories ? { borderTop: '1px solid var(--line)' } : undefined}
+          >
+            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+              <LayoutGrid size={21} />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.manage.homeCards')}</p>
+              <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.manage.homeCardsDesc')}</p>
+            </div>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+          </button>
+        </div>
 
         {/* 外观 */}
         <div className="card overflow-hidden">

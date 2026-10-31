@@ -18,7 +18,26 @@
   "manage": {
     "sectionTitle": "Bookkeeping",
     "categories": "Categories",
-    "categoriesDesc": "Customize income/expense categories"
+    "categoriesDesc": "Customize income/expense categories",
+    "homeCards": "Home cards",
+    "homeCardsDesc": "Customize which cards show on Home and their order"
+  },
+  "home": {
+    "title": "Home cards",
+    "intro": "Toggle cards on or off, and use the arrows to reorder them on the Home screen.",
+    "cards": {
+      "monthOverview": "Month overview",
+      "budget": "Budget progress",
+      "quickTools": "Quick tools",
+      "today": "Today's income & expense",
+      "recent": "Recent records"
+    },
+    "visibleOn": "Shown",
+    "visibleOff": "Hidden",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "toggleVisible": "Toggle visibility",
+    "hint": "Note: The quick record input always stays at the top of Home and cannot be hidden."
   },
   "appearance": {
     "sectionTitle": "Appearance",

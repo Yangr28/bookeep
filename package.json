@@ -1,7 +1,7 @@
 {
   "name": "bookeep",
   "private": true,
-  "version": "4.16.10",
+  "version": "5.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

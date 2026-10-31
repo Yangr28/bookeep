@@ -9,6 +9,7 @@ interface StatisticsProps {
   selectedDate: Date;
   onShowCalendar: () => void;
   onDateChange?: (date: Date) => void;
+  onGoToYearReview?: () => void;
 }
 
 const CHART_COLORS = {
@@ -26,7 +27,7 @@ const TOOLTIP_STYLE = {
   boxShadow: 'var(--shadow-card)',
 };
 
-const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) => {
+const StatisticsComponent = ({ selectedDate, onShowCalendar, onGoToYearReview }: StatisticsProps) => {
   const { t } = useTranslation();
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -161,6 +162,16 @@ const StatisticsComponent = ({ selectedDate, onShowCalendar }: StatisticsProps) 
           <h1 className="page-title">{t('statistics.title')}</h1>
           <p className="page-subtitle">{t('statistics.subtitle')}</p>
         </div>
+        {onGoToYearReview && (
+          <button
+            onClick={onGoToYearReview}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-button text-sm font-medium flex-shrink-0"
+            style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
+          >
+            <Calendar size={16} />
+            <span className="whitespace-nowrap">{t('statistics.yearReview')}</span>
+          </button>
+        )}
       </div>
 
       <div className="px-4 mt-3">

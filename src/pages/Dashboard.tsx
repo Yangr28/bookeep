@@ -2,16 +2,16 @@ import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { useStore } from '../store/useStore';
-import { StatCard } from '../components/StatCard';
-import { TransactionCard } from '../components/TransactionCard';
-import { Sparkline, StackedBar, ProgressRing } from '../components/MiniCharts';
 import { SmartConfirmSheet, SmartConfirmData } from '../components/SmartConfirmSheet';
 import { TrendDetailSheet } from '../components/TrendDetailSheet';
-import { formatCurrencyShort } from '../utils/format';
+import { MonthOverviewCard } from '../components/dashboard/MonthOverviewCard';
+import { BudgetCard } from '../components/dashboard/BudgetCard';
+import { QuickToolsCard } from '../components/dashboard/QuickToolsCard';
+import { TodayOverviewCard } from '../components/dashboard/TodayOverviewCard';
+import { RecentRecordsCard } from '../components/dashboard/RecentRecordsCard';
 import { getMonthKey } from '../utils/date';
 import { parseSmartInputWithHistory, parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { Wallet, Settings, Plus, Sparkles, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, AlertCircle, History, ChevronUp } from 'lucide-react';
-import Empty from '../components/Empty';
+import { Settings, Plus, Sparkles, Search, Repeat, Bookmark, PiggyBank, ArrowLeftRight, Globe, Check, Pencil, Tag, CreditCard as CreditCardIcon, History } from 'lucide-react';
 import { RecordActionSheet } from '../components/RecordActionSheet';
 import { getNoteSuggestions } from '../utils/recommender';
 import { useCountUp } from '../hooks/useCountUp';
@@ -122,6 +122,7 @@ const DashboardComponent = ({
   const accounts = useStore((state) => state.accounts);
   const budgets = useStore((state) => state.budgets);
   const calculateBudgetUsage = useStore((state) => state.calculateBudgetUsage);
+  const homeCards = useStore((state) => state.homeCards);
 
   // 计算函数缓存：仅 transactions/accounts 变化时重算
   const todayIncome = useMemo(() => getTodayIncome(), [getTodayIncome, transactions]);
@@ -150,9 +151,6 @@ const DashboardComponent = ({
     const percentage = totalBudget ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
     return { totalBudget, totalSpent, percentage, overCount };
   }, [categories, budgets, transactions, calculateBudgetUsage, currentMonth]);
-
-  const getBudgetColor = (pct: number) =>
-    pct >= 100 ? 'var(--expense)' : pct >= 80 ? 'var(--expense-ink)' : pct >= 50 ? 'var(--primary-ink)' : 'var(--primary)';
 
   // 近 6 个月总资产趋势（用于 sparkline，仅 accounts/transactions 变化时重算）
   const assetsTrend = useMemo(() => getMonthlyAssetsTrend(6), [getMonthlyAssetsTrend, accounts, transactions]);
@@ -480,6 +478,67 @@ const DashboardComponent = ({
     { icon: PiggyBank, labelKey: 'dashboard.toolBudget', onClick: onGoToBudgets, color: 'var(--accent-budget)', bg: 'var(--accent-budget-soft)' },
   ];
 
+  // 首页可配置卡片：仅渲染可见的，按 order 升序
+  const sortedHomeCards = useMemo(
+    () => homeCards.filter((c) => c.visible).sort((a, b) => a.order - b.order),
+    [homeCards],
+  );
+
+  const renderHomeCard = (id: string) => {
+    switch (id) {
+      case 'monthOverview':
+        return (
+          <MonthOverviewCard
+            key={id}
+            balance={balance}
+            animatedBalance={animatedBalance}
+            monthIncome={monthIncome}
+            monthExpense={monthExpense}
+            assetsTrend={assetsTrend}
+            onViewDetail={(f) => onViewDetail(f)}
+            onTrendClick={() => setTrendDetailOpen(true)}
+          />
+        );
+      case 'budget':
+        return (
+          <BudgetCard
+            key={id}
+            budgetSummary={budgetSummary}
+            onGoToBudgets={() => onGoToBudgets?.()}
+          />
+        );
+      case 'quickTools':
+        return <QuickToolsCard key={id} tools={quickTools} />;
+      case 'today':
+        return (
+          <TodayOverviewCard
+            key={id}
+            todayIncome={todayIncome}
+            todayExpense={todayExpense}
+            totalAssets={totalAssets}
+            animatedTotalAssets={animatedTotalAssets}
+            totalIncome={totalIncome}
+            totalExpense={totalExpense}
+            onViewDetail={(f) => onViewDetail(f)}
+          />
+        );
+      case 'recent':
+        return (
+          <RecentRecordsCard
+            key={id}
+            transactions={recentTransactions}
+            hasOlderRecords={hasOlderRecords}
+            pullIndicatorRef={pullIndicatorRef}
+            onEdit={(tx) => onEditTransaction?.(tx)}
+            onDelete={(tx) => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(tx)}
+            onAction={(tx) => setActionTransaction(tx)}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="page-root pb-nav overflow-y-auto">
       {/* 头部：问候 + 快捷图标 */}
@@ -505,100 +564,8 @@ const DashboardComponent = ({
         </div>
       </div>
 
-      {/* 本月概览卡 */}
-      <div className="px-4 mt-3">
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => onViewDetail('month-balance')}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewDetail('month-balance'); } }}
-          className="card card-hover w-full p-4 text-left block cursor-pointer"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.monthBalance')}</p>
-              <p className="text-3xl font-bold mt-1 amount-num truncate" style={{ color: 'var(--ink)' }}>
-                {formatCurrencyShort(Math.abs(animatedBalance - balance) < 0.005 ? balance : animatedBalance)}
-              </p>
-            </div>
-            {/* 资产趋势 sparkline：点击查看详细趋势明细 */}
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setTrendDetailOpen(true); }}
-              className="flex flex-col items-end flex-shrink-0 mt-1 -mr-1 px-1 py-0.5 rounded-button card-press"
-              aria-label={t('dashboard.trendTitle')}
-            >
-              <Sparkline data={assetsTrend.map(d => d.assets)} width={72} height={24} />
-              <span className="text-[10px] mt-1" style={{ color: 'var(--ink-2)' }}>{t('dashboard.trend6m')}</span>
-            </button>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--primary)' }} />
-              <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-2)' }}>{t('dashboard.income')}</span>
-              <span className="text-sm font-semibold amount-num truncate" style={{ color: 'var(--primary)' }}>
-                {formatCurrencyShort(monthIncome)}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--expense)' }} />
-              <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-2)' }}>{t('dashboard.expense')}</span>
-              <span className="text-sm font-semibold amount-num truncate" style={{ color: 'var(--expense)' }}>
-                {formatCurrencyShort(-monthExpense)}
-              </span>
-            </div>
-          </div>
-          {/* 收支对比堆叠条 + 结余率 */}
-          <div className="mt-2.5">
-            <StackedBar income={monthIncome} expense={monthExpense} height={6} />
-          </div>
-        </div>
-        {/* 预算进度小条：仅当本月有设置预算时显示 */}
-        {budgetSummary.totalBudget > 0 && (
-          <button
-            onClick={() => onGoToBudgets?.()}
-            className="card card-hover w-full p-3.5 mt-2 text-left block animate-stagger-in"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.monthBudget')}</span>
-                {budgetSummary.overCount > 0 && (
-                  <span className="text-[11px] flex items-center gap-1 font-semibold" style={{ color: 'var(--expense)' }}>
-                    <AlertCircle size={11} />
-                    {t('dashboard.overCount', { n: budgetSummary.overCount })}
-                  </span>
-                )}
-                {budgetSummary.overCount === 0 && (
-                  <span className="text-[11px] amount-num" style={{ color: 'var(--ink-2)' }}>
-                    {formatCurrencyShort(budgetSummary.totalSpent)} / {formatCurrencyShort(budgetSummary.totalBudget)}
-                  </span>
-                )}
-              </div>
-              {/* 预算进度环：超支时脉冲警告 */}
-              <ProgressRing
-                percentage={budgetSummary.percentage}
-                size={36}
-                stroke={3.5}
-                pulse={budgetSummary.overCount > 0}
-              />
-            </div>
-            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--paper-deep)' }}>
-              <div
-                className="h-full transition-all duration-500"
-                style={{ width: `${budgetSummary.percentage}%`, background: getBudgetColor(budgetSummary.percentage) }}
-              />
-            </div>
-            <div className="flex items-center justify-between mt-1.5">
-              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>
-                {t('dashboard.used', { percent: budgetSummary.percentage.toFixed(0) })}
-              </span>
-              <span className="text-xs font-medium" style={{ color: getBudgetColor(budgetSummary.percentage) }}>
-                {budgetSummary.percentage >= 100 ? t('dashboard.statusOver') : budgetSummary.percentage >= 80 ? t('dashboard.statusNearLimit') : t('dashboard.statusNormal')}
-              </span>
-            </div>
-          </button>
-        )}
-      </div>
+      {/* 首页可配置卡片：按 homeCards 的 order/visible 动态渲染 */}
+      {sortedHomeCards.map((card) => renderHomeCard(card.id))}
 
       {/* 记账区域（快捷入口，完整记账在独立页面） */}
       <div className="px-4 mt-3">
@@ -749,84 +716,6 @@ const DashboardComponent = ({
             </div>
           )}
         </div>
-      </div>
-
-      {/* 快捷工具 */}
-      <div className="px-4 mt-3">
-        <div className="card p-2 grid grid-cols-4 gap-1">
-          {quickTools.map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <button
-                key={tool.labelKey}
-                onClick={tool.onClick}
-                className="flex flex-col items-center gap-1 py-1.5 rounded-button transition-colors active:scale-95 min-w-0"
-              >
-                <div className="w-9 h-9 rounded-button flex items-center justify-center" style={{ background: tool.bg }}>
-                  <Icon size={18} style={{ color: tool.color }} />
-                </div>
-                <span className="text-xs font-medium w-full text-center truncate" style={{ color: 'var(--ink)' }}>{t(tool.labelKey)}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 今日收支 + 总资产 */}
-      <div className="px-4 mt-3 space-y-2.5">
-        <div className="grid grid-cols-2 gap-2.5">
-          <StatCard type="income" title={t('dashboard.todayIncome')} amount={todayIncome} onClick={() => onViewDetail('today-income')} />
-          <StatCard type="expense" title={t('dashboard.todayExpense')} amount={todayExpense} onClick={() => onViewDetail('today-expense')} />
-        </div>
-
-        <button onClick={() => onViewDetail('total-balance')} className="card card-hover w-full p-3.5 text-left block">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>{t('dashboard.totalAssets')}</p>
-              <p className="text-2xl font-bold mt-1 amount-num" style={{ color: 'var(--ink)' }}>{formatCurrencyShort(Math.abs(animatedTotalAssets - totalAssets) < 0.005 ? totalAssets : animatedTotalAssets)}</p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
-                {t('dashboard.income')} <span className="font-semibold amount-num" style={{ color: 'var(--primary)' }}>{formatCurrencyShort(totalIncome)}</span>
-              </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--ink-2)' }}>
-                {t('dashboard.expense')} <span className="font-semibold amount-num" style={{ color: 'var(--expense)' }}>{formatCurrencyShort(-totalExpense)}</span>
-              </p>
-            </div>
-          </div>
-        </button>
-      </div>
-
-      {/* 近三日记录 */}
-      <div className="px-4 mt-4">
-        <h2 className="section-title">{t('dashboard.recentRecords')}</h2>
-        {recentTransactions.length === 0 ? (
-          <Empty icon={Wallet} title={t('dashboard.noRecords')} description={t('dashboard.noRecordsHint')} />
-        ) : (
-          <div>
-            {recentTransactions.map((transaction, index) => (
-              <div key={transaction.id} data-record-id={transaction.id} className="animate-stagger-in" style={{ animationDelay: `${index * 50}ms` }}>
-                <TransactionCard
-                  transaction={transaction}
-                  onDelete={() => (onDeleteTransaction ?? ((t: Transaction) => deleteTransaction(t.id)))(transaction)}
-                  onEdit={() => onEditTransaction?.(transaction)}
-                  onPress={() => setActionTransaction(transaction)}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-        {/* 上拉展开提示：页面滚到底后继续上拉，无缝进入全部账单 */}
-        {hasOlderRecords && (
-          <div
-            ref={pullIndicatorRef}
-            className="flex flex-col items-center justify-center overflow-hidden transition-[height] duration-150 ease-out"
-            style={{ height: 0, opacity: 0 }}
-          >
-            <ChevronUp size={16} className="transition-transform duration-200 flex-shrink-0" style={{ color: 'var(--primary)' }} />
-            <span className="text-xs mt-1" style={{ color: 'var(--ink-2)' }}>{t('dashboard.pullToAllRecords')}</span>
-          </div>
-        )}
       </div>
 
       {/* 智能记账核对浮层：确认后才入账，或跳完整记账页再改 */}
