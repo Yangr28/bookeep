@@ -20,7 +20,22 @@
     "categories": "分类管理",
     "categoriesDesc": "自定义收入/支出分类",
     "homeCards": "首页管理",
-    "homeCardsDesc": "自定义首页卡片的显示与顺序"
+    "homeCardsDesc": "自定义首页卡片的显示与顺序",
+    "notificationAuto": "通知自动记账",
+    "notificationAutoDesc": "监听微信/支付宝支付通知，确认后记账"
+  },
+  "notifications": {
+    "title": "通知自动记账",
+    "intro": "开启后，微信 / 支付宝完成支付时，bookeep 会读取支付通知并识别金额，回到 App 首页时弹出「确认入账」卡片；确认后才保存，不会自动记账。",
+    "accessTitle": "通知使用权",
+    "accessOn": "已开启",
+    "accessOff": "未开启",
+    "authorize": "去开启",
+    "reauthorize": "重新授权",
+    "romTitle": "后台运行与自启动",
+    "romDesc": "部分国产系统（小米 / 华为 / OPPO / vivo 等）会限制后台，导致通知无法及时接收。建议在「应用设置 → 电池 / 省电策略」中允许后台运行，并开启「自启动」。",
+    "openAppSettings": "打开应用设置",
+    "privacyNote": "所有通知内容只在本机解析，不会上传服务器；识别不到金额的通知会被直接忽略。"
   },
   "home": {
     "title": "首页管理",

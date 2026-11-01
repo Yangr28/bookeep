@@ -20,7 +20,22 @@
     "categories": "Categories",
     "categoriesDesc": "Customize income/expense categories",
     "homeCards": "Home cards",
-    "homeCardsDesc": "Customize which cards show on Home and their order"
+    "homeCardsDesc": "Customize which cards show on Home and their order",
+    "notificationAuto": "Auto-record from notifications",
+    "notificationAutoDesc": "Watch WeChat/Alipay payment notifications and confirm entries"
+  },
+  "notifications": {
+    "title": "Auto-record from notifications",
+    "intro": "When enabled, bookeep reads WeChat / Alipay payment notifications to detect the amount. Returning to Home shows a \"confirm entry\" card — nothing is saved until you confirm.",
+    "accessTitle": "Notification access",
+    "accessOn": "Enabled",
+    "accessOff": "Not enabled",
+    "authorize": "Enable",
+    "reauthorize": "Re-authorize",
+    "romTitle": "Background running & autostart",
+    "romDesc": "Some Android skins (Xiaomi / Huawei / OPPO / vivo, etc.) restrict background activity, so notifications may arrive late. Allow background running in \"App settings → Battery\" and enable autostart.",
+    "openAppSettings": "Open app settings",
+    "privacyNote": "All notification content is parsed on-device and never uploaded. Notifications without a detectable amount are ignored."
   },
   "home": {
     "title": "Home cards",
