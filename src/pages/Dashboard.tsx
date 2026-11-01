@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo, memo, type ReactNode, type CSSProperties } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { useStore } from '../store/useStore';
@@ -16,20 +16,6 @@ import { RecordActionSheet } from '../components/RecordActionSheet';
 import { getNoteSuggestions } from '../utils/recommender';
 import { useCountUp } from '../hooks/useCountUp';
 import { TransactionType, Transaction } from '../types';
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 // 仅首次启动进入首页时自动聚焦智能记账输入框；返回首页时不再弹出键盘
 let hasAutoFocusedOnLaunch = false;
@@ -101,22 +87,163 @@ const greetingKey = (): string => {
   return 'dashboard.greeting.evening';
 };
 
-/** 可排序卡片包裹器：长按拖拽整卡，松开后由 DndContext 触发 reorder */
-function SortableCard({ id, children }: { id: string; children: ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const style: CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.85 : 1,
-    zIndex: isDragging ? 50 : 'auto',
-    touchAction: 'none',
-  };
-  return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      {children}
-    </div>
-  );
-}
+/**
+ * 首页卡片长按拖拽排序。
+ * 触摸：长按 500ms 后进入拖拽，拖拽中才阻止页面滚动；未长按时完全不拦截，页面可正常滑动。
+ * 鼠标：按住移动超过 8px 即进入拖拽。
+ */
+const useCardDragSort = (
+  containerRef: { current: HTMLDivElement | null },
+  onReorder: (activeId: string, overId: string) => void,
+) => {
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [draggingOffset, setDraggingOffset] = useState(0);
+  const reorderRef = useRef(onReorder);
+  reorderRef.current = onReorder;
+
+  useEffect(() => {
+    const area = containerRef.current;
+    if (!area) return undefined;
+
+    const LONG_PRESS_MS = 500;
+    const MOVE_TOLERANCE = 8;
+    let press: {
+      id: string;
+      startX: number;
+      startY: number;
+      active: boolean;
+      timer: number | null;
+      touch: boolean;
+    } | null = null;
+
+    const cardEls = () => Array.from(area.querySelectorAll<HTMLElement>('[data-card-id]'));
+
+    const clearTimer = () => {
+      if (press?.timer != null) {
+        window.clearTimeout(press.timer);
+        press.timer = null;
+      }
+    };
+
+    const activate = () => {
+      if (!press) return;
+      press.active = true;
+      clearTimer();
+      setDraggingId(press.id);
+      setDraggingOffset(0);
+      try {
+        navigator.vibrate?.(10);
+      } catch {
+        // 部分环境不支持震动，忽略
+      }
+    };
+
+    const start = (target: EventTarget | null, x: number, y: number, touch: boolean) => {
+      clearTimer();
+      press = null;
+      if (!(target instanceof HTMLElement)) return;
+      // 输入框、按钮等交互元素上不触发长按拖拽
+      if (target.closest('input, textarea, select, button, a, [contenteditable="true"]')) return;
+      const el = target.closest<HTMLElement>('[data-card-id]');
+      const id = el?.dataset.cardId;
+      if (!id) return;
+      press = { id, startX: x, startY: y, active: false, timer: null, touch };
+      if (touch) press.timer = window.setTimeout(activate, LONG_PRESS_MS);
+    };
+
+    const move = (x: number, y: number, evt?: TouchEvent) => {
+      if (!press) return;
+      const dx = x - press.startX;
+      const dy = y - press.startY;
+      if (!press.active) {
+        if (Math.abs(dx) < MOVE_TOLERANCE && Math.abs(dy) < MOVE_TOLERANCE) return;
+        if (press.touch) {
+          // 未长按就移动：视为页面滚动，放弃拖拽
+          clearTimer();
+          press = null;
+          return;
+        }
+        activate();
+      }
+      if (evt?.cancelable) evt.preventDefault();
+      setDraggingOffset(dy);
+    };
+
+    const finish = () => {
+      if (!press) return;
+      const { id, active } = press;
+      clearTimer();
+      press = null;
+      setDraggingId(null);
+      setDraggingOffset(0);
+      if (!active) return;
+
+      // 以拖动卡片与其它卡片的重叠面积判断落点：只长按不移动时不会误触发排序
+      const list = cardEls();
+      const dragged = list.find((el) => el.dataset.cardId === id);
+      if (!dragged) return;
+      const rect = dragged.getBoundingClientRect();
+      let overId: string | null = null;
+      let maxOverlap = 0;
+      list.forEach((el) => {
+        const otherId = el.dataset.cardId;
+        if (!otherId || otherId === id) return;
+        const r = el.getBoundingClientRect();
+        const overlap = Math.min(rect.bottom, r.bottom) - Math.max(rect.top, r.top);
+        if (overlap > maxOverlap) {
+          maxOverlap = overlap;
+          overId = otherId;
+        }
+      });
+      if (overId && maxOverlap > 0) reorderRef.current(id, overId);
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) {
+        clearTimer();
+        press = null;
+        return;
+      }
+      start(e.target, e.touches[0].clientX, e.touches[0].clientY, true);
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      move(e.touches[0].clientX, e.touches[0].clientY, e);
+    };
+    const onTouchEnd = () => finish();
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      start(e.target, e.clientX, e.clientY, false);
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!press) return;
+      move(e.clientX, e.clientY);
+      if (press?.active) e.preventDefault();
+    };
+
+    area.addEventListener('touchstart', onTouchStart, { passive: true });
+    area.addEventListener('touchmove', onTouchMove, { passive: false });
+    area.addEventListener('touchend', onTouchEnd);
+    area.addEventListener('touchcancel', onTouchEnd);
+    area.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onTouchEnd);
+
+    return () => {
+      clearTimer();
+      press = null;
+      area.removeEventListener('touchstart', onTouchStart);
+      area.removeEventListener('touchmove', onTouchMove);
+      area.removeEventListener('touchend', onTouchEnd);
+      area.removeEventListener('touchcancel', onTouchEnd);
+      area.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onTouchEnd);
+    };
+  }, [containerRef]);
+
+  return { draggingId, draggingOffset };
+};
 
 const DashboardComponent = ({
   onViewDetail,
@@ -516,17 +643,9 @@ const DashboardComponent = ({
     [homeCards],
   );
 
-  // 长按 500ms 触发拖拽（移动端友好，避免与点击/滚动冲突）
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { delay: 500, tolerance: 8 } }),
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      reorderHomeCards(String(active.id), String(over.id));
-    }
-  };
+  // 长按 500ms 触发拖拽（移动端友好，未长按时不拦截页面滚动）
+  const cardsAreaRef = useRef<HTMLDivElement>(null);
+  const { draggingId, draggingOffset } = useCardDragSort(cardsAreaRef, reorderHomeCards);
 
   const quickToolsLayoutRaw = homeCards.find((c) => c.id === 'quickTools')?.layout ?? '1x4';
   const quickToolsLayout: '1x4' | '2x2' = quickToolsLayoutRaw === '2x2' ? '2x2' : '1x4';
@@ -744,15 +863,27 @@ const DashboardComponent = ({
       </div>
 
       {/* 首页可配置卡片：长按拖拽排序，按 order/visible 渲染 */}
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={sortedHomeCards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-          {sortedHomeCards.map((card) => (
-            <SortableCard key={card.id} id={card.id}>
-              {renderHomeCard(card.id)}
-            </SortableCard>
-          ))}
-        </SortableContext>
-      </DndContext>
+      <div ref={cardsAreaRef} style={draggingId ? { userSelect: 'none' } : undefined}>
+        {sortedHomeCards.map((card) => (
+          <div
+            key={card.id}
+            data-card-id={card.id}
+            style={
+              draggingId === card.id
+                ? {
+                    transform: `translateY(${draggingOffset}px) scale(1.02)`,
+                    transition: 'none',
+                    position: 'relative',
+                    zIndex: 20,
+                    boxShadow: '0 12px 28px rgba(0, 0, 0, 0.16)',
+                  }
+                : undefined
+            }
+          >
+            {renderHomeCard(card.id)}
+          </div>
+        ))}
+      </div>
 
       {/* 智能记账核对浮层：确认后才入账，或跳完整记账页再改 */}
       <SmartConfirmSheet
