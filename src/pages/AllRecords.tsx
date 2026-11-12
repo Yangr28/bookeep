@@ -47,6 +47,8 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   // 账户筛选：'all' 全部 | 账户 id
   const [accountFilter, setAccountFilter] = useState<string>('all');
+  // 收支类型筛选：'all' 全部 | 'income' 只看收入 | 'expense' 只看支出
+  const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
   // 金额范围筛选
   const [amountMin, setAmountMin] = useState('');
   const [amountMax, setAmountMax] = useState('');
@@ -111,7 +113,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     }),
   ];
 
-  const filteredRecords = allRecords.filter((record) => {
+  const baseRecords = allRecords.filter((record) => {
     const dateStr = toDateKey(new Date(record.createdAt));
 
     if (startDate && dateStr < startDate) return false;
@@ -164,6 +166,11 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     return true;
   });
 
+  // 收支类型筛选：只看收入或只看支出；转账不属于收支，一并隐藏
+  const filteredRecords = typeFilter === 'all'
+    ? baseRecords
+    : baseRecords.filter((r) => r.type === 'transaction' && r.transaction?.type === typeFilter);
+
   const sortedRecords = filteredRecords.sort((a, b) =>
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
@@ -178,7 +185,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
   const { visibleItems: visibleRecords, sentinelRef, hasMore } = useInfiniteList(
     sortedRecords,
     30,
-    [startDate, endDate, categoryFilter, accountFilter, amountMin, amountMax, debouncedQuery, transactions, transfers],
+    [startDate, endDate, categoryFilter, accountFilter, typeFilter, amountMin, amountMax, debouncedQuery, transactions, transfers],
     anchorMinCount,
   );
 
@@ -210,21 +217,23 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anchorTarget?.id, initialAnchor?.offsetY]);
 
-  const totalIncome = sortedRecords
+  // 概览合计基于类型筛选之外的结果，切换收入/支出时两个数字保持不变，便于对比
+  const totalIncome = baseRecords
     .filter((r) => r.type === 'transaction' && r.direction === 'in')
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const totalExpense = sortedRecords
+  const totalExpense = baseRecords
     .filter((r) => r.type === 'transaction' && r.direction === 'out')
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const hasFilter = !!(startDate || endDate || categoryFilter !== 'all' || accountFilter !== 'all' || amountMin || amountMax || query);
+  const hasFilter = !!(startDate || endDate || categoryFilter !== 'all' || accountFilter !== 'all' || typeFilter !== 'all' || amountMin || amountMax || query);
 
   const handleResetFilter = () => {
     setStartDate('');
     setEndDate('');
     setCategoryFilter('all');
     setAccountFilter('all');
+    setTypeFilter('all');
     setAmountMin('');
     setAmountMax('');
     setQuery('');
@@ -341,24 +350,43 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
         </div>
       )}
 
-      {/* 收支概览 */}
+      {/* 收支概览：点击收入/支出卡片可只看对应明细 */}
       <div className="px-4 mt-3">
-        <div className="card p-3.5">
-          <div className="flex items-center justify-around">
-            <div className="text-center flex-1 min-w-0">
-              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('common.income')}</p>
+        <div className="card p-3">
+          <div className="flex items-stretch gap-2">
+            <button
+              onClick={() => setTypeFilter((prev) => (prev === 'income' ? 'all' : 'income'))}
+              className="flex-1 min-w-0 rounded-button px-2 py-1.5 text-center transition-colors"
+              style={{
+                background: typeFilter === 'income' ? 'var(--primary-soft)' : 'transparent',
+                border: `1px solid ${typeFilter === 'income' ? 'var(--primary)' : 'transparent'}`,
+              }}
+            >
+              <p className="text-xs truncate" style={{ color: 'var(--ink-2)' }}>{t('common.income')}</p>
               <p className="text-lg font-bold amount-num mt-0.5 truncate" style={{ color: 'var(--primary)' }}>
                 +{formatCurrencyShort(totalIncome)}
               </p>
-            </div>
-            <div className="w-px self-stretch" style={{ background: 'var(--line)' }} />
-            <div className="text-center flex-1 min-w-0">
-              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('common.expense')}</p>
+            </button>
+            <div className="w-px flex-shrink-0" style={{ background: 'var(--line)' }} />
+            <button
+              onClick={() => setTypeFilter((prev) => (prev === 'expense' ? 'all' : 'expense'))}
+              className="flex-1 min-w-0 rounded-button px-2 py-1.5 text-center transition-colors"
+              style={{
+                background: typeFilter === 'expense' ? 'var(--expense-soft)' : 'transparent',
+                border: `1px solid ${typeFilter === 'expense' ? 'var(--expense)' : 'transparent'}`,
+              }}
+            >
+              <p className="text-xs truncate" style={{ color: 'var(--ink-2)' }}>{t('common.expense')}</p>
               <p className="text-lg font-bold amount-num mt-0.5 truncate" style={{ color: 'var(--expense)' }}>
                 -{formatCurrencyShort(totalExpense)}
               </p>
-            </div>
+            </button>
           </div>
+          <p className="text-[11px] text-center mt-1.5" style={{ color: 'var(--ink-2)' }}>
+            {typeFilter === 'all' ? t('allRecords.typeFilterHint') : t('allRecords.typeFilterActive', {
+              type: t(typeFilter === 'income' ? 'common.income' : 'common.expense'),
+            })}
+          </p>
         </div>
       </div>
 

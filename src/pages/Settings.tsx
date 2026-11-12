@@ -14,9 +14,8 @@ import {
   type BackupRecord,
 } from '../utils/export';
 import { getLocalVersions, compareVersions } from '../utils/update';
-import PaymentNotifications from '../plugins/paymentNotifications';
-import { Capacitor } from '@capacitor/core';
-import { App as CapApp } from '@capacitor/app';
+import { AppLock, isAppLockEnabled, disableAppLock } from '../components/AppLock';
+
 import type { UpdateFlowState } from '../hooks/useUpdateCheck';
 import {
   ArrowLeft,
@@ -25,6 +24,7 @@ import {
   Info,
   HelpCircle,
   Shield,
+  Lock,
   Sun,
   Moon,
   X,
@@ -42,8 +42,6 @@ import {
   LayoutGrid,
   ChevronUp,
   ChevronDown,
-  Bell,
-  BellRing,
 } from 'lucide-react';
 
 interface SettingsProps {
@@ -82,36 +80,12 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   const [rollbackVersion, setRollbackVersion] = useState<string | null>(null);
   // 本次回退是否已点击「确认回退」开始下载（区分确认态与流程进度态）
   const [rollbackStarted, setRollbackStarted] = useState(false);
-  const [subPage, setSubPage] = useState<'help' | 'privacy' | 'backups' | 'home' | 'notifications' | null>(null);
+  const [subPage, setSubPage] = useState<'help' | 'privacy' | 'backups' | 'home' | null>(null);
+  // 应用锁：setup 设置新密码 | disable 验证后关闭
+  const [lockModal, setLockModal] = useState<'setup' | 'disable' | null>(null);
+  const [lockEnabled, setLockEnabled] = useState(isAppLockEnabled());
   const [nativeVersion, setNativeVersion] = useState('');
   const [hotVersion, setHotVersion] = useState('');
-  /** 支付通知监听：是否已获得「通知使用权」 */
-  const isNative = Capacitor.isNativePlatform();
-  const [notificationEnabled, setNotificationEnabled] = useState(false);
-
-  const refreshNotificationStatus = useCallback(async () => {
-    try {
-      const { enabled } = await PaymentNotifications.isEnabled();
-      setNotificationEnabled(enabled);
-    } catch {
-      setNotificationEnabled(false);
-    }
-  }, []);
-
-  // 进入「通知自动记账」页时检测授权状态，从系统设置返回后自动刷新
-  useEffect(() => {
-    if (!isNative || subPage !== 'notifications') return undefined;
-    void refreshNotificationStatus();
-    let handle: { remove: () => Promise<void> } | undefined;
-    CapApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) void refreshNotificationStatus();
-    }).then((h) => {
-      handle = h;
-    });
-    return () => {
-      void handle?.remove();
-    };
-  }, [isNative, subPage, refreshNotificationStatus]);
 
   /** 操作反馈弹窗（替代 alert） */
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; title: string; message: string } | null>(null);
@@ -486,6 +460,31 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             </div>
           </div>
           <div className="px-4 mt-3 space-y-2.5 pb-6">
+            {/* 应用锁 */}
+            <div className="card p-3.5 flex items-center gap-3">
+              <div
+                className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0"
+                style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
+              >
+                <Lock size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.appLock.title')}</p>
+                <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>
+                  {lockEnabled ? t('settings.appLock.onDesc') : t('settings.appLock.offDesc')}
+                </p>
+              </div>
+              <button
+                onClick={() => setLockModal(lockEnabled ? 'disable' : 'setup')}
+                className="flex-shrink-0 px-3 py-1.5 rounded-button text-xs font-semibold active:scale-95 transition-transform"
+                style={lockEnabled
+                  ? { background: 'var(--paper-deep)', color: 'var(--ink)' }
+                  : { background: 'var(--primary)', color: '#fff' }}
+              >
+                {lockEnabled ? t('settings.appLock.disable') : t('settings.appLock.enable')}
+              </button>
+            </div>
+
             <div className="card p-3.5 space-y-3 text-sm" style={{ color: 'var(--ink-2)' }}>
               <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{t('settings.privacy.updated')}</p>
 
@@ -516,7 +515,6 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                 <h3 className="font-bold mb-2" style={{ color: 'var(--ink)' }}>{t('settings.privacy.s4Title')}</h3>
                 <ul className="list-disc pl-5 space-y-1">
                   <li><strong>{t('settings.privacy.s4StorageTitle')}</strong>{t('settings.privacy.s4StorageBody')}</li>
-                  <li><strong>{t('settings.privacy.s4CameraTitle')}</strong>{t('settings.privacy.s4CameraBody')}</li>
                   <li><strong>{t('settings.privacy.s4NotifyTitle')}</strong>{t('settings.privacy.s4NotifyBody')}</li>
                 </ul>
               </div>
@@ -546,6 +544,22 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
               </div>
             </div>
           </div>
+          {lockModal && createPortal(
+            <AppLock
+              isSetupMode={lockModal === 'setup'}
+              onUnlock={() => {
+                disableAppLock();
+                setLockEnabled(false);
+                setLockModal(null);
+              }}
+              onSetupComplete={() => {
+                setLockEnabled(true);
+                setLockModal(null);
+              }}
+              onCancel={() => setLockModal(null)}
+            />,
+            document.body
+          )}
         </>
       )}
 
@@ -757,81 +771,6 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
         </>
       )}
 
-      {/* 通知自动记账子页面 */}
-      {subPage === 'notifications' && (
-        <>
-          <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
-            <button onClick={() => setSubPage(null)} className="icon-btn" aria-label={t('settings.back')}>
-              <ArrowLeft size={20} />
-            </button>
-            <div className="flex-1 min-w-0">
-              <h1 className="page-title">{t('settings.notifications.title')}</h1>
-            </div>
-          </div>
-          <div className="px-4 mt-3 space-y-2.5 pb-6">
-            <div className="card p-3.5 text-sm" style={{ color: 'var(--ink-2)' }}>
-              {t('settings.notifications.intro')}
-            </div>
-
-            <div className="card p-3.5">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
-                >
-                  {notificationEnabled ? <BellRing size={21} /> : <Bell size={21} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold" style={{ color: 'var(--ink)' }}>
-                    {t('settings.notifications.accessTitle')}
-                  </p>
-                  <p
-                    className="text-sm"
-                    style={{ color: notificationEnabled ? 'var(--primary)' : 'var(--ink-2)' }}
-                  >
-                    {notificationEnabled
-                      ? t('settings.notifications.accessOn')
-                      : t('settings.notifications.accessOff')}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => void PaymentNotifications.requestPermission()}
-                className="mt-3 w-full h-10 rounded-button text-sm font-semibold active:brightness-95"
-                style={{
-                  background: notificationEnabled ? 'var(--paper-deep)' : 'var(--primary)',
-                  color: notificationEnabled ? 'var(--ink)' : '#fff',
-                }}
-              >
-                {notificationEnabled
-                  ? t('settings.notifications.reauthorize')
-                  : t('settings.notifications.authorize')}
-              </button>
-            </div>
-
-            <div className="card p-3.5">
-              <p className="font-semibold" style={{ color: 'var(--ink)' }}>
-                {t('settings.notifications.romTitle')}
-              </p>
-              <p className="text-sm mt-1" style={{ color: 'var(--ink-2)' }}>
-                {t('settings.notifications.romDesc')}
-              </p>
-              <button
-                onClick={() => void PaymentNotifications.openAppSettings()}
-                className="mt-3 w-full h-10 rounded-button text-sm font-semibold active:brightness-95"
-                style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
-              >
-                {t('settings.notifications.openAppSettings')}
-              </button>
-            </div>
-
-            <p className="text-xs px-1" style={{ color: 'var(--ink-2)' }}>
-              {t('settings.notifications.privacyNote')}
-            </p>
-          </div>
-        </>
-      )}
-
       {!subPage && (
       <>
       <div className="safe-top px-4 pt-2 pb-1 flex items-center gap-3">
@@ -955,22 +894,6 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
-          {isNative && (
-            <button
-              onClick={() => setSubPage('notifications')}
-              className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
-              style={{ borderTop: '1px solid var(--line)' }}
-            >
-              <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
-                <Bell size={21} />
-              </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.manage.notificationAuto')}</p>
-                <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.manage.notificationAutoDesc')}</p>
-              </div>
-              <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
-            </button>
-          )}
         </div>
 
         {/* 外观 */}

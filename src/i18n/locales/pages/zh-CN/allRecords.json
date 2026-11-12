@@ -16,6 +16,8 @@
   "amountMin": "最小",
   "amountMax": "最大",
   "transactionDetails": "交易明细",
+  "typeFilterHint": "点击收入或支出，只看对应明细",
+  "typeFilterActive": "当前仅显示{{type}}明细，再点一次取消",
   "transfer": "转账",
   "transferPath": "{{from}} → {{to}}",
   "noRecords": "暂无记录",

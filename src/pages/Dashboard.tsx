@@ -16,10 +16,6 @@ import { RecordActionSheet } from '../components/RecordActionSheet';
 import { getNoteSuggestions } from '../utils/recommender';
 import { useCountUp } from '../hooks/useCountUp';
 import { TransactionType, Transaction } from '../types';
-import { Capacitor } from '@capacitor/core';
-import { App as CapApp } from '@capacitor/app';
-import PaymentNotifications from '../plugins/paymentNotifications';
-import { parsePaymentNotification } from '../utils/paymentNotificationParser';
 
 // 仅首次启动进入首页时自动聚焦智能记账输入框；返回首页时不再弹出键盘
 let hasAutoFocusedOnLaunch = false;
@@ -421,59 +417,6 @@ const DashboardComponent = ({
   // 智能记账核对浮层数据（完全识别时先弹核对，不再直接入账）
   const [confirmData, setConfirmData] = useState<SmartConfirmData | null>(null);
   const [trendDetailOpen, setTrendDetailOpen] = useState(false);
-
-  // 支付通知确认入账：首页加载或应用回到前台时，取走原生缓存的支付通知并弹核对浮层
-  const notificationContextRef = useRef({ accounts, categories });
-  notificationContextRef.current = { accounts, categories };
-
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return undefined;
-    let disposed = false;
-    let resumeHandle: { remove: () => Promise<void> } | undefined;
-
-    const consume = async () => {
-      try {
-        const { notifications } = await PaymentNotifications.getPendingNotifications();
-        if (disposed || !notifications?.length) return;
-        // 只处理最新一条能解析的，其余本轮丢弃，避免连续弹多层浮层
-        for (let i = notifications.length - 1; i >= 0; i -= 1) {
-          const parsed = parsePaymentNotification(notifications[i]);
-          if (!parsed) continue;
-          const { accounts: currentAccounts, categories: currentCategories } =
-            notificationContextRef.current;
-          const smart = parseSmartInput(`${parsed.amount} ${parsed.merchant}`, currentAccounts, currentCategories);
-          const categoryId = smart.categoryKeyword
-            ? findCategoryByIdentifier(currentCategories, 'expense', smart.categoryKeyword)
-            : null;
-          const accountId =
-            useStore.getState().lastUsedAccountId ?? currentAccounts[0]?.id ?? null;
-          setConfirmData({
-            type: 'expense',
-            amount: parsed.amount.toFixed(2),
-            categoryId,
-            accountId,
-            note: parsed.note,
-            dateTime: parsed.dateTime,
-          });
-          return;
-        }
-      } catch {
-        // 旧基座没有该插件（或非原生环境），静默忽略
-      }
-    };
-
-    void consume();
-    CapApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) void consume();
-    }).then((handle) => {
-      resumeHandle = handle;
-    });
-
-    return () => {
-      disposed = true;
-      void resumeHandle?.remove();
-    };
-  }, []);
 
   const handleSmartSubmit = useCallback((text?: string, opts?: { forceEdit?: boolean }) => {
     const inputText = text ?? smartInput;

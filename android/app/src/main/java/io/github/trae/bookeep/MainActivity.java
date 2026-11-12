@@ -14,7 +14,6 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(WidgetLaunchPlugin.class);
         registerPlugin(AppUpdatePlugin.class);
-        registerPlugin(PaymentNotificationsPlugin.class);
         super.onCreate(savedInstanceState);
         // 恢复热更新版本（失败自动回滚 / APK 升级后自动弃用旧热更新包）
         if (getBridge() != null) {

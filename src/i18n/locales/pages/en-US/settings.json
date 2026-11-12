@@ -20,22 +20,7 @@
     "categories": "Categories",
     "categoriesDesc": "Customize income/expense categories",
     "homeCards": "Home cards",
-    "homeCardsDesc": "Customize which cards show on Home and their order",
-    "notificationAuto": "Auto-record from notifications",
-    "notificationAutoDesc": "Watch WeChat/Alipay payment notifications and confirm entries"
-  },
-  "notifications": {
-    "title": "Auto-record from notifications",
-    "intro": "When enabled, bookeep reads WeChat / Alipay payment notifications to detect the amount. Returning to Home shows a \"confirm entry\" card — nothing is saved until you confirm.",
-    "accessTitle": "Notification access",
-    "accessOn": "Enabled",
-    "accessOff": "Not enabled",
-    "authorize": "Enable",
-    "reauthorize": "Re-authorize",
-    "romTitle": "Background running & autostart",
-    "romDesc": "Some Android skins (Xiaomi / Huawei / OPPO / vivo, etc.) restrict background activity, so notifications may arrive late. Allow background running in \"App settings → Battery\" and enable autostart.",
-    "openAppSettings": "Open app settings",
-    "privacyNote": "All notification content is parsed on-device and never uploaded. Notifications without a detectable amount are ignored."
+    "homeCardsDesc": "Customize which cards show on Home and their order"
   },
   "home": {
     "title": "Home cards",
@@ -123,6 +108,13 @@
     "feedbackTitle": "Feedback",
     "feedbackIntro": "If you run into a problem or have a suggestion, we'd love to hear from you:",
     "githubIssuesDesc": "Report a bug or suggest a feature"
+  },
+  "appLock": {
+    "title": "App lock",
+    "onDesc": "4-digit PIN required at launch",
+    "offDesc": "Require a PIN when the app starts",
+    "enable": "Turn on",
+    "disable": "Turn off"
   },
   "privacy": {
     "updated": "Last updated: September 2026",

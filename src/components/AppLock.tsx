@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Lock, Eye, EyeOff, Settings } from 'lucide-react';
+import { Lock, Eye, EyeOff, Settings, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface AppLockProps {
   onUnlock: () => void;
   isSetupMode?: boolean;
   onSetupComplete?: () => void;
+  /** 设置/验证过程中取消（不改变锁状态） */
+  onCancel?: () => void;
 }
 
 const LOCK_KEY = 'bookeep_app_lock';
@@ -52,7 +54,7 @@ async function verifyPassword(password: string): Promise<boolean> {
   return false;
 }
 
-export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppLockProps) => {
+export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete, onCancel }: AppLockProps) => {
   const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -145,6 +147,16 @@ export const AppLock = ({ onUnlock, isSetupMode = false, onSetupComplete }: AppL
       style={{ background: 'var(--paper)' }}
     >
       <div className="w-full max-w-sm">
+        {onCancel && (
+          <button
+            onClick={onCancel}
+            className="absolute right-4 icon-btn"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+            aria-label={t('common.cancel')}
+          >
+            <X size={20} />
+          </button>
+        )}
         <div className="text-center mb-8">
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -240,12 +252,15 @@ const DeleteIcon = () => (
   </svg>
 );
 
-export const isAppLocked = () => localStorage.getItem(LOCK_KEY) === 'true';
+/** 是否已开启应用锁（开关 + 已设置密码） */
+export const isAppLockEnabled = () =>
+  localStorage.getItem(LOCK_KEY) === 'true' && !!localStorage.getItem(PASSWORD_KEY);
 
-export const unlockApp = () => {
+/** App 启动时是否需要上锁 */
+export const isAppLocked = isAppLockEnabled;
+
+/** 关闭应用锁，同时清除密码 */
+export const disableAppLock = () => {
   localStorage.removeItem(LOCK_KEY);
-};
-
-export const lockApp = () => {
-  localStorage.setItem(LOCK_KEY, 'true');
+  localStorage.removeItem(PASSWORD_KEY);
 };

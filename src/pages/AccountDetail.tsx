@@ -3,10 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { toDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
-import { TransactionCard } from '../components/TransactionCard';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { formatCurrencyShort, formatDateTime } from '../utils/format';
-import { ArrowLeft, Wallet, TrendingUp, TrendingDown, ArrowRightLeft, ArrowRight, Calendar, Scale, AlertTriangle, CheckCircle2, Wrench } from 'lucide-react';
+import { ArrowLeft, Wallet, TrendingUp, TrendingDown, ArrowRightLeft, Trash2, Calendar, Scale, AlertTriangle, CheckCircle2, Wrench } from 'lucide-react';
 import { Account, Transfer, Transaction } from '../types';
 
 interface AccountDetailProps {
@@ -285,69 +284,108 @@ export const AccountDetail = ({ onBack, accountId, onEditTransaction }: AccountD
           </div>
         </div>
 
-        {/* 交易记录 */}
+        {/* 交易记录：左列收入、右列支出，直观呈现资金双向变动 */}
         <h2 className="section-title">{t('accountDetail.transactions')}</h2>
         {sortedRecords.length > 0 ? (
-          <div className="space-y-2 pb-6">
-            {sortedRecords.map((record) => {
-              if (record.type === 'transaction' && record.transaction) {
-                return (
-                  <TransactionCard
-                    key={record.id}
-                    transaction={record.transaction}
-                    onDelete={() => deleteTransaction(record.id)}
-                    onEdit={onEditTransaction ? () => onEditTransaction(record.transaction!) : undefined}
-                  />
-                );
-              }
-
-              const isIn = record.direction === 'in';
+          <div className="grid grid-cols-2 gap-2.5 pb-6">
+            {([
+              { key: 'in' as const, label: t('common.income'), color: 'var(--primary)' },
+              { key: 'out' as const, label: t('common.expense'), color: 'var(--expense)' },
+            ]).map((column) => {
+              const columnRecords = sortedRecords.filter((r) => r.direction === column.key);
+              const columnTotal = columnRecords.reduce((sum, r) => sum + r.amount, 0);
               return (
-                <div key={record.id} className="card p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={isIn
-                          ? { background: 'var(--primary-soft)', color: 'var(--primary)' }
-                          : { background: 'var(--expense-soft)', color: 'var(--expense)' }}
-                      >
-                        <ArrowRightLeft size={17} />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs flex-shrink-0" style={{ color: 'var(--ink-2)' }}>
-                            {isIn ? t('accountDetail.transferIn') : t('accountDetail.transferOut')}
-                          </span>
-                          <ArrowRight size={12} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
-                          <span className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>
-                            {record.relatedAccount?.name || t('accountDetail.unknownAccount')}
-                          </span>
-                        </div>
-                        <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-2)' }}>
-                          {record.transfer?.note || t('accountDetail.transfer')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p
-                        className="font-semibold amount-num"
-                        style={{ color: isIn ? 'var(--primary)' : 'var(--expense)' }}
-                      >
-                        {isIn ? '+' : '-'}{formatCurrencyShort(record.amount)}
-                      </p>
-                      <p className="text-xs mt-0.5 amount-num" style={{ color: 'var(--ink-2)' }}>
-                        {formatDateTime(record.createdAt)}
-                      </p>
-                    </div>
+                <div key={column.key} className="min-w-0">
+                  <div className="flex items-center justify-between gap-1 mb-2 px-0.5">
+                    <span className="text-xs font-semibold truncate min-w-0" style={{ color: column.color }}>
+                      {column.label}
+                    </span>
+                    <span className="text-xs font-semibold amount-num truncate flex-shrink-0" style={{ color: column.color }}>
+                      {column.key === 'in' ? '+' : '-'}{formatCurrencyShort(columnTotal)}
+                    </span>
                   </div>
-                  <button
-                    onClick={() => deleteTransfer(record.id)}
-                    className="mt-2 text-xs font-medium"
-                    style={{ color: 'var(--expense)' }}
-                  >
-                    {t('common.delete')}
-                  </button>
+                  <div className="space-y-2">
+                    {columnRecords.length === 0 ? (
+                      <div className="card p-2.5 text-center text-[11px]" style={{ color: 'var(--ink-2)' }}>
+                        —
+                      </div>
+                    ) : (
+                      columnRecords.map((record) => {
+                        const isIn = record.direction === 'in';
+                        const amountColor = isIn ? 'var(--primary)' : 'var(--expense)';
+
+                        if (record.type === 'transaction' && record.transaction) {
+                          const tx = record.transaction;
+                          const category = useStore.getState().getCategoryById(tx.categoryId);
+                          return (
+                            <div
+                              key={record.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={onEditTransaction ? () => onEditTransaction(tx) : undefined}
+                              className="card p-2.5 active:brightness-95 transition-[filter]"
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: category?.color || 'var(--ink-2)' }}
+                                />
+                                <span className="text-xs truncate min-w-0" style={{ color: 'var(--ink-2)' }}>
+                                  {category?.name || t('common.unclassified')}
+                                </span>
+                              </div>
+                              <p className="text-sm font-bold amount-num mt-1 truncate" style={{ color: amountColor }}>
+                                {isIn ? '+' : '-'}{formatCurrencyShort(record.amount)}
+                              </p>
+                              <div className="flex items-center justify-between gap-1 mt-0.5">
+                                <p className="text-[10px] truncate min-w-0" style={{ color: 'var(--ink-2)' }}>
+                                  {tx.note || formatDateTime(record.createdAt)}
+                                </p>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteTransaction(record.id);
+                                  }}
+                                  className="flex-shrink-0 p-0.5"
+                                  aria-label={t('common.delete')}
+                                >
+                                  <Trash2 size={12} style={{ color: 'var(--expense)' }} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div key={record.id} className="card p-2.5">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <ArrowRightLeft size={12} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+                              <span className="text-xs truncate min-w-0" style={{ color: 'var(--ink-2)' }}>
+                                {isIn ? t('accountDetail.transferIn') : t('accountDetail.transferOut')}
+                                {' · '}
+                                {record.relatedAccount?.name || t('accountDetail.unknownAccount')}
+                              </span>
+                            </div>
+                            <p className="text-sm font-bold amount-num mt-1 truncate" style={{ color: amountColor }}>
+                              {isIn ? '+' : '-'}{formatCurrencyShort(record.amount)}
+                            </p>
+                            <div className="flex items-center justify-between gap-1 mt-0.5">
+                              <p className="text-[10px] truncate min-w-0" style={{ color: 'var(--ink-2)' }}>
+                                {formatDateTime(record.createdAt)}
+                              </p>
+                              <button
+                                onClick={() => deleteTransfer(record.id)}
+                                className="flex-shrink-0 p-0.5"
+                                aria-label={t('common.delete')}
+                              >
+                                <Trash2 size={12} style={{ color: 'var(--expense)' }} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               );
             })}

@@ -56,17 +56,6 @@
             android:name=".UpdateDownloadService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
-
-        <!-- 支付通知监听：捕获微信/支付宝支付通知，用于首页确认入账 -->
-        <service
-            android:name=".PaymentNotificationService"
-            android:exported="true"
-            android:label="@string/payment_listener_label"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
     </application>
 
     <!-- Permissions -->

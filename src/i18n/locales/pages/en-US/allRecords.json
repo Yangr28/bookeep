@@ -16,6 +16,8 @@
   "amountMin": "Min",
   "amountMax": "Max",
   "transactionDetails": "Transactions",
+  "typeFilterHint": "Tap income or expense to filter",
+  "typeFilterActive": "Showing {{type}} only — tap again to clear",
   "transfer": "Transfer",
   "transferPath": "{{from}} → {{to}}",
   "noRecords": "No records",
