@@ -490,15 +490,15 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
             </div>
           </div>
 
-          {/* 账户筛选 */}
-          <div className="flex items-center gap-2 mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--line)' }}>
-            <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('common.account')}</span>
-            <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
+          {/* 账户筛选：双列布局，账户较多时纵向展开，无需横向滚动 */}
+          <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--line)' }}>
+            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t('common.account')}</span>
+            <div className="grid grid-cols-2 gap-1.5 mt-2">
               <button
                 onClick={() => setAccountFilter('all')}
-                className={`chip flex-shrink-0 ${accountFilter === 'all' ? 'chip-active' : 'chip-inactive'}`}
+                className={`chip w-full min-w-0 justify-center ${accountFilter === 'all' ? 'chip-active' : 'chip-inactive'}`}
               >
-                {t('allRecords.filterAll')}
+                <span className="truncate min-w-0">{t('allRecords.filterAll')}</span>
               </button>
               {accounts.map((account) => {
                 const active = accountFilter === account.id;
@@ -506,13 +506,13 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
                   <button
                     key={account.id}
                     onClick={() => setAccountFilter(account.id)}
-                    className={`chip flex-shrink-0 ${active ? 'chip-active' : 'chip-inactive'}`}
+                    className={`chip w-full min-w-0 justify-center ${active ? 'chip-active' : 'chip-inactive'}`}
                   >
                     <span
                       className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: account.color }}
                     />
-                    {account.name}
+                    <span className="truncate min-w-0">{account.name}</span>
                   </button>
                 );
               })}
