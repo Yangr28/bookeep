@@ -15,6 +15,7 @@ import {
 } from '../utils/export';
 import { getLocalVersions, compareVersions } from '../utils/update';
 import { AppLock, isAppLockEnabled, disableAppLock } from '../components/AppLock';
+import { exportToExcel } from '../utils/exportExcel';
 
 import type { UpdateFlowState } from '../hooks/useUpdateCheck';
 import {
@@ -25,6 +26,7 @@ import {
   HelpCircle,
   Shield,
   Lock,
+  FileSpreadsheet,
   Sun,
   Moon,
   X,
@@ -84,6 +86,7 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   // 应用锁：setup 设置新密码 | disable 验证后关闭
   const [lockModal, setLockModal] = useState<'setup' | 'disable' | null>(null);
   const [lockEnabled, setLockEnabled] = useState(isAppLockEnabled());
+  const [excelExporting, setExcelExporting] = useState(false);
   const [nativeVersion, setNativeVersion] = useState('');
   const [hotVersion, setHotVersion] = useState('');
 
@@ -176,6 +179,20 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
     } catch (error) {
       console.error('Export error:', error);
       showToast('error', t('settings.toast.exportFailedTitle'), t('settings.toast.exportFailedMessage'));
+    }
+  };
+
+  const handleExportExcel = async () => {
+    if (excelExporting) return;
+    setExcelExporting(true);
+    try {
+      await exportToExcel({ transactions, transfers, accounts, categories });
+      showToast('success', t('settings.toast.excelSuccessTitle'), t('settings.toast.excelSuccessMessage'));
+    } catch (error) {
+      console.error('Excel export error:', error);
+      showToast('error', t('settings.toast.excelFailedTitle'), t('settings.toast.excelFailedMessage'));
+    } finally {
+      setExcelExporting(false);
     }
   };
 
@@ -801,6 +818,24 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             <div className="flex-1 text-left min-w-0">
               <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.data.export')}</p>
               <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.data.exportDesc')}</p>
+            </div>
+            <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
+          </button>
+
+          <button
+            onClick={handleExportExcel}
+            disabled={excelExporting}
+            className="w-full flex items-center gap-3 p-3.5 active:brightness-95 disabled:opacity-60"
+            style={{ borderTop: '1px solid var(--line)' }}
+          >
+            <div className="w-11 h-11 rounded-button flex items-center justify-center flex-shrink-0" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+              <FileSpreadsheet size={21} />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>{t('settings.data.exportExcel')}</p>
+              <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>
+                {excelExporting ? t('settings.data.exportExcelBusy') : t('settings.data.exportExcelDesc')}
+              </p>
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
