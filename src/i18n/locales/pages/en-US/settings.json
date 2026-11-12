@@ -118,8 +118,8 @@
   },
   "appLock": {
     "title": "App lock",
-    "onDesc": "4-digit PIN required at launch",
-    "offDesc": "Require a PIN when the app starts",
+    "onDesc": "Password or pattern required at launch",
+    "offDesc": "Require verification when the app starts",
     "enable": "Turn on",
     "disable": "Turn off"
   },

@@ -118,7 +118,7 @@
   },
   "appLock": {
     "title": "应用锁",
-    "onDesc": "启动应用需输入 4 位密码",
+    "onDesc": "启动应用需验证密码或手势",
     "offDesc": "开启后启动应用需输入密码",
     "enable": "开启",
     "disable": "关闭"
