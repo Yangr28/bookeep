@@ -239,6 +239,83 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     setQuery('');
   };
 
+  // 筛选单个账户时，按收入/支出双列展示该账户的资金变动
+  const flowColumns = (() => {
+    if (accountFilter === 'all' || batchMode) return null;
+    const income: Record[] = [];
+    const expense: Record[] = [];
+    visibleRecords.forEach((record) => {
+      if (record.type === 'transaction' && record.transaction) {
+        (record.transaction.type === 'income' ? income : expense).push(record);
+        return;
+      }
+      if (record.transfer) {
+        if (record.transfer.toAccountId === accountFilter) income.push(record);
+        else if (record.transfer.fromAccountId === accountFilter) expense.push(record);
+      }
+    });
+    const total = (list: Record[]) => list.reduce((sum, r) => sum + r.amount, 0);
+    return { income, expense, incomeTotal: total(income), expenseTotal: total(expense) };
+  })();
+
+  const renderFlowCard = (record: Record) => {
+    if (record.type === 'transaction' && record.transaction) {
+      const tx = record.transaction;
+      const category = useStore.getState().getCategoryById(tx.categoryId);
+      const isIncome = tx.type === 'income';
+      return (
+        <button
+          key={record.id}
+          data-record-id={record.id}
+          onClick={() => setActionRecord(tx)}
+          className="card w-full p-2.5 text-left active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: category?.color || 'var(--ink-2)' }}
+            />
+            <span className="text-xs font-medium truncate min-w-0" style={{ color: 'var(--ink)' }}>
+              {record.categoryName}
+            </span>
+          </div>
+          <p
+            className="text-sm font-semibold amount-num mt-1 truncate"
+            style={{ color: isIncome ? 'var(--primary)' : 'var(--expense)' }}
+          >
+            {formatCurrencyShort(record.amount)}
+          </p>
+          <p className="text-[11px] truncate mt-0.5" style={{ color: 'var(--ink-2)' }}>
+            {record.note || formatDateTime(record.createdAt).slice(-5)}
+          </p>
+        </button>
+      );
+    }
+
+    const transfer = record.transfer!;
+    const isIn = transfer.toAccountId === accountFilter;
+    const other = getAccountById(isIn ? transfer.fromAccountId : transfer.toAccountId);
+    return (
+      <div key={record.id} data-record-id={record.id} className="card w-full p-2.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <ArrowRightLeft size={12} className="flex-shrink-0" style={{ color: 'var(--primary)' }} />
+          <span className="text-xs font-medium truncate min-w-0" style={{ color: 'var(--ink)' }}>
+            {t('allRecords.transfer')}
+          </span>
+        </div>
+        <p
+          className="text-sm font-semibold amount-num mt-1 truncate"
+          style={{ color: isIn ? 'var(--primary)' : 'var(--expense)' }}
+        >
+          {formatCurrencyShort(record.amount)}
+        </p>
+        <p className="text-[11px] truncate mt-0.5" style={{ color: 'var(--ink-2)' }}>
+          {other?.name || record.note || formatDateTime(record.createdAt).slice(-5)}
+        </p>
+      </div>
+    );
+  };
+
   // 当前筛选结果中可参与批量操作的记录（仅收支记录，转账无分类）
   const selectableIds = sortedRecords
     .filter((r) => r.type === 'transaction')
@@ -490,15 +567,15 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
             </div>
           </div>
 
-          {/* 账户筛选：双列布局，账户较多时纵向展开，无需横向滚动 */}
-          <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--line)' }}>
-            <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t('common.account')}</span>
-            <div className="grid grid-cols-2 gap-1.5 mt-2">
+          {/* 账户筛选 */}
+          <div className="flex items-center gap-2 mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--line)' }}>
+            <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('common.account')}</span>
+            <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
               <button
                 onClick={() => setAccountFilter('all')}
-                className={`chip w-full min-w-0 justify-center ${accountFilter === 'all' ? 'chip-active' : 'chip-inactive'}`}
+                className={`chip flex-shrink-0 ${accountFilter === 'all' ? 'chip-active' : 'chip-inactive'}`}
               >
-                <span className="truncate min-w-0">{t('allRecords.filterAll')}</span>
+                {t('allRecords.filterAll')}
               </button>
               {accounts.map((account) => {
                 const active = accountFilter === account.id;
@@ -506,13 +583,13 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
                   <button
                     key={account.id}
                     onClick={() => setAccountFilter(account.id)}
-                    className={`chip w-full min-w-0 justify-center ${active ? 'chip-active' : 'chip-inactive'}`}
+                    className={`chip flex-shrink-0 ${active ? 'chip-active' : 'chip-inactive'}`}
                   >
                     <span
                       className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: account.color }}
                     />
-                    <span className="truncate min-w-0">{account.name}</span>
+                    {account.name}
                   </button>
                 );
               })}
@@ -551,6 +628,30 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
       <div className="px-4 mt-4">
         <h2 className="section-title">{t('allRecords.transactionDetails')}</h2>
         {sortedRecords.length > 0 ? (
+          flowColumns ? (
+            <div className="grid grid-cols-2 gap-2 items-start">
+              {[
+                { key: 'income', label: t('common.income'), color: 'var(--primary)', records: flowColumns.income, total: flowColumns.incomeTotal },
+                { key: 'expense', label: t('common.expense'), color: 'var(--expense)', records: flowColumns.expense, total: flowColumns.expenseTotal },
+              ].map((column) => (
+                <div key={column.key}>
+                  <div className="flex items-center justify-between gap-1 mb-1.5 px-0.5">
+                    <span className="text-xs font-medium truncate" style={{ color: column.color }}>{column.label}</span>
+                    <span className="text-xs font-semibold amount-num flex-shrink-0" style={{ color: column.color }}>
+                      {formatCurrencyShort(column.total)}
+                    </span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {column.records.length === 0 ? (
+                      <div className="card p-2.5 text-center text-xs" style={{ color: 'var(--ink-2)' }}>—</div>
+                    ) : (
+                      column.records.map((record) => renderFlowCard(record))
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
           <div>
             {visibleRecords.map((record) => {
               if (record.type === 'transaction' && record.transaction) {
@@ -621,6 +722,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
               </>
             )}
           </div>
+          )
         ) : (
           <div className="card flex flex-col items-center py-12">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--paper-deep)' }}>
