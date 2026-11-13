@@ -5,7 +5,29 @@
   "data": {
     "sectionTitle": "数据管理",
     "export": "导出数据",
-    "exportDesc": "将所有数据导出为 JSON 文件",
+    "exportDesc": "导出全部数据为 JSON，可选密码加密",
+    "zeroUpload": {
+      "title": "数据零上传",
+      "desc": "所有数据仅保存在本机，不上传任何服务器。备份文件可选密码加密（AES-256），请妥善保管密码，忘记密码将无法恢复加密备份。"
+    },
+    "backupEncrypt": {
+      "title": "导出备份",
+      "subtitle": "可选择是否使用密码加密",
+      "placeholder": "输入密码（可留空）",
+      "hint": "设置密码后备份将以 AES-256 加密保存，文件名带 _enc 后缀；留空则导出明文 JSON。密码不会保存在应用内，请自行牢记。",
+      "tooShort": "密码至少 4 位",
+      "exportPlain": "直接导出",
+      "exportEncrypted": "加密导出"
+    },
+    "backupPw": {
+      "importTitle": "加密备份",
+      "restoreTitle": "恢复加密备份",
+      "subtitle": "该备份已加密，请输入密码",
+      "placeholder": "输入备份密码",
+      "wrongPw": "密码错误或文件已损坏",
+      "failed": "解密失败，请重试",
+      "confirm": "确认"
+    },
     "exportExcel": "导出 Excel",
     "exportExcelDesc": "导出账单明细为 Excel 表格（.xlsx）",
     "exportExcelBusy": "正在生成 Excel…",

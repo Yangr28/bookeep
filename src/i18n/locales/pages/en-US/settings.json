@@ -5,7 +5,29 @@
   "data": {
     "sectionTitle": "Data management",
     "export": "Export data",
-    "exportDesc": "Export all data as a JSON file",
+    "exportDesc": "Export all data as JSON with optional encryption",
+    "zeroUpload": {
+      "title": "Zero data upload",
+      "desc": "All data stays on this device and is never uploaded to any server. Backups can be encrypted with a password (AES-256). Keep the password safe — encrypted backups cannot be recovered without it."
+    },
+    "backupEncrypt": {
+      "title": "Export backup",
+      "subtitle": "Encrypt with a password or export as plain JSON",
+      "placeholder": "Enter password (optional)",
+      "hint": "With a password, the backup is encrypted with AES-256 and the file name gets an _enc suffix; leave empty for plain JSON. The password is never stored in the app — remember it yourself.",
+      "tooShort": "Use at least 4 characters",
+      "exportPlain": "Export as is",
+      "exportEncrypted": "Export encrypted"
+    },
+    "backupPw": {
+      "importTitle": "Encrypted backup",
+      "restoreTitle": "Restore encrypted backup",
+      "subtitle": "This backup is encrypted, enter the password",
+      "placeholder": "Enter backup password",
+      "wrongPw": "Wrong password or the file is corrupted",
+      "failed": "Decryption failed, please try again",
+      "confirm": "Confirm"
+    },
     "exportExcel": "Export Excel",
     "exportExcelDesc": "Export transactions as an Excel workbook (.xlsx)",
     "exportExcelBusy": "Generating Excel…",

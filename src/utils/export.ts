@@ -3,6 +3,9 @@ import { Budget } from '../store/budgetsSlice';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { loadFromStorage, saveToStorage } from './storage';
 import { todayKey } from './date';
+import { encryptBackupText, decryptBackupText, isEncryptedBackup, BackupPasswordRequiredError } from './backupCrypto';
+
+export { BackupPasswordRequiredError };
 
 export interface ExportData {
   version: string;
@@ -69,14 +72,17 @@ export const exportData = (params: ExportParams): ExportData => {
   };
 };
 
-export const downloadExportFile = async (data: ExportData): Promise<{ uri: string; fileName: string }> => {
+/** 导出备份文件；传入 password 时生成 AES-GCM 加密备份，否则为明文 JSON */
+export const downloadExportFile = async (data: ExportData, password?: string): Promise<{ uri: string; fileName: string }> => {
   const json = JSON.stringify(data, null, 2);
-  const fileName = `bookeep_backup_${todayKey()}_${Date.now()}.json`;
+  const suffix = password ? '_enc' : '';
+  const fileName = `bookeep_backup_${todayKey()}_${Date.now()}${suffix}.json`;
+  const payload = password ? await encryptBackupText(json, password) : json;
 
   try {
     const result = await Filesystem.writeFile({
       path: fileName,
-      data: json,
+      data: payload,
       directory: Directory.Documents,
       encoding: Encoding.UTF8,
     });
@@ -85,7 +91,7 @@ export const downloadExportFile = async (data: ExportData): Promise<{ uri: strin
   } catch (error) {
     console.warn('Filesystem write failed, falling back to browser download:', error);
 
-    const blob = new Blob([json], { type: 'application/json' });
+    const blob = new Blob([payload], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement('a');
@@ -133,8 +139,8 @@ export const deleteBackupRecord = async (id: string, deleteFile = true): Promise
   saveToStorage(BACKUPS_KEY, list.filter((r) => r.id !== id));
 };
 
-/** 读取一条备份记录对应的文件内容（用于应用内恢复） */
-export const readBackupFile = async (record: BackupRecord): Promise<ExportData> => {
+/** 读取一条备份记录对应的文件内容（用于应用内恢复）；加密备份需传 password */
+export const readBackupFile = async (record: BackupRecord, password?: string): Promise<ExportData> => {
   if (record.fileUri.startsWith('downloads://')) {
     throw new Error('此备份文件为浏览器下载，请使用「导入数据」功能恢复');
   }
@@ -145,7 +151,11 @@ export const readBackupFile = async (record: BackupRecord): Promise<ExportData> 
   });
   // 使用 UTF8 编码时，data 为 string；否则为 Blob
   const text = typeof result.data === 'string' ? result.data : await (result.data as Blob).text();
-  return parseImportData(text);
+  if (isEncryptedBackup(text) && !password) {
+    throw new BackupPasswordRequiredError();
+  }
+  const plain = password ? await decryptBackupText(text, password) : text;
+  return parseImportData(plain);
 };
 
 /**

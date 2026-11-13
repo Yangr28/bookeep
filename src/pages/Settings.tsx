@@ -11,11 +11,13 @@ import {
   saveBackupRecord,
   deleteBackupRecord,
   readBackupFile,
+  BackupPasswordRequiredError,
   type BackupRecord,
 } from '../utils/export';
 import { getLocalVersions, compareVersions } from '../utils/update';
 import { AppLock, isAppLockEnabled, disableAppLock } from '../components/AppLock';
 import { exportToExcel } from '../utils/exportExcel';
+import { decryptBackupText, isEncryptedBackup, BackupDecryptError } from '../utils/backupCrypto';
 
 import type { UpdateFlowState } from '../hooks/useUpdateCheck';
 import {
@@ -25,6 +27,7 @@ import {
   Info,
   HelpCircle,
   Shield,
+  ShieldCheck,
   Lock,
   FileSpreadsheet,
   Sun,
@@ -103,6 +106,16 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
 
   /** 导入确认弹窗（覆盖当前数据） */
   const [importConfirm, setImportConfirm] = useState<{ data: ReturnType<typeof parseImportData> } | null>(null);
+  // 导出加密选项弹窗
+  const [showExportEncrypt, setShowExportEncrypt] = useState(false);
+  const [encryptPassword, setEncryptPassword] = useState('');
+  const [encryptPwError, setEncryptPwError] = useState('');
+  // 加密备份密码弹窗（导入文件 / 应用内恢复共用）
+  const [pwPrompt, setPwPrompt] = useState<
+    { kind: 'import'; text: string } | { kind: 'restore'; record: BackupRecord } | null
+  >(null);
+  const [pwInput, setPwInput] = useState('');
+  const [pwError, setPwError] = useState('');
   /** 备份管理：备份列表 */
   const [backups, setBackups] = useState<BackupRecord[]>([]);
   const refreshBackups = useCallback(() => setBackups(loadBackupRecords()), []);
@@ -150,10 +163,20 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
     }
   };
 
-  const handleExport = async () => {
+  const handleExport = () => {
+    // 先弹加密选项：可留空导出明文，或输入密码生成加密备份
+    setEncryptPassword('');
+    setEncryptPwError('');
+    setShowExportEncrypt(true);
+  };
+
+  const confirmExport = async () => {
+    setShowExportEncrypt(false);
+    const password = encryptPassword.trim() || undefined;
+    if (password && password.length < 4) return; // 按钮已禁用，防御性兜底
     try {
       const data = exportData({ transactions, accounts, categories, transfers, recurringRecords, templates, budgets, fixedDeposits, loans });
-      const { uri, fileName } = await downloadExportFile(data);
+      const { uri, fileName } = await downloadExportFile(data, password);
 
       // 保存备份记录到应用内
       saveBackupRecord({
@@ -208,6 +231,13 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
       reader.onload = (event) => {
         try {
           const jsonString = event.target?.result as string;
+          // 加密备份：先要求输入密码解密，再进入确认流程
+          if (isEncryptedBackup(jsonString)) {
+            setPwInput('');
+            setPwError('');
+            setPwPrompt({ kind: 'import', text: jsonString });
+            return;
+          }
           const imported = parseImportData(jsonString);
           // 弹出确认覆盖弹窗
           setImportConfirm({ data: imported });
@@ -220,10 +250,30 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
     input.click();
   };
 
-  /** 确认导入：覆盖当前数据 */
-  const confirmImport = () => {
-    if (!importConfirm) return;
-    const imported = importConfirm.data;
+  /** 密码弹窗提交：解密并进入导入确认，或直接恢复备份 */
+  const submitPwPrompt = async () => {
+    if (!pwPrompt || !pwInput) return;
+    try {
+      if (pwPrompt.kind === 'import') {
+        const plain = await decryptBackupText(pwPrompt.text, pwInput);
+        const imported = parseImportData(plain);
+        setPwPrompt(null);
+        setImportConfirm({ data: imported });
+      } else {
+        const imported = await readBackupFile(pwPrompt.record, pwInput);
+        applyImported(imported);
+        setPwPrompt(null);
+        showToast('success', t('settings.toast.restoreSuccessTitle'), t('settings.toast.restoreSuccessMessage', { name: pwPrompt.record.fileName }));
+      }
+      setPwInput('');
+      setPwError('');
+    } catch (err) {
+      setPwError(err instanceof BackupDecryptError ? t('settings.data.backupPw.wrongPw') : t('settings.data.backupPw.failed'));
+    }
+  };
+
+  /** 将导入数据写入应用状态（导入确认 / 备份恢复共用） */
+  const applyImported = (imported: ReturnType<typeof parseImportData>) => {
     setTransactions(imported.transactions);
     setAccounts(imported.accounts);
     setCategories(imported.categories);
@@ -233,6 +283,13 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
     setBudgets(imported.budgets);
     setFixedDeposits(imported.fixedDeposits);
     setLoans(imported.loans);
+  };
+
+  /** 确认导入：覆盖当前数据 */
+  const confirmImport = () => {
+    if (!importConfirm) return;
+    const imported = importConfirm.data;
+    applyImported(imported);
 
     setImportConfirm(null);
     showToast(
@@ -250,18 +307,17 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   const handleRestoreBackup = async (record: BackupRecord) => {
     try {
       const imported = await readBackupFile(record);
-      setTransactions(imported.transactions);
-      setAccounts(imported.accounts);
-      setCategories(imported.categories);
-      setTransfers(imported.transfers);
-      setRecurringRecords(imported.recurringRecords);
-      setTemplates(imported.templates);
-      setBudgets(imported.budgets);
-      setFixedDeposits(imported.fixedDeposits);
-      setLoans(imported.loans);
+      applyImported(imported);
 
       showToast('success', t('settings.toast.restoreSuccessTitle'), t('settings.toast.restoreSuccessMessage', { name: record.fileName }));
     } catch (err) {
+      if (err instanceof BackupPasswordRequiredError) {
+        // 加密备份：先输入密码再恢复
+        setPwInput('');
+        setPwError('');
+        setPwPrompt({ kind: 'restore', record });
+        return;
+      }
       showToast('error', t('settings.toast.restoreFailedTitle'), err instanceof Error ? err.message : t('settings.toast.fileMissing'));
     }
   };
@@ -808,6 +864,15 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
             <h3 className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>{t('settings.data.sectionTitle')}</h3>
           </div>
 
+          {/* 数据零上传说明 */}
+          <div className="flex items-start gap-2.5 px-4 py-3" style={{ background: 'var(--primary-soft)' }}>
+            <ShieldCheck size={18} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--primary)' }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold" style={{ color: 'var(--primary-ink)' }}>{t('settings.data.zeroUpload.title')}</p>
+              <p className="text-xs leading-relaxed mt-0.5" style={{ color: 'var(--primary-ink)' }}>{t('settings.data.zeroUpload.desc')}</p>
+            </div>
+          </div>
+
           <button
             onClick={handleExport}
             className="w-full flex items-center gap-3 p-3.5 active:brightness-95"
@@ -1256,6 +1321,130 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
       )}
 
       {/* 导入数据确认弹窗 */}
+      {/* 导出加密选项弹窗 */}
+      {showExportEncrypt && createPortal(
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => setShowExportEncrypt(false)}
+        >
+          <div
+            className="card w-full max-w-md overflow-hidden animate-bounce-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 pt-6 pb-4" style={{ background: 'var(--primary-soft)' }}>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-12 h-12 rounded-card flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'var(--card)', color: 'var(--primary)' }}
+                >
+                  <Lock size={26} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{t('settings.data.backupEncrypt.title')}</h3>
+                  <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.data.backupEncrypt.subtitle')}</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4">
+              <input
+                type="password"
+                value={encryptPassword}
+                onChange={(e) => {
+                  setEncryptPassword(e.target.value);
+                  setEncryptPwError('');
+                }}
+                placeholder={t('settings.data.backupEncrypt.placeholder')}
+                autoFocus
+                className="w-full rounded-button px-4 py-3 text-base outline-none"
+                style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
+              />
+              <p className="text-xs leading-relaxed mt-2.5" style={{ color: 'var(--ink-2)' }}>
+                {t('settings.data.backupEncrypt.hint')}
+              </p>
+              {encryptPassword.trim().length > 0 && encryptPassword.trim().length < 4 && (
+                <p className="text-xs mt-2" style={{ color: 'var(--expense)' }}>{t('settings.data.backupEncrypt.tooShort')}</p>
+              )}
+            </div>
+            <div className="px-6 py-4" style={{ borderTop: '1px solid var(--line)' }}>
+              <div className="flex gap-3">
+                <button onClick={() => setShowExportEncrypt(false)} className="btn-ghost flex-1">{t('common.cancel')}</button>
+                <button onClick={confirmExport} className="btn-primary flex-1">{t('settings.data.backupEncrypt.exportPlain')}</button>
+              </div>
+              <button
+                onClick={confirmExport}
+                disabled={encryptPassword.trim().length > 0 && encryptPassword.trim().length < 4}
+                className="w-full mt-2.5 py-3 rounded-button font-semibold text-white active:scale-[0.99] transition-transform disabled:opacity-50"
+                style={{ background: 'var(--primary)' }}
+              >
+                {t('settings.data.backupEncrypt.exportEncrypted')}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {/* 加密备份密码弹窗（导入 / 恢复共用） */}
+      {pwPrompt && createPortal(
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => setPwPrompt(null)}
+        >
+          <div
+            className="card w-full max-w-md overflow-hidden animate-bounce-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 pt-6 pb-4" style={{ background: 'var(--primary-soft)' }}>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-12 h-12 rounded-card flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'var(--card)', color: 'var(--primary)' }}
+                >
+                  <Lock size={26} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>
+                    {pwPrompt.kind === 'import' ? t('settings.data.backupPw.importTitle') : t('settings.data.backupPw.restoreTitle')}
+                  </h3>
+                  <p className="text-sm truncate" style={{ color: 'var(--ink-2)' }}>{t('settings.data.backupPw.subtitle')}</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4">
+              <input
+                type="password"
+                value={pwInput}
+                onChange={(e) => {
+                  setPwInput(e.target.value);
+                  setPwError('');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void submitPwPrompt();
+                }}
+                placeholder={t('settings.data.backupPw.placeholder')}
+                autoFocus
+                className="w-full rounded-button px-4 py-3 text-base outline-none"
+                style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
+              />
+              {pwError && (
+                <p className="text-xs mt-2" style={{ color: 'var(--expense)' }}>{pwError}</p>
+              )}
+            </div>
+            <div className="px-6 py-4" style={{ borderTop: '1px solid var(--line)' }}>
+              <div className="flex gap-3">
+                <button onClick={() => setPwPrompt(null)} className="btn-ghost flex-1">{t('common.cancel')}</button>
+                <button onClick={() => void submitPwPrompt()} disabled={!pwInput} className="btn-primary flex-1 disabled:opacity-50">
+                  {t('settings.data.backupPw.confirm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
       {importConfirm && createPortal(
         <div
           className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in"
