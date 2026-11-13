@@ -1,6 +1,6 @@
 import { TransactionType, Transaction, Account } from '../types';
 
-import { toDateKey, addDays } from './date';
+import { toDateKey, addDays, addMonths } from './date';
 import { predictCategoryFromHistory } from './recommender';
 
 export interface ParseResult {
@@ -416,6 +416,41 @@ export const findAccountByKeyword = (
   return null;
 };
 
+/** 中文星期字符 → JS getDay() 值（周日=0） */
+const WEEKDAY_CHAR_MAP: Record<string, number> = {
+  一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 日: 0, 天: 0,
+};
+
+/**
+ * 日期/时间口语片段（按精确度降序排列，全局剔除）。
+ * 用于金额提取前的预处理与备注清洗，避免「8点半买早餐」的 8 被当成金额。
+ */
+const DATE_TIME_SNIPPET_PATTERNS: RegExp[] = [
+  /(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})[日号]?/g, // 完整日期：2024年12月3日
+  /(\d{1,2})[:点时](\d{2})(?:分)?/g,               // 8:30 / 8点30 / 8时30分
+  /(\d{1,2})[:点时](\d{1,2})分/g,                  // 8点5分
+  /(\d{1,2})点半/g,                                // 8点半
+  /(\d{1,2})[点时](?!\d*[块元毛角])/g,             // 8点 / 8时（"2点5块"是口语小数，不剔除）
+];
+
+/**
+ * 剔除日期/时间口语片段与时段词，返回干净文本。
+ * 用于金额提取前的预处理与备注清洗。
+ */
+const stripDateTimeText = (text: string): string => {
+  let out = text;
+  for (const p of DATE_TIME_SNIPPET_PATTERNS) {
+    out = out.replace(p, ' ');
+  }
+  out = out.replace(/大前天|前天|昨天|昨日|今晚|今早|今晨|昨夜|昨晚|明晚|今天|今日|明天|明日|今夜/g, ' ');
+  out = out.replace(/([0-9一二两三四五六七八九十]+)\s*(?:天|日)前/g, ' ');
+  // 「上周三」含「周三」，长形式在前一并剔除
+  out = out.replace(/上个?(?:周|星期|礼拜)\s*[一二三四五六日天]|(?:周|星期|礼拜)\s*[一二三四五六日天]/g, ' ');
+  out = out.replace(/上个月|上月/g, ' ');
+  out = out.replace(/早上|早晨|上午|中午|下午(?!茶)|午后(?!茶)|晚上|傍晚|凌晨|清晨|深夜|夜里|夜间|午间|午休/g, ' ');
+  return out;
+};
+
 const extractDateTime = (text: string): { date: string; time: string } => {
   let date = '';
   let time = '';
@@ -426,32 +461,85 @@ const extractDateTime = (text: string): { date: string; time: string } => {
     date = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
   }
 
-  const timePattern = /(\d{1,2})[:点时](\d{2})(?:分)?/;
-  const timeMatch = text.match(timePattern);
+  // 时间：优先精确形式，依次兜底口语形式（8点5分 → 8点半 → 8点）
+  const timeMatch = text.match(/(\d{1,2})[:点时](\d{2})(?:分)?/);
   if (timeMatch) {
     time = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2].padStart(2, '0')}`;
+  } else {
+    let tm = text.match(/(\d{1,2})[:点时](\d{1,2})分/);
+    if (tm) {
+      time = `${tm[1].padStart(2, '0')}:${tm[2].padStart(2, '0')}`;
+    } else if ((tm = text.match(/(\d{1,2})点半/))) {
+      time = `${tm[1].padStart(2, '0')}:30`;
+    } else if ((tm = text.match(/(\d{1,2})[点时](?![:\d])/))) {
+      time = `${tm[1].padStart(2, '0')}:00`;
+    }
   }
-
-  const todayPatterns = [/今天/, /今日/, /今天上午/, /今天下午/, /今天晚上/, /今晚/, /今早/, /今晨/];
-  const yesterdayPatterns = [/昨天/, /昨日/, /昨天上午/, /昨天下午/, /昨天晚上/, /昨晚/, /昨天早上/];
-  const tomorrowPatterns = [/明天/, /明日/, /明天上午/, /明天下午/, /明天晚上/, /明晚/];
 
   const now = new Date();
-  if (todayPatterns.some(p => p.test(text))) {
-    date = toDateKey(now);
-  } else if (yesterdayPatterns.some(p => p.test(text))) {
-    date = toDateKey(addDays(now, -1));
-  } else if (tomorrowPatterns.some(p => p.test(text))) {
-    date = toDateKey(addDays(now, 1));
+  if (!date) {
+    let offsetDays: number | null = null;
+    if (/大前天/.test(text)) {
+      offsetDays = -3;
+    } else if (/前天/.test(text)) {
+      offsetDays = -2;
+    } else if (/昨天|昨日|昨晚|昨夜/.test(text)) {
+      offsetDays = -1;
+    } else if (/今天|今日|今晚|今早|今晨|今夜/.test(text)) {
+      offsetDays = 0;
+    } else if (/明天|明日|明晚/.test(text)) {
+      offsetDays = 1;
+    } else {
+      // N天前 / N日前（阿拉伯或简单中文数字："3天前""十天前"）
+      const daysAgoMatch = text.match(/([0-9一二两三四五六七八九十]+)\s*(?:天|日)前/);
+      if (daysAgoMatch) {
+        const n = /^\d+$/.test(daysAgoMatch[1])
+          ? parseInt(daysAgoMatch[1], 10)
+          : chineseToNumber(daysAgoMatch[1]);
+        if (n && n > 0 && n < 366) offsetDays = -n;
+      }
+    }
+
+    if (offsetDays !== null) {
+      date = toDateKey(addDays(now, offsetDays));
+    } else {
+      // 「上周三」优先于「周三」（后者是前者的子串）：周X 指最近过去的该日
+      const lastWeekMatch = text.match(/上个?(?:周|星期|礼拜)\s*([一二三四五六日天])/);
+      const weekMatch = text.match(/(?:周|星期|礼拜)\s*([一二三四五六日天])/);
+      const weekdayChar = (lastWeekMatch || weekMatch)?.[1];
+      if (weekdayChar && WEEKDAY_CHAR_MAP[weekdayChar] !== undefined) {
+        const diff = (now.getDay() - WEEKDAY_CHAR_MAP[weekdayChar] + 7) % 7;
+        date = toDateKey(addDays(now, lastWeekMatch ? -(diff + 7) : -diff));
+      } else if (/上个?月/.test(text)) {
+        // 上个月同日（1/31 → 2/28 由 addMonths 钳制）
+        date = toDateKey(addMonths(now, -1));
+      }
+    }
   }
 
-  const morningPatterns = [/早上/, /早晨/, /上午/, /凌晨/, /清晨/];
+  const dawnPatterns = [/凌晨/];
+  const morningPatterns = [/早上/, /早晨/, /上午/, /清晨/];
   const noonPatterns = [/中午/, /午间/, /午休/];
   const afternoonPatterns = [/下午/, /午后/];
   const eveningPatterns = [/晚上/, /傍晚/, /夜里/, /夜间/, /深夜/];
 
-  if (!time) {
-    if (morningPatterns.some(p => p.test(text))) {
+  if (time) {
+    // 结合时段修正小时：下午3点 → 15:00、晚上8点 → 20:00、中午1点 → 13:00、凌晨12点 → 00:00
+    let h = parseInt(time.slice(0, 2), 10);
+    const mm = time.slice(3);
+    if (afternoonPatterns.some(p => p.test(text)) || eveningPatterns.some(p => p.test(text))) {
+      if (h < 12) h += 12;
+    } else if (dawnPatterns.some(p => p.test(text)) && h === 12) {
+      h = 0;
+    } else if (noonPatterns.some(p => p.test(text)) && h >= 1 && h <= 2) {
+      h += 12;
+    }
+    time = `${h.toString().padStart(2, '0')}:${mm}`;
+  } else {
+    // 未给出具体时间，按时段给默认时间
+    if (dawnPatterns.some(p => p.test(text))) {
+      time = '02:00';
+    } else if (morningPatterns.some(p => p.test(text))) {
       time = '08:00';
     } else if (noonPatterns.some(p => p.test(text))) {
       time = '12:00';
@@ -579,6 +667,14 @@ const extractAmount = (text: string): { amount: string; matchText: string } => {
     if (jiao) return { amount: composeAmount(0, jiao), matchText: m[0] };
   }
 
+  // 4c. 口语小数：X点Y + 货币单位（"2点5块"→2.5、"12点50元"→12.5；
+  //     带货币单位时不被视为时间，stripDateTimeText 亦按此保留）
+  m = text.match(/(\d+)[点](\d{1,2})\s*(?:块钱|元钱|块|元|圆)/);
+  if (m) {
+    const num = parseFloat(`${m[1]}.${m[2]}`);
+    if (!isNaN(num) && num > 0) return { amount: num.toString(), matchText: m[0] };
+  }
+
   // 5. 阿拉伯数字 + 简单货币单位（长单位排前面，"块钱"优先于"块"）
   const currencyUnits = ['元人民币', '元整', '块钱', '元钱', '元', '块', '圆'];
   for (const unit of currencyUnits) {
@@ -665,16 +761,18 @@ export const parseSmartInput = (input: string, userAccounts: Account[] = [], use
   const accountKeyword = extractAccountKeyword(trimmedInput, userAccounts);
   result.accountKeyword = accountKeyword;
 
-  // 从文本中移除账户关键词后再提取金额
-  const textForAmount = accountKeyword
-    ? trimmedInput.replace(new RegExp(accountKeyword, 'g'), '')
-    : trimmedInput;
-  const { amount, matchText: amountMatchText } = extractAmount(textForAmount);
-  result.amount = amount;
-
+  // ★ 先解析日期时间，再把时间片段从金额提取文本中剔除
+  //（"8点半买早餐"的 8、"下午3点开会"的 3 不能被当成金额）
   const { date, time } = extractDateTime(trimmedInput);
   result.date = date;
   result.time = time;
+
+  const textBeforeAmount = accountKeyword
+    ? trimmedInput.replace(new RegExp(accountKeyword, 'g'), '')
+    : trimmedInput;
+  const textForAmount = stripDateTimeText(textBeforeAmount);
+  const { amount, matchText: amountMatchText } = extractAmount(textForAmount);
+  result.amount = amount;
 
   const merchant = extractMerchant(trimmedInput);
   result.merchant = merchant;
@@ -759,15 +857,10 @@ export const parseSmartInput = (input: string, userAccounts: Account[] = [], use
     }
   }
 
-  let note = trimmedInput;
+  // 备注清洗：剔除日期/时间口语片段与时段词、金额片段、账户/币种关键词
+  let note = stripDateTimeText(trimmedInput);
   if (amountMatchText) {
     note = note.replace(amountMatchText, '');
-  }
-  if (date) {
-    note = note.replace(/\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日号]?/, '');
-  }
-  if (time) {
-    note = note.replace(/\d{1,2}[:点时]\d{2}(?:分)?/, '');
   }
   // 从备注中去除账户关键词
   if (accountKeyword) {
@@ -777,7 +870,6 @@ export const parseSmartInput = (input: string, userAccounts: Account[] = [], use
   if (currencyKeyword) {
     note = note.replace(new RegExp(currencyKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '');
   }
-  note = note.replace(/今天|昨天|明天|今日|昨日|明日|早上|上午|中午|下午|晚上|今早|昨晚|明晚|凌晨|清晨|傍晚|深夜|夜里|夜间|午间|午休|午后|晚上/g, '');
   note = note.replace(/[\s]+/g, ' ').trim();
   note = note.replace(/^[，。、；：！？,.!?;:\s]+|[，。、；：！？,.!?;:\s]+$/g, '');
   

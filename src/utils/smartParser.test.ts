@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Account, TransactionType } from '../types';
 import { parseSmartInput, findCategoryByIdentifier } from './smartParser';
+import { toDateKey, addMonths } from './date';
 
 /**
  * 智能输入解析测试：口语金额（块/毛/分）与分类识别。
@@ -273,5 +274,121 @@ describe('parseSmartInput 自定义分类名直命中（最高优先级）', () 
     expect(r.type).toBe('income');
     const id = findCategoryByIdentifier(cats, r.type, r.categoryKeyword);
     expect(['i-其他收入', 'i-红包']).toContain(id);
+  });
+});
+
+describe('parseSmartInput 口语日期时间', () => {
+  /** 期望日期键：今天偏移 offsetDays 天（本地时区安全） */
+  const expectDateKey = (offsetDays: number): string => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return toDateKey(d);
+  };
+  /** 期望日期键：最近过去的周 target（0=周日），weeksBack=1 再往前推一周 */
+  const expectRecentWeekday = (target: number, weeksBack = 0): string => {
+    const now = new Date();
+    const diff = (now.getDay() - target + 7) % 7;
+    const d = new Date();
+    d.setDate(d.getDate() - (diff + weeksBack * 7));
+    return toDateKey(d);
+  };
+
+  it('"昨天打车32" → 昨天日期 + 金额 32（回归）', () => {
+    const r = parseSmartInput('昨天打车32', accounts, makeCategories());
+    expect(r.date).toBe(expectDateKey(-1));
+    expect(r.amount).toBe('32');
+    expect(r.note).not.toContain('昨天');
+  });
+
+  it('"前天打车32" → 前天日期，备注不残留', () => {
+    const r = parseSmartInput('前天打车32', accounts, makeCategories());
+    expect(r.date).toBe(expectDateKey(-2));
+    expect(r.amount).toBe('32');
+    expect(r.note).not.toContain('前天');
+  });
+
+  it('"大前天吃饭25" → 大前天日期', () => {
+    const r = parseSmartInput('大前天吃饭25', accounts, makeCategories());
+    expect(r.date).toBe(expectDateKey(-3));
+    expect(r.amount).toBe('25');
+  });
+
+  it('"3天前购物100" → 3天前日期', () => {
+    const r = parseSmartInput('3天前购物100', accounts, makeCategories());
+    expect(r.date).toBe(expectDateKey(-3));
+    expect(r.amount).toBe('100');
+    expect(r.note).not.toContain('3天前');
+  });
+
+  it('"十天前打车45"（中文数字）→ 10天前日期', () => {
+    const r = parseSmartInput('十天前打车45', accounts, makeCategories());
+    expect(r.date).toBe(expectDateKey(-10));
+    expect(r.amount).toBe('45');
+  });
+
+  it('"上周三打车" → 上周三日期', () => {
+    const r = parseSmartInput('上周三打车', accounts, makeCategories());
+    expect(r.date).toBe(expectRecentWeekday(3, 1));
+    expect(r.note).not.toContain('周三');
+  });
+
+  it('"周日买菜50" → 最近过去的周日', () => {
+    const r = parseSmartInput('周日买菜50', accounts, makeCategories());
+    expect(r.date).toBe(expectRecentWeekday(0));
+    expect(r.amount).toBe('50');
+  });
+
+  it('"上个月买衣服200" → 上个月同日（月末钳制）', () => {
+    const r = parseSmartInput('上个月买衣服200', accounts, makeCategories());
+    expect(r.date).toBe(toDateKey(addMonths(new Date(), -1)));
+    expect(r.amount).toBe('200');
+    expect(r.note).not.toContain('上个月');
+  });
+
+  it('"下午3点开会" → 15:00', () => {
+    const r = parseSmartInput('下午3点开会', accounts, makeCategories());
+    expect(r.time).toBe('15:00');
+  });
+
+  it('"晚上8点半买夜宵" → 20:30', () => {
+    const r = parseSmartInput('晚上8点半买夜宵', accounts, makeCategories());
+    expect(r.time).toBe('20:30');
+  });
+
+  it('"昨天晚上8点30打车45" → 20:30 + 金额 45', () => {
+    const r = parseSmartInput('昨天晚上8点30打车45', accounts, makeCategories());
+    expect(r.time).toBe('20:30');
+    expect(r.amount).toBe('45');
+  });
+
+  it('"8点半买早餐" → 08:30 且 8 不再被当成金额', () => {
+    const r = parseSmartInput('8点半买早餐', accounts, makeCategories());
+    expect(r.time).toBe('08:30');
+    expect(r.amount).toBe('');
+    expect(r.note).not.toContain('点半');
+  });
+
+  it('"上午9点买咖啡25" → 09:00 + 金额 25', () => {
+    const r = parseSmartInput('上午9点买咖啡25', accounts, makeCategories());
+    expect(r.time).toBe('09:00');
+    expect(r.amount).toBe('25');
+  });
+
+  it('"中午12点吃饭30" → 12:00（不误加12小时）', () => {
+    const r = parseSmartInput('中午12点吃饭30', accounts, makeCategories());
+    expect(r.time).toBe('12:00');
+    expect(r.amount).toBe('30');
+  });
+
+  it('"2点5块买奶茶" → 口语小数 2.5，不当作时间', () => {
+    const r = parseSmartInput('2点5块买奶茶', accounts, makeCategories());
+    expect(r.amount).toBe('2.5');
+    expect(r.time).toBe('');
+  });
+
+  it('"8点5分买早餐6块" → 08:05 + 金额 6', () => {
+    const r = parseSmartInput('8点5分买早餐6块', accounts, makeCategories());
+    expect(r.time).toBe('08:05');
+    expect(r.amount).toBe('6');
   });
 });

@@ -340,7 +340,7 @@ export const getFrequentAmounts = (
 };
 
 /**
- * 备注/商家补全候选：历史备注按前缀（大小写不敏感）匹配，
+ * 备注/商家补全候选：历史备注按前缀（大小写不敏感）优先、包含匹配补后，
  * 按出现次数、最近使用排序。纯数字备注不参与。
  */
 export const getNoteSuggestions = (
@@ -351,21 +351,29 @@ export const getNoteSuggestions = (
   const q = prefix.trim().toLowerCase();
   if (!q) return [];
 
-  const stats = new Map<string, { display: string; count: number; lastTs: number }>();
+  const stats = new Map<string, { display: string; count: number; lastTs: number; isPrefix: boolean }>();
   for (const tx of recentTransactions(transactions)) {
     const note = tx.note?.trim();
     if (!note || note.length < 2 || /^\d+(\.\d+)?$/.test(note)) continue;
     const key = note.toLowerCase();
-    if (!key.startsWith(q)) continue;
+    if (!key.includes(q)) continue;
     const ts = new Date(tx.createdAt).getTime();
-    const prev = stats.get(key) ?? { display: note, count: 0, lastTs: 0 };
-    prev.count += 1;
-    prev.lastTs = Math.max(prev.lastTs, ts);
-    stats.set(key, prev);
+    const prev = stats.get(key);
+    if (prev) {
+      prev.count += 1;
+      prev.lastTs = Math.max(prev.lastTs, ts);
+    } else {
+      stats.set(key, { display: note, count: 1, lastTs: ts, isPrefix: key.startsWith(q) });
+    }
   }
 
   return [...stats.values()]
-    .sort((a, b) => b.count - a.count || b.lastTs - a.lastTs || a.display.localeCompare(b.display))
+    .sort((a, b) =>
+      Number(b.isPrefix) - Number(a.isPrefix) ||
+      b.count - a.count ||
+      b.lastTs - a.lastTs ||
+      a.display.localeCompare(b.display),
+    )
     .slice(0, limit)
     .map((s) => s.display);
 };

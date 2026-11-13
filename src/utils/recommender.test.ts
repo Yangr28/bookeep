@@ -282,6 +282,16 @@ describe('recommender - getNoteSuggestions', () => {
     expect(getNoteSuggestions(txs, '')).toEqual([]);
     expect(getNoteSuggestions(txs, '35')).toEqual([]);
   });
+
+  it('前缀候选优先于包含候选', () => {
+    const txs = [
+      makeTx({ note: '地铁通勤' }),
+      makeTx({ note: '打地铁上班' }),
+    ];
+    const r = getNoteSuggestions(txs, '地铁', 5);
+    expect(r[0]).toBe('地铁通勤');
+    expect(r).toContain('打地铁上班');
+  });
 });
 
 describe('smartParser.parseSmartInputWithHistory - 历史分类写回', () => {

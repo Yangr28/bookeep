@@ -6,7 +6,7 @@ import { TransactionType, Transaction } from '../types';
 import { formatCurrency, formatDateTime } from '../utils/format';
 import { isSameLocalDate } from '../utils/date';
 import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { getFrequentCategories, getFrequentAmounts, predictCategory, recommendAccount } from '../utils/recommender';
+import { getFrequentCategories, getFrequentAmounts, predictCategory, recommendAccount, getNoteSuggestions } from '../utils/recommender';
 import { calcAmount } from '../utils/calcAmount';
 import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ChevronDown, ArrowLeft, Circle, CheckCircle2, Copy } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
@@ -124,6 +124,15 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
   // 金额算式实时求值（12+8 → 20），纯数字/非法时为 null
   const calcResult = useMemo(() => calcAmount(amount), [amount]);
 
+  // 备注联想：历史备注按前缀优先、包含补充，频次排序，点击填入（与当前输入相同的不展示）
+  const noteSuggestions = useMemo(() => {
+    const q = note.trim();
+    if (!q) return [];
+    return getNoteSuggestions(transactions, q, 4).filter(
+      (s) => s.trim().toLowerCase() !== q.toLowerCase(),
+    );
+  }, [transactions, note]);
+
   // 常用金额（重复金额优先、最近补位），最多 4 个；当前已输入的金额不重复展示
   const frequentAmounts = useMemo(
     () => getFrequentAmounts(transactions, type, 4).filter((a) => a.toString() !== amount),
@@ -217,10 +226,24 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
       onNoteChange(result.note);
     }
 
+    // 智能输入中识别的日期/时间（"昨天打车32""下午3点开会"）直接写入日期时间
+    if (result.date || result.time) {
+      const d = new Date();
+      if (result.date) {
+        const [y, m, dd] = result.date.split('-').map(Number);
+        d.setFullYear(y, m - 1, dd);
+      }
+      if (result.time) {
+        const [h, min] = result.time.split(':').map(Number);
+        d.setHours(h, min, 0, 0);
+      }
+      onQuickDate(d);
+    }
+
     setShowSmartResult(true);
     setTimeout(() => setShowSmartResult(false), 2000);
     setSmartInput('');
-  }, [smartInput, accounts, categories, onTypeChange, onAmountChange, onCategoryChange, onAccountChange, onNoteChange]);
+  }, [smartInput, accounts, categories, onTypeChange, onAmountChange, onCategoryChange, onAccountChange, onNoteChange, onQuickDate]);
 
   const AccountIcon = selectedAccount ? getIcon(selectedAccount.icon) : Wallet;
 
@@ -509,6 +532,27 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
               style={{ color: 'var(--ink)' }}
             />
           </div>
+
+          {/* 备注联想（历史备注 chips，输入时出现，点击填入） */}
+          {noteSuggestions.length > 0 && (
+            <div className="flex items-center gap-2 px-3.5 py-2 flex-wrap" style={{ borderTop: '1px solid var(--line)' }}>
+              {noteSuggestions.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => onNoteChange(s)}
+                  className="flex-shrink-0 max-w-[10rem] truncate px-2.5 py-1 rounded-full text-xs font-medium active:scale-95 transition-transform"
+                  style={{
+                    background: 'var(--paper)',
+                    color: 'var(--ink-2)',
+                    border: '1px solid var(--line)',
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
