@@ -39,6 +39,7 @@
   "refundCount": "共 {{count}} 笔退款",
   "linkPickerExpenseTitle": "选择原支出",
   "linkPickerIncomeTitle": "选择退款收入",
+  "linkSearchPlaceholder": "搜索备注 / 分类 / 金额",
   "linkNoCandidate": "暂无可关联的记录",
   "refundBadge": "退款",
   "searchPlaceholder": "搜索备注、分类、账户或金额",

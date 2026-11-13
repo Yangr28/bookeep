@@ -11,7 +11,7 @@ export interface TransactionsSlice {
   moveTransactionsToCategory: (ids: string[], categoryId: string) => void;
   /** 批量把多条记录移动到指定账户（同步调整原账户与新账户余额） */
   moveTransactionsToAccount: (ids: string[], accountId: string) => void;
-  /** 退款关联：把退款收入（income）关联到原支出（expense），已关联会覆盖 */
+  /** 退款关联：把退款收入（income）关联到原支出（expense），并归入原支出的分类；已关联会覆盖 */
   linkTransactions: (refundId: string, expenseId: string) => void;
   /** 解除某条退款记录的关联 */
   unlinkTransaction: (id: string) => void;
@@ -162,8 +162,17 @@ export const createTransactionsSlice: StateCreator<
       if (!refund || !expense || refund.type !== 'income' || expense.type !== 'expense') {
         return {};
       }
+      // 关联的同时把退款收入归入原支出的分类：
+      // 分类明细按 categoryId 过滤且不区分收支，退款会直接出现在原支出分类下（带「退款」角标），
+      // 而分类统计（饼图/预算）均先按 type 过滤，收入类型不会污染支出统计
       const updatedTransactions = state.transactions.map((t) =>
-        t.id === refundId ? { ...t, linkedTransactionId: expenseId } : t,
+        t.id === refundId
+          ? {
+              ...t,
+              linkedTransactionId: expenseId,
+              ...(expense.categoryId ? { categoryId: expense.categoryId } : {}),
+            }
+          : t,
       );
       saveTransactions(updatedTransactions);
       return { transactions: updatedTransactions };

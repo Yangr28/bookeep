@@ -24,6 +24,8 @@ export const RecordActionSheet = ({ transaction, onClose, onEdit, onDuplicate, o
   const unlinkTransaction = useStore((state) => state.unlinkTransaction);
   // 关联候选弹层（退款收入找原支出 / 原支出找退款收入）
   const [showLinkPicker, setShowLinkPicker] = useState(false);
+  // 关联候选搜索词（匹配备注 / 分类名 / 金额）
+  const [linkQuery, setLinkQuery] = useState('');
 
   if (!transaction) return null;
 
@@ -40,15 +42,28 @@ export const RecordActionSheet = ({ transaction, onClose, onEdit, onDuplicate, o
     : [];
   const linkedRefundTotal = linkedRefunds.reduce((sum, x) => sum + x.amount, 0);
 
-  // 候选：对方类型记录，金额越接近越靠前，同金额再按时间倒序
-  const candidates = transactions
-    .filter((x) => x.id !== transaction.id && x.type === (isIncome ? 'expense' : 'income'))
-    .sort((a, b) => {
-      const diff = Math.abs(a.amount - transaction.amount) - Math.abs(b.amount - transaction.amount);
-      if (diff !== 0) return diff;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    })
-    .slice(0, 20);
+  // 候选：对方类型记录。无搜索词按时间倒序（最近优先，取 50 条）；
+  // 有搜索词则全量匹配备注/分类/金额后再取 50 条，保证老记录也能找到
+  const oppositeType = isIncome ? 'expense' : 'income';
+  const linkQueryTrim = linkQuery.trim().toLowerCase();
+  const candidates = (linkQueryTrim
+    ? transactions.filter((x) => {
+        if (x.id === transaction.id || x.type !== oppositeType) return false;
+        const cat = categories.find((c) => c.id === x.categoryId);
+        const haystack = [x.note ?? '', cat?.name ?? '', x.amount.toString(), x.amount.toFixed(2)]
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(linkQueryTrim);
+      })
+    : transactions.filter((x) => x.id !== transaction.id && x.type === oppositeType)
+  )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 50);
+
+  const openLinkPicker = () => {
+    setLinkQuery('');
+    setShowLinkPicker(true);
+  };
 
   const handlePick = (target: Transaction) => {
     if (isIncome) linkTransactions(transaction.id, target.id);
@@ -133,7 +148,7 @@ export const RecordActionSheet = ({ transaction, onClose, onEdit, onDuplicate, o
               </div>
             ) : (
               <button
-                onClick={() => setShowLinkPicker(true)}
+                onClick={openLinkPicker}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-button text-sm font-medium text-left active:scale-[0.99] transition-transform"
                 style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
               >
@@ -163,7 +178,7 @@ export const RecordActionSheet = ({ transaction, onClose, onEdit, onDuplicate, o
             </div>
           ) : (
             <button
-              onClick={() => setShowLinkPicker(true)}
+              onClick={openLinkPicker}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-button text-sm font-medium text-left active:scale-[0.99] transition-transform"
               style={{ background: 'var(--paper-deep)', color: 'var(--ink)' }}
             >
@@ -221,10 +236,18 @@ export const RecordActionSheet = ({ transaction, onClose, onEdit, onDuplicate, o
                 <X size={18} />
               </button>
             </div>
+            <input
+              value={linkQuery}
+              onChange={(e) => setLinkQuery(e.target.value)}
+              placeholder={t('allRecords.linkSearchPlaceholder')}
+              autoFocus
+              className="w-full mb-3 px-3 py-2.5 rounded-button text-sm bg-transparent outline-none"
+              style={{ background: 'var(--paper)', color: 'var(--ink)' }}
+            />
             <div className="space-y-2 max-h-[55vh] overflow-y-auto">
               {candidates.length === 0 ? (
                 <p className="text-sm py-6 text-center" style={{ color: 'var(--ink-2)' }}>
-                  {t('allRecords.linkNoCandidate')}
+                  {linkQueryTrim ? t('allRecords.noSearchResult') : t('allRecords.linkNoCandidate')}
                 </p>
               ) : (
                 candidates.map((item) => {

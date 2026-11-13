@@ -39,6 +39,7 @@
   "refundCount": "{{count}} refund(s)",
   "linkPickerExpenseTitle": "Select original expense",
   "linkPickerIncomeTitle": "Select refund income",
+  "linkSearchPlaceholder": "Search note / category / amount",
   "linkNoCandidate": "No records to link",
   "refundBadge": "Refund",
   "searchPlaceholder": "Search notes, categories, accounts or amounts",
