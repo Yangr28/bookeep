@@ -42,6 +42,7 @@
   "linkSearchPlaceholder": "Search note / category / amount",
   "linkNoCandidate": "No records to link",
   "refundBadge": "Refund",
+  "refundAmountShort": "refunded {{amount}}",
   "searchPlaceholder": "Search notes, categories, accounts or amounts",
   "clearSearch": "Clear search",
   "noSearchResult": "No matching records",

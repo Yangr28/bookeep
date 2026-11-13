@@ -162,17 +162,9 @@ export const createTransactionsSlice: StateCreator<
       if (!refund || !expense || refund.type !== 'income' || expense.type !== 'expense') {
         return {};
       }
-      // 关联的同时把退款收入归入原支出的分类：
-      // 分类明细按 categoryId 过滤且不区分收支，退款会直接出现在原支出分类下（带「退款」角标），
-      // 而分类统计（饼图/预算）均先按 type 过滤，收入类型不会污染支出统计
+      // 只关联 id，不改变退款收入的分类；退款信息通过反向查找在原支出卡片上显示
       const updatedTransactions = state.transactions.map((t) =>
-        t.id === refundId
-          ? {
-              ...t,
-              linkedTransactionId: expenseId,
-              ...(expense.categoryId ? { categoryId: expense.categoryId } : {}),
-            }
-          : t,
+        t.id === refundId ? { ...t, linkedTransactionId: expenseId } : t,
       );
       saveTransactions(updatedTransactions);
       return { transactions: updatedTransactions };

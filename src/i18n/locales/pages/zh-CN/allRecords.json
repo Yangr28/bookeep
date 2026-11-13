@@ -42,6 +42,7 @@
   "linkSearchPlaceholder": "搜索备注 / 分类 / 金额",
   "linkNoCandidate": "暂无可关联的记录",
   "refundBadge": "退款",
+  "refundAmountShort": "已退 {{amount}}",
   "searchPlaceholder": "搜索备注、分类、账户或金额",
   "clearSearch": "清除搜索",
   "noSearchResult": "没有匹配的记录",

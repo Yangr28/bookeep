@@ -71,9 +71,17 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, onPress, disa
   };
 
   const category = useStore((state) => state.getCategoryById(transaction.categoryId));
+  const allTransactions = useStore((state) => state.transactions);
   const IconComponent = getIcon(category?.icon || 'Circle');
   const isIncome = transaction.type === 'income';
   const amountColor = isIncome ? 'var(--primary)' : 'var(--expense)';
+
+  // 原支出卡片：反查有多少退款收入关联到它
+  const linkedRefunds = isIncome
+    ? []
+    : allTransactions.filter((x) => x.linkedTransactionId === transaction.id);
+  const refundTotal = linkedRefunds.reduce((sum, x) => sum + x.amount, 0);
+  const hasRefund = refundTotal > 0;
 
   return (
     <div className="relative overflow-hidden rounded-card mb-1.5">
@@ -138,8 +146,14 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, onPress, disa
             <div className="flex items-center justify-between">
               <p className="font-medium truncate" style={{ color: 'var(--ink)' }}>{category?.name || t('common.unclassified')}</p>
               <span className="font-semibold amount-num flex-shrink-0 ml-2 truncate" style={{ color: amountColor }}>
-                {isIncome ? '+' : '-'}{formatCurrencyShort(transaction.amount)}
-                {transaction.currency && transaction.currency !== 'CNY' && transaction.originalAmount !== undefined && (
+                {isIncome ? '+' : '-'}
+                {formatCurrencyShort(hasRefund ? Math.max(0, transaction.amount - refundTotal) : transaction.amount)}
+                {hasRefund && (
+                  <span className="text-xs font-normal ml-1.5" style={{ color: 'var(--primary)' }}>
+                    ({t('allRecords.refundAmountShort', { amount: formatCurrencyShort(refundTotal) })})
+                  </span>
+                )}
+                {transaction.currency && transaction.currency !== 'CNY' && transaction.originalAmount !== undefined && !hasRefund && (
                   <span className="text-xs font-normal ml-1" style={{ color: 'var(--ink-2)' }}>({getCurrencySymbol(transaction.currency)}{transaction.originalAmount})</span>
                 )}
               </span>
