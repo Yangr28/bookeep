@@ -25,7 +25,7 @@ const MIN_NOTE_HITS = 2;
 const NOTE_MARGIN_RATIO = 1.3;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export type PredictionSource = 'merchant' | 'note' | 'time' | 'frequency' | 'none';
+export type PredictionSource = 'memory' | 'merchant' | 'note' | 'time' | 'frequency' | 'none';
 
 export interface CategoryPrediction {
   categoryId: string | null;
@@ -65,6 +65,37 @@ const recentTransactions = (transactions: Transaction[], limit = HISTORY_SCAN_LI
 
 const isValid = (categoryId: string, validCategoryIds?: Set<string>): boolean =>
   !validCategoryIds || validCategoryIds.has(categoryId);
+
+/** 备注记忆键：小写 + 去空白/标点，用于"同一备注"的精确匹配 */
+const normalizeNoteKey = (text: string): string =>
+  text.toLowerCase().replace(/[\s，。、；：！？,.!?;:"'“”‘’]+/g, '');
+
+/** 备注记忆最短长度（过短（如"饭"）记忆噪声大，交由备注词统计处理） */
+const MIN_MEMORY_NOTE_LEN = 2;
+
+/**
+ * 备注记忆：用户在记账页为某条备注手动选过分类后，下次输入相同备注即沿用最近一次分类。
+ * 只认"最近一条"（用户后续纠正会覆盖旧记忆），一条历史即可生效——这是"学习"的核心。
+ */
+const predictCategoryByNoteMemory = (
+  transactions: Transaction[],
+  type: TransactionType,
+  validCategoryIds: Set<string> | undefined,
+  note: string,
+): CategoryPrediction => {
+  const noteKey = normalizeNoteKey(note);
+  if (noteKey.length < MIN_MEMORY_NOTE_LEN) {
+    return { categoryId: null, confidence: 0, source: 'none' };
+  }
+  // recentTransactions 已按 createdAt 降序，首个命中即最近一次记账
+  for (const tx of recentTransactions(transactions)) {
+    if (tx.type !== type || !isValid(tx.categoryId, validCategoryIds)) continue;
+    if (normalizeNoteKey(tx.note ?? '') === noteKey) {
+      return { categoryId: tx.categoryId, confidence: 0.9, source: 'memory' };
+    }
+  }
+  return { categoryId: null, confidence: 0, source: 'none' };
+};
 
 /** 取 Map 中得分最高的键；并列时按 lastTs、键名字典序确定性打破平局 */
 const pickTop = (
@@ -143,6 +174,10 @@ export const predictCategoryFromHistory = (
   if (!merchantKey && words.length === 0) {
     return { categoryId: null, confidence: 0, source: 'none' };
   }
+
+  // ① 同一备注的记忆（用户上次为这条备注选的分类）优先于一切统计信号
+  const memory = predictCategoryByNoteMemory(transactions, type, validCategoryIds, note);
+  if (memory.categoryId) return memory;
 
   const merchantStats = new Map<string, { score: number; count: number; lastTs: number }>();
   const noteStats = new Map<string, { score: number; count: number; lastTs: number }>();
@@ -337,6 +372,36 @@ export const getFrequentAmounts = (
     if (!picked.has(amount)) result.push(amount);
   }
   return result.slice(0, limit);
+};
+
+/**
+ * 历史使用过的标签：按使用次数、最近使用排序（供记录页快捷添加与账单页筛选）。
+ * 返回 { tag, count } 列表，调用方按需截断。
+ */
+export const getFrequentTags = (
+  transactions: Transaction[],
+  limit = 12,
+): { tag: string; count: number }[] => {
+  const stats = new Map<string, { tag: string; count: number; lastTs: number }>();
+  for (const tx of transactions) {
+    if (!tx.tags?.length) continue;
+    const ts = new Date(tx.createdAt).getTime();
+    for (const raw of tx.tags) {
+      const tag = raw.trim();
+      if (!tag) continue;
+      const prev = stats.get(tag);
+      if (prev) {
+        prev.count += 1;
+        prev.lastTs = Math.max(prev.lastTs, ts);
+      } else {
+        stats.set(tag, { tag, count: 1, lastTs: ts });
+      }
+    }
+  }
+  return [...stats.values()]
+    .sort((a, b) => b.count - a.count || b.lastTs - a.lastTs || a.tag.localeCompare(b.tag))
+    .slice(0, limit)
+    .map(({ tag, count }) => ({ tag, count }));
 };
 
 /**

@@ -15,6 +15,8 @@ interface ModalState {
   recordAccountId: string | null;
   recordAmount: string;
   recordNote: string;
+  /** 交易标签（最多 3 个） */
+  recordTags: string[];
   recordCategoryId: string | null;
   recordType: 'expense' | 'income';
   /** 记账币种（记账金额按汇率折算成人民币存储） */
@@ -38,6 +40,7 @@ export const useModal = () => {
     recordAccountId: null,
     recordAmount: '',
     recordNote: '',
+    recordTags: [],
     recordCategoryId: null,
     recordType: 'expense',
     recordCurrency: 'CNY',
@@ -135,6 +138,10 @@ export const useModal = () => {
     setState(prev => ({ ...prev, recordNote: value }));
   }, []);
 
+  const setRecordTags = useCallback((value: string[]) => {
+    setState(prev => ({ ...prev, recordTags: value }));
+  }, []);
+
   const setRecordCategoryId = useCallback((value: string | null) => {
     setState(prev => ({ ...prev, recordCategoryId: value }));
   }, []);
@@ -182,6 +189,7 @@ export const useModal = () => {
     setRecordAccountId,
     setRecordAmount,
     setRecordNote,
+    setRecordTags,
     setRecordCategoryId,
     setRecordType,
     setRecordCurrency,

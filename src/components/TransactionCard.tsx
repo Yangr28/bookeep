@@ -146,6 +146,25 @@ const TransactionCardComponent = ({ transaction, onDelete, onEdit, onPress, disa
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               {transaction.note && <p className="text-xs truncate flex-1 min-w-0" style={{ color: 'var(--ink-2)' }}>{transaction.note}</p>}
+              {/* 已关联原支出的退款收入，标一个「退款」角标 */}
+              {!!transaction.linkedTransactionId && (
+                <span
+                  className="text-xs flex-shrink-0 px-1.5 py-0.5 rounded-full"
+                  style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}
+                >
+                  {t('allRecords.refundBadge')}
+                </span>
+              )}
+              {/* 标签：跨分类的灵活归类，随备注行展示 */}
+              {!!transaction.tags?.length && (
+                <span
+                  className="text-xs flex-shrink-0 max-w-[7rem] truncate"
+                  style={{ color: 'var(--primary)' }}
+                  title={transaction.tags.map((tag) => `#${tag}`).join(' ')}
+                >
+                  {transaction.tags.map((tag) => `#${tag}`).join(' ')}
+                </span>
+              )}
               <span className="text-xs amount-num flex-shrink-0 whitespace-nowrap" style={{ color: 'var(--ink-2)' }}>{formatDateTime(transaction.createdAt)}</span>
             </div>
           </div>

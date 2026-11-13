@@ -7,6 +7,7 @@ import {
   predictCategoryFromHistory,
   recommendAccount,
   getFrequentAmounts,
+  getFrequentTags,
   getNoteSuggestions,
   recencyWeight,
 } from './recommender';
@@ -317,5 +318,87 @@ describe('smartParser.parseSmartInputWithHistory - 历史分类写回', () => {
     const r = parseSmartInputWithHistory('滴滴 20', txs, [], categories);
     expect(r.categoryKeyword).toBe('滴滴');
     expect(r.confidence).toBeGreaterThanOrEqual(0.7);
+  });
+});
+
+describe('recommender - 标签统计', () => {
+  it('按使用次数排序，次数相同按最近使用', () => {
+    const txs = [
+      makeTx({ tags: ['出差', '报销'], createdAt: daysAgo(10) }),
+      makeTx({ tags: ['出差'], createdAt: daysAgo(2) }),
+      makeTx({ tags: ['家庭'], createdAt: daysAgo(0) }),
+    ];
+    const result = getFrequentTags(txs, 5);
+    expect(result.map((r) => r.tag)).toEqual(['出差', '家庭', '报销']);
+    expect(result[0].count).toBe(2);
+  });
+
+  it('无标签/空白标签不计入，limit 生效', () => {
+    const txs = [
+      makeTx({ tags: [''] }),
+      makeTx({ tags: ['  '] }),
+      makeTx({ tags: ['A', 'B', 'C'] }),
+    ];
+    expect(getFrequentTags(txs, 2).map((r) => r.tag)).toEqual(['A', 'B']);
+    expect(getFrequentTags([makeTx({})], 5)).toEqual([]);
+  });
+});
+
+describe('recommender - 备注记忆自动归类', () => {
+  it('只有一条历史也能记住：相同备注直接返回上次分类', () => {
+    const txs = [makeTx({ categoryId: 'food', note: '楼下便利店关东煮', createdAt: daysAgo(3) })];
+    const r = predictCategory({
+      transactions: txs,
+      type: 'expense',
+      note: '楼下便利店关东煮',
+      now: NOW,
+    });
+    expect(r.categoryId).toBe('food');
+    expect(r.source).toBe('memory');
+  });
+
+  it('忽略大小写/空白/标点差异，视为同一备注', () => {
+    const txs = [makeTx({ categoryId: 'food', note: 'Starbucks 咖啡', createdAt: daysAgo(3) })];
+    const r = predictCategory({
+      transactions: txs,
+      type: 'expense',
+      note: ' starbucks咖啡 ',
+      now: NOW,
+    });
+    expect(r.categoryId).toBe('food');
+    expect(r.source).toBe('memory');
+  });
+
+  it('用户后续纠正会覆盖旧记忆：最近一次分类胜出', () => {
+    const txs = [
+      makeTx({ categoryId: 'food', note: '买花', createdAt: daysAgo(10) }),
+      makeTx({ categoryId: 'transport', note: '买花', createdAt: daysAgo(1) }),
+    ];
+    const r = predictCategory({ transactions: txs, type: 'expense', note: '买花', now: NOW });
+    expect(r.categoryId).toBe('transport');
+    expect(r.source).toBe('memory');
+  });
+
+  it('收支类型不同不串用记忆', () => {
+    const txs = [makeTx({ type: 'income', categoryId: 'salary', note: '外快', createdAt: daysAgo(1) })];
+    const r = predictCategory({ transactions: txs, type: 'expense', note: '外快', now: NOW });
+    expect(r.source).not.toBe('memory');
+  });
+
+  it('过短备注（1 字）不建立记忆', () => {
+    const txs = [makeTx({ categoryId: 'food', note: '饭', createdAt: daysAgo(1) })];
+    const r = predictCategory({ transactions: txs, type: 'expense', note: '饭', now: NOW });
+    expect(r.source).not.toBe('memory');
+  });
+
+  it('智能输入链路生效：无分类关键词时用备注记忆补上分类名', () => {
+    const cats = [
+      ...categories,
+      { id: 'shopping', name: '购物', type: 'expense' as TransactionType },
+    ];
+    const txs = [makeTx({ categoryId: 'shopping', note: '老王', createdAt: daysAgo(1) })];
+    const r = parseSmartInputWithHistory('老王 15', txs, [], cats);
+    expect(r.amount).toBe('15');
+    expect(r.categoryKeyword).toBe('购物');
   });
 });

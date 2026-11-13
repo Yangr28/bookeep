@@ -41,6 +41,7 @@
       "latestVersion": "当前已是最新版本",
       "checkUpdateFailed": "检查更新失败",
       "batchMoved": "已移动 {{count}} 条记录到「{{category}}」",
+      "batchMovedAccount": "已把 {{count}} 条记录改到「{{account}}」",
       "recurringGenerated": "已自动生成 {{count}} 条周期记账",
       "deleted": "已删除",
       "batchDeleted": "已删除 {{count}} 条记录"
@@ -149,6 +150,8 @@
     "today": "今天",
     "time": "时间",
     "notePlaceholder": "添加备注",
+    "tagsLabel": "标签",
+    "tagPlaceholder": "加标签，回车确认",
     "saveEdit": "保存修改",
     "confirm": "确认记账",
     "continueToggle": "保存后继续记一笔",

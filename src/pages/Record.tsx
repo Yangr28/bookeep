@@ -6,9 +6,9 @@ import { TransactionType, Transaction } from '../types';
 import { formatCurrency, formatDateTime } from '../utils/format';
 import { isSameLocalDate } from '../utils/date';
 import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
-import { getFrequentCategories, getFrequentAmounts, predictCategory, recommendAccount, getNoteSuggestions } from '../utils/recommender';
+import { getFrequentCategories, getFrequentAmounts, getFrequentTags, predictCategory, recommendAccount, getNoteSuggestions } from '../utils/recommender';
 import { calcAmount } from '../utils/calcAmount';
-import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ChevronDown, ArrowLeft, Circle, CheckCircle2, Copy } from 'lucide-react';
+import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ChevronDown, ArrowLeft, Circle, CheckCircle2, Copy, X } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
 import { getCurrencySymbol, getRate, convertToCNY } from '../utils/currency';
 import CurrencyPickerModal from '../components/CurrencyPickerModal';
@@ -27,6 +27,9 @@ interface RecordProps {
   onShowAccountPicker: () => void;
   amount: string;
   note: string;
+  /** 交易标签（最多 3 个） */
+  tags: string[];
+  onTagsChange: (tags: string[]) => void;
   onAmountChange: (amount: string) => void;
   onNoteChange: (note: string) => void;
   categoryId: string | null;
@@ -45,16 +48,21 @@ interface RecordProps {
   resetSignal: number;
 }
 
-const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedDateTime, selectedAccountId, onShowDatePicker, onQuickDate, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, currency, onCurrencyChange, onSubmit, continueMode, onContinueModeChange, resetSignal }: RecordProps) => {
+const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedDateTime, selectedAccountId, onShowDatePicker, onQuickDate, onShowTimePicker, onShowAccountPicker, amount, note, tags, onTagsChange, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, currency, onCurrencyChange, onSubmit, continueMode, onContinueModeChange, resetSignal }: RecordProps) => {
   const { t } = useTranslation();
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [smartInput, setSmartInput] = useState('');
   const [showSmartResult, setShowSmartResult] = useState(false);
   // 分类搜索（分类较多时快速过滤）
   const [categoryQuery, setCategoryQuery] = useState('');
+  // 标签输入与聚焦态（聚焦时展示常用标签）
+  const [tagInput, setTagInput] = useState('');
+  const [tagFocused, setTagFocused] = useState(false);
   const smartInputRef = useRef<HTMLInputElement>(null);
   // 记录进入时的金额，用于判断是否为 FAB 空进入（无预填）
   const initialAmountRef = useRef(amount);
+  // 用户是否手动选过分类：手动后不再用备注记忆覆盖
+  const categoryTouchedRef = useRef(false);
 
   useEffect(() => {
     // 滚动位置由 App.tsx 统一管理
@@ -133,6 +141,30 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
     );
   }, [transactions, note]);
 
+  /**
+   * 备注记忆自动归类：输入备注时若历史有完全相同备注的记账（用户上次选的分类），
+   * 且用户还未手动选分类，则自动套用该分类——"记不住的分类，记住一次下次自动填"。
+   */
+  useEffect(() => {
+    if (isEditMode || categoryTouchedRef.current) return;
+    const q = note.trim();
+    if (q.length < 2) return;
+    const timer = setTimeout(() => {
+      const validIds = new Set(categories.filter((c) => c.type === type).map((c) => c.id));
+      const prediction = predictCategory({ transactions, type, validCategoryIds: validIds, note: q });
+      // 只接受强上下文信号（备注记忆/历史商家/备注词），高频兜底不覆盖用户选择
+      if (
+        prediction.categoryId &&
+        (prediction.source === 'memory' ||
+          prediction.source === 'merchant' ||
+          prediction.source === 'note')
+      ) {
+        onCategoryChange(prediction.categoryId);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [note, type, transactions, categories, isEditMode, onCategoryChange]);
+
   // 常用金额（重复金额优先、最近补位），最多 4 个；当前已输入的金额不重复展示
   const frequentAmounts = useMemo(
     () => getFrequentAmounts(transactions, type, 4).filter((a) => a.toString() !== amount),
@@ -169,12 +201,14 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
     const validIds = new Set(categories.filter((c) => c.type === type).map((c) => c.id));
     const prediction = predictCategory({ transactions, type, validCategoryIds: validIds });
     if (prediction.categoryId) onCategoryChange(prediction.categoryId);
+    categoryTouchedRef.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetSignal]);
 
   const handleTypeChange = (next: TransactionType) => {
     onTypeChange(next);
     onCategoryChange(null);
+    categoryTouchedRef.current = false;
     if (isEditMode) return;
     // 切换类型即重置点：为新类型预选高频分类（无历史则留空，由用户手选）
     const validIds = new Set(categories.filter((c) => c.type === next).map((c) => c.id));
@@ -191,6 +225,23 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
   const hasAccountError = !selectedAccountId;
   const canSubmit = !!amount && parseFloat(amount) > 0 && !!categoryId && !!selectedAccountId;
 
+  // 常用标签：按历史使用频次排序，排除已选与输入不符的项
+  const tagSuggestions = useMemo(() => {
+    const q = tagInput.trim().toLowerCase().replace(/^#+/, '');
+    return getFrequentTags(transactions, 12)
+      .map((r) => r.tag)
+      .filter((tag) => !tags.includes(tag) && (!q || tag.toLowerCase().includes(q)))
+      .slice(0, 5);
+  }, [transactions, tags, tagInput]);
+
+  // 添加标签：去空白与 # 前缀，限长 12 字、最多 3 个、不可重复
+  const handleAddTag = (raw: string) => {
+    const tag = raw.trim().replace(/^#+/, '').slice(0, 12);
+    setTagInput('');
+    if (!tag || tags.includes(tag) || tags.length >= 3) return;
+    onTagsChange([...tags, tag]);
+  };
+
   const handleSmartSubmit = useCallback(() => {
     if (!smartInput.trim()) return;
 
@@ -200,6 +251,21 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
 
     if (result.categoryKeyword) {
       autoCategoryId = findCategoryByIdentifier(categories, result.type, result.categoryKeyword);
+    }
+
+    // 文本未命中分类关键词时，按"备注记忆"补全（上次为同一备注选的分类）
+    if (!autoCategoryId && result.note) {
+      const validIds = new Set(categories.filter((c) => c.type === result.type).map((c) => c.id));
+      const memory = predictCategory({
+        transactions,
+        type: result.type,
+        validCategoryIds: validIds,
+        note: result.note,
+        merchant: result.merchant,
+      });
+      if (memory.categoryId && memory.source !== 'time' && memory.source !== 'frequency') {
+        autoCategoryId = memory.categoryId;
+      }
     }
 
     // ★ 账户识别：之前完全缺失，导致记账页智能输入永远识别不到账户
@@ -243,7 +309,7 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
     setShowSmartResult(true);
     setTimeout(() => setShowSmartResult(false), 2000);
     setSmartInput('');
-  }, [smartInput, accounts, categories, onTypeChange, onAmountChange, onCategoryChange, onAccountChange, onNoteChange, onQuickDate]);
+  }, [smartInput, accounts, categories, transactions, onTypeChange, onAmountChange, onCategoryChange, onAccountChange, onNoteChange, onQuickDate]);
 
   const AccountIcon = selectedAccount ? getIcon(selectedAccount.icon) : Wallet;
 
@@ -370,7 +436,11 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
                   isSelected={categoryId === category.id}
                   isFrequent={frequentBadgeIds.has(category.id)}
                   frequentLabel={t('record.frequentBadge')}
-                  onClick={() => onCategoryChange(category.id)}
+                  onClick={() => {
+                    // 手动选分类：记为"用户意图"，不再被备注记忆覆盖
+                    categoryTouchedRef.current = true;
+                    onCategoryChange(category.id);
+                  }}
                 />
               ))}
             </div>
@@ -532,6 +602,74 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
               style={{ color: 'var(--ink)' }}
             />
           </div>
+
+          {/* 交易标签：最多 3 个，回车确认；聚焦时展示常用标签快捷添加 */}
+          <div className="flex items-start gap-2 px-3.5 py-2.5" style={{ borderTop: '1px solid var(--line)' }}>
+            <span className="text-xs flex-shrink-0 mt-2" style={{ color: 'var(--ink-2)' }}>
+              {t('record.tagsLabel')}
+            </span>
+            <div className="flex-1 flex items-center gap-1.5 flex-wrap min-w-0">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
+                  style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => onTagsChange(tags.filter((x) => x !== tag))}
+                    aria-label={t('common.delete')}
+                    className="flex-shrink-0 active:scale-90"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+              {tags.length < 3 && (
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onFocus={() => setTagFocused(true)}
+                  onBlur={() => {
+                    setTagFocused(false);
+                    if (tagInput.trim()) handleAddTag(tagInput);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddTag(tagInput);
+                    } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+                      onTagsChange(tags.slice(0, -1));
+                    }
+                  }}
+                  maxLength={12}
+                  placeholder={t('record.tagPlaceholder')}
+                  className="flex-1 min-w-[5rem] bg-transparent outline-none text-xs"
+                  style={{ color: 'var(--ink)' }}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* 常用标签快捷添加（历史使用频次排序，排除已选） */}
+          {tagFocused && tagSuggestions.length > 0 && tags.length < 3 && (
+            <div className="flex items-center gap-1.5 px-3.5 pb-2.5 flex-wrap">
+              {tagSuggestions.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleAddTag(tag)}
+                  className="px-2.5 py-1 rounded-full text-xs font-medium active:scale-95 transition-transform"
+                  style={{ background: 'var(--paper)', color: 'var(--ink-2)', border: '1px solid var(--line)' }}
+                >
+                  + {tag}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* 备注联想（历史备注 chips，输入时出现，点击填入） */}
           {noteSuggestions.length > 0 && (

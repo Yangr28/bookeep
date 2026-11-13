@@ -40,7 +40,7 @@ export const exportToExcel = async ({
   const accountNames = new Map(accounts.map((a) => [a.id, a.name]));
   const categoryNames = new Map(categories.map((c) => [c.id, c.name]));
 
-  const txHeader = ['日期', '时间', '类型', '分类', '账户', '金额(元)', '币种', '原币金额', '汇率', '备注'];
+  const txHeader = ['日期', '时间', '类型', '分类', '账户', '金额(元)', '币种', '原币金额', '汇率', '备注', '标签'];
   const txRows = [...transactions]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .map((tx) => {
@@ -56,6 +56,7 @@ export const exportToExcel = async ({
         '原币金额': tx.originalAmount ?? tx.amount,
         '汇率': tx.exchangeRate ?? 1,
         '备注': tx.note || '',
+        '标签': (tx.tags ?? []).join('、'),
       };
     });
 
@@ -64,7 +65,7 @@ export const exportToExcel = async ({
   const ws = XLSX.utils.json_to_sheet(txRows, { header: txHeader });
   ws['!cols'] = [
     { wch: 11 }, { wch: 8 }, { wch: 7 }, { wch: 14 }, { wch: 16 },
-    { wch: 14 }, { wch: 8 }, { wch: 12 }, { wch: 10 }, { wch: 30 },
+    { wch: 14 }, { wch: 8 }, { wch: 12 }, { wch: 10 }, { wch: 30 }, { wch: 18 },
   ];
   // 金额列千分位、汇率列四位小数
   if (ws['!ref']) {

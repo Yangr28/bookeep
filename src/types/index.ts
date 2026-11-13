@@ -19,6 +19,10 @@ export interface Transaction {
   currency?: string;        // 原始货币代码（如 'USD', 'JPY'），默认 'CNY'
   originalAmount?: number;  // 原始货币金额
   exchangeRate?: number;    // 记账时汇率（1外币 = ?人民币）
+  /** 交易标签（最多 3 个），用于跨分类的灵活归类与筛选 */
+  tags?: string[];
+  /** 退款关联：退款收入记录指向被退款的原支出记录 id */
+  linkedTransactionId?: string;
 }
 
 export interface RecurringRecord {

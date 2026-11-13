@@ -41,6 +41,7 @@
       "latestVersion": "You're on the latest version",
       "checkUpdateFailed": "Update check failed",
       "batchMoved": "Moved {{count}} records to \"{{category}}\"",
+      "batchMovedAccount": "Changed {{count}} records to \"{{account}}\"",
       "recurringGenerated": "Generated {{count}} recurring transaction(s)",
       "deleted": "Deleted",
       "batchDeleted": "Deleted {{count}} records"
@@ -149,6 +150,8 @@
     "today": "Today",
     "time": "Time",
     "notePlaceholder": "Add a note",
+    "tagsLabel": "Tags",
+    "tagPlaceholder": "Add tag, press Enter",
     "saveEdit": "Save changes",
     "confirm": "Save transaction",
     "continueToggle": "Keep adding after saving",
@@ -228,7 +231,7 @@
     "language": {
       "title": "Language",
       "system": "System",
-      "zh": "中文",
+      "zh": "Chinese",
       "en": "English"
     }
   }

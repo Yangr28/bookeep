@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect, useRef } from 'react';
+import { useState, useLayoutEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toDateKey } from '../utils/date';
 import { createPortal } from 'react-dom';
@@ -6,6 +6,7 @@ import { useStore } from '../store/useStore';
 import { TransactionCard } from '../components/TransactionCard';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { formatCurrencyShort, formatDateTime } from '../utils/format';
+import { getFrequentTags } from '../utils/recommender';
 import { ArrowLeft, Calendar, ArrowRightLeft, Wallet, X, ChevronDown, ListChecks, FolderInput, Search as SearchIcon } from 'lucide-react';
 import { Transaction, Transfer, Category } from '../types';
 import { CategoryCard } from '../components/CategoryCard';
@@ -40,6 +41,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
   const deleteTransaction = useStore((state) => state.deleteTransaction);
   const deleteTransfer = useStore((state) => state.deleteTransfer);
   const moveTransactionsToCategory = useStore((state) => state.moveTransactionsToCategory);
+  const moveTransactionsToAccount = useStore((state) => state.moveTransactionsToAccount);
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -49,6 +51,8 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
   const [accountFilter, setAccountFilter] = useState<string>('all');
   // 收支类型筛选：'all' 全部 | 'income' 只看收入 | 'expense' 只看支出
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  // 标签筛选：'all' 全部 | 标签名
+  const [tagFilter, setTagFilter] = useState<string>('all');
   // 金额范围筛选
   const [amountMin, setAmountMin] = useState('');
   const [amountMax, setAmountMax] = useState('');
@@ -60,12 +64,16 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
   // 记录操作菜单（编辑 / 复制记一笔 / 存为模板 / 删除）
   const [actionRecord, setActionRecord] = useState<Transaction | null>(null);
 
-  // 批量管理：多选记录并批量移动到其他分类（转账无分类，不参与）
+  // 批量管理：多选记录后批量改分类 / 改账户（转账无分类，不参与）
   const [batchMode, setBatchMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showAccountPicker, setShowAccountPicker] = useState(false);
 
   const getAccountById = (id: string) => accounts.find((a) => a.id === id);
+
+  // 标签候选：历史使用过的标签，按频次排序（无标签时不显示标签筛选行）
+  const allTags = useMemo(() => getFrequentTags(transactions, 20).map((r) => r.tag), [transactions]);
 
   interface Record {
     id: string;
@@ -142,6 +150,12 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
       }
     }
 
+    // 标签筛选：转账无标签，筛选标签时隐藏
+    if (tagFilter !== 'all') {
+      if (record.type !== 'transaction' || !record.transaction) return false;
+      if (!(record.transaction.tags ?? []).includes(tagFilter)) return false;
+    }
+
     // 金额范围筛选
     if (amountMin && record.amount < parseFloat(amountMin)) return false;
     if (amountMax && record.amount > parseFloat(amountMax)) return false;
@@ -157,6 +171,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
         record.categoryName,
         record.relatedAccountName,
         accountName,
+        record.transaction?.tags?.join(' ') ?? '',
         record.amount.toString(),
         record.amount.toFixed(2),
       ].filter(Boolean).join(' ').toLowerCase();
@@ -185,7 +200,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
   const { visibleItems: visibleRecords, sentinelRef, hasMore } = useInfiniteList(
     sortedRecords,
     30,
-    [startDate, endDate, categoryFilter, accountFilter, typeFilter, amountMin, amountMax, debouncedQuery, transactions, transfers],
+    [startDate, endDate, categoryFilter, accountFilter, typeFilter, tagFilter, amountMin, amountMax, debouncedQuery, transactions, transfers],
     anchorMinCount,
   );
 
@@ -226,7 +241,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     .filter((r) => r.type === 'transaction' && r.direction === 'out')
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const hasFilter = !!(startDate || endDate || categoryFilter !== 'all' || accountFilter !== 'all' || typeFilter !== 'all' || amountMin || amountMax || query);
+  const hasFilter = !!(startDate || endDate || categoryFilter !== 'all' || accountFilter !== 'all' || typeFilter !== 'all' || tagFilter !== 'all' || amountMin || amountMax || query);
 
   const handleResetFilter = () => {
     setStartDate('');
@@ -234,6 +249,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     setCategoryFilter('all');
     setAccountFilter('all');
     setTypeFilter('all');
+    setTagFilter('all');
     setAmountMin('');
     setAmountMax('');
     setQuery('');
@@ -331,6 +347,7 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     setBatchMode(false);
     setSelectedIds(new Set());
     setShowCategoryPicker(false);
+    setShowAccountPicker(false);
   };
 
   const toggleSelect = (id: string) => {
@@ -354,6 +371,13 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
     const ids = [...selectedIds];
     moveTransactionsToCategory(ids, category.id);
     onToast?.(t('app.toast.batchMoved', { count: ids.length, category: category.name }));
+    exitBatchMode();
+  };
+
+  const handleMoveToAccount = (account: { id: string; name: string }) => {
+    const ids = [...selectedIds];
+    moveTransactionsToAccount(ids, account.id);
+    onToast?.(t('app.toast.batchMovedAccount', { count: ids.length, account: account.name }));
     exitBatchMode();
   };
 
@@ -596,6 +620,30 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
             </div>
           </div>
 
+          {/* 标签筛选（有标签历史时才显示） */}
+          {allTags.length > 0 && (
+            <div className="flex items-center gap-2 mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--line)' }}>
+              <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('allRecords.filterTag')}</span>
+              <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
+                <button
+                  onClick={() => setTagFilter('all')}
+                  className={`chip flex-shrink-0 ${tagFilter === 'all' ? 'chip-active' : 'chip-inactive'}`}
+                >
+                  {t('allRecords.filterAll')}
+                </button>
+                {allTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setTagFilter(tagFilter === tag ? 'all' : tag)}
+                    className={`chip flex-shrink-0 ${tagFilter === tag ? 'chip-active' : 'chip-inactive'}`}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 金额范围 */}
           <div className="flex items-center gap-2 mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--line)' }}>
             <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink)' }}>{t('common.amount')}</span>
@@ -751,14 +799,23 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
           className="fixed bottom-0 left-0 right-0 z-[60] animate-slide-up"
           style={{ background: 'var(--card)', boxShadow: '0 -2px 12px rgba(0,0,0,0.10)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
-          <div className="px-4 py-3 flex items-center gap-3">
-            <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink-2)' }}>
+          <div className="px-4 py-3 flex items-center gap-2">
+            <span className="text-sm font-medium flex-shrink-0 mr-auto" style={{ color: 'var(--ink-2)' }}>
               {t('allRecords.selectedCount', { count: selectedIds.size })}
             </span>
             <button
+              onClick={() => setShowAccountPicker(true)}
+              disabled={selectedIds.size === 0}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-button text-sm font-medium disabled:opacity-40 active:scale-95 transition-transform"
+              style={{ background: 'var(--paper)', color: 'var(--ink)' }}
+            >
+              <Wallet size={16} />
+              {t('allRecords.moveToAccount')}
+            </button>
+            <button
               onClick={() => setShowCategoryPicker(true)}
               disabled={selectedIds.size === 0}
-              className="ml-auto flex items-center gap-1.5 px-4 py-2.5 rounded-button text-sm font-medium text-white disabled:opacity-40 active:scale-95 transition-transform"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-button text-sm font-medium text-white disabled:opacity-40 active:scale-95 transition-transform"
               style={{ background: 'var(--primary)' }}
             >
               <FolderInput size={16} />
@@ -815,6 +872,55 @@ export const AllRecords = ({ isTab = false, onBack, onEditTransaction, onDeleteT
                 </div>
               );
             })}
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* 目标账户选择弹层 */}
+      {showAccountPicker && createPortal(
+        <>
+          <div
+            className="fixed inset-0 z-[70]"
+            style={{ background: 'rgba(0,0,0,0.45)' }}
+            onClick={() => setShowAccountPicker(false)}
+          />
+          <div
+            className="fixed left-0 right-0 bottom-0 z-[71] animate-slide-up rounded-t-card p-4"
+            style={{
+              background: 'var(--card)',
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)',
+              maxHeight: '75vh',
+              overflowY: 'auto',
+            }}
+          >
+            <div className="flex items-center mb-4">
+              <h2 className="text-base font-semibold flex-1" style={{ color: 'var(--ink)' }}>
+                {t('allRecords.pickAccountTitle')}
+              </h2>
+              <button onClick={() => setShowAccountPicker(false)} className="icon-btn" aria-label={t('allRecords.batchExit')}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {accounts.map((account) => (
+                <button
+                  key={account.id}
+                  onClick={() => handleMoveToAccount(account)}
+                  className="w-full flex items-center gap-3 p-3 rounded-button text-left active:brightness-95"
+                  style={{ background: 'var(--paper)' }}
+                >
+                  <span
+                    className="w-1.5 h-8 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: account.color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{account.name}</p>
+                    <p className="text-xs" style={{ color: 'var(--ink-2)' }}>{formatCurrencyShort(account.balance)}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </>,
         document.body

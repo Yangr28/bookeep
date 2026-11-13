@@ -9,6 +9,12 @@ export interface TransactionsSlice {
   updateTransaction: (id: string, transaction: Omit<Transaction, 'id'>) => void;
   /** 批量把多条记录移动到指定分类（仅改分类，不影响账户余额） */
   moveTransactionsToCategory: (ids: string[], categoryId: string) => void;
+  /** 批量把多条记录移动到指定账户（同步调整原账户与新账户余额） */
+  moveTransactionsToAccount: (ids: string[], accountId: string) => void;
+  /** 退款关联：把退款收入（income）关联到原支出（expense），已关联会覆盖 */
+  linkTransactions: (refundId: string, expenseId: string) => void;
+  /** 解除某条退款记录的关联 */
+  unlinkTransaction: (id: string) => void;
   deleteTransaction: (id: string) => void;
   /** 撤销删除：用原 ID 与原 createdAt 恢复交易并还原账户余额 */
   restoreTransaction: (transaction: Transaction) => void;
@@ -120,10 +126,67 @@ export const createTransactionsSlice: StateCreator<
     });
   },
 
+  moveTransactionsToAccount: (ids, accountId) => {
+    if (ids.length === 0) return;
+    set((state) => {
+      const idSet = new Set(ids);
+      // 原账户余额回冲、新账户余额计入：收入 +金额，支出 -金额
+      const deltaByAccount = new Map<string, number>();
+      const updatedTransactions = state.transactions.map((t) => {
+        if (!idSet.has(t.id) || t.accountId === accountId) return t;
+        const signed = t.type === 'income' ? t.amount : -t.amount;
+        if (t.accountId) {
+          deltaByAccount.set(t.accountId, round2((deltaByAccount.get(t.accountId) ?? 0) - signed));
+        }
+        deltaByAccount.set(accountId, round2((deltaByAccount.get(accountId) ?? 0) + signed));
+        return { ...t, accountId };
+      });
+      if (deltaByAccount.size === 0) return {};
+
+      const updatedAccounts = state.accounts.map((account) => {
+        const delta = deltaByAccount.get(account.id);
+        if (delta === undefined) return account;
+        return { ...account, balance: round2(account.balance + delta) };
+      });
+      saveTransactions(updatedTransactions);
+      saveAccounts(updatedAccounts);
+      return { transactions: updatedTransactions, accounts: updatedAccounts };
+    });
+  },
+
+  linkTransactions: (refundId, expenseId) => {
+    set((state) => {
+      const refund = state.transactions.find((t) => t.id === refundId);
+      const expense = state.transactions.find((t) => t.id === expenseId);
+      // 只允许「收入 ← 支出」方向，避免把支出关联到收入造成语义反转
+      if (!refund || !expense || refund.type !== 'income' || expense.type !== 'expense') {
+        return {};
+      }
+      const updatedTransactions = state.transactions.map((t) =>
+        t.id === refundId ? { ...t, linkedTransactionId: expenseId } : t,
+      );
+      saveTransactions(updatedTransactions);
+      return { transactions: updatedTransactions };
+    });
+  },
+
+  unlinkTransaction: (id) => {
+    set((state) => {
+      const updatedTransactions = state.transactions.map((t) =>
+        t.id === id ? { ...t, linkedTransactionId: undefined } : t,
+      );
+      saveTransactions(updatedTransactions);
+      return { transactions: updatedTransactions };
+    });
+  },
+
   deleteTransaction: (id) => {
     set((state) => {
       const transactionToDelete = state.transactions.find((t) => t.id === id);
-      const updatedTransactions = state.transactions.filter((t) => t.id !== id);
+      // 删除时一并清理指向该记录的退款关联，避免悬空引用
+      const updatedTransactions = state.transactions
+        .filter((t) => t.id !== id)
+        .map((t) => (t.linkedTransactionId === id ? { ...t, linkedTransactionId: undefined } : t));
       saveTransactions(updatedTransactions);
 
       let updatedAccounts = state.accounts;

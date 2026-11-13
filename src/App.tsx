@@ -113,6 +113,7 @@ export default function App() {
     recordAccountId,
     recordAmount,
     recordNote,
+    recordTags,
     recordCategoryId,
     recordType,
     recordCurrency,
@@ -131,6 +132,7 @@ export default function App() {
     setRecordAccountId,
     setRecordAmount,
     setRecordNote,
+    setRecordTags,
     setRecordCategoryId,
     setRecordType,
     setRecordCurrency,
@@ -250,9 +252,10 @@ export default function App() {
     setRecordAmount('');
     setRecordCategoryId('');
     setRecordNote('');
+    setRecordTags([]);
     setRecordType('expense');
     setShowKeypad(false);
-  }, [resetHistory, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setShowKeypad, editTransaction, t, showToast]);
+  }, [resetHistory, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordTags, setRecordType, setShowKeypad, editTransaction, t, showToast]);
 
   // 模板一键记账成功反馈：Toast + 保存成功对勾动画，与普通记账保持一致
   const handleUseTemplateRecord = useCallback(() => {
@@ -341,10 +344,11 @@ export default function App() {
       ).toString(),
     );
     setRecordNote(transaction.note || '');
+    setRecordTags(transaction.tags ?? []);
     setRecordCategoryId(transaction.categoryId);
     setRecordType(transaction.type);
     handlePageChange('/record');
-  }, [handlePageChange, setEditTransaction, setRecordCurrency, setRecordDateTime, setRecordAccountId, setRecordAmount, setRecordNote, setRecordCategoryId, setRecordType]);
+  }, [handlePageChange, setEditTransaction, setRecordCurrency, setRecordDateTime, setRecordAccountId, setRecordAmount, setRecordNote, setRecordTags, setRecordCategoryId, setRecordType]);
 
   // 复制流水：以现有交易为模板新建一笔，时间为当前（保留分类/账户/金额/备注）
   const handleCopyTransaction = useCallback((transaction: Transaction) => {
@@ -359,10 +363,11 @@ export default function App() {
     );
     setRecordCategoryId(transaction.categoryId);
     setRecordNote(transaction.note || '');
+    setRecordTags(transaction.tags ?? []);
     setRecordAccountId(transaction.accountId);
     setRecordDateTime(new Date());
     handlePageChange('/record');
-  }, [handlePageChange, setEditTransaction, setRecordType, setRecordCurrency, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordAccountId, setRecordDateTime]);
+  }, [handlePageChange, setEditTransaction, setRecordType, setRecordCurrency, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordTags, setRecordAccountId, setRecordDateTime]);
 
   // 首页上拉无缝进账单页：记录锚点由 AllRecords 定位，期间跳过通用滚动位置恢复
   const handleGoToRecords = useCallback((anchor?: { id: string; offsetY: number }) => {
@@ -409,12 +414,13 @@ export default function App() {
     setRecordAmount('');
     setRecordCategoryId(null);
     setRecordNote('');
+    setRecordTags([]);
     setRecordType('expense');
     setRecordCurrency('CNY');
     setRecordDateTime(new Date());
     setRecordContinueMode(continuous);
     handlePageChange('/record');
-  }, [handlePageChange, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setRecordCurrency, setRecordDateTime, setRecordContinueMode]);
+  }, [handlePageChange, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordTags, setRecordType, setRecordCurrency, setRecordDateTime, setRecordContinueMode]);
 
   // 首页模板一键入账：不进记账页，直接生成交易并给成功反馈
   const handleQuickTemplate = useCallback((template: RecordTemplate) => {
@@ -444,11 +450,12 @@ export default function App() {
     setRecordAmount(parsed.amount || '');
     setRecordCategoryId(parsed.categoryId || null);
     setRecordNote(parsed.note || '');
+    setRecordTags([]);
     setRecordCurrency(parsed.currency || 'CNY');
     if (parsed.accountId) setRecordAccountId(parsed.accountId);
     setRecordDateTime(parsed.dateTime || new Date());
     handlePageChange('/record');
-  }, [handlePageChange, setEditTransaction, setRecordType, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordCurrency, setRecordAccountId, setRecordDateTime]);
+  }, [handlePageChange, setEditTransaction, setRecordType, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordTags, setRecordCurrency, setRecordAccountId, setRecordDateTime]);
 
   const handleConfirmExit = useCallback(() => {
     CapApp.exitApp();
@@ -637,6 +644,7 @@ export default function App() {
         categoryId: recordCategoryId,
         accountId: recordAccountId,
         note: recordNote,
+        tags: recordTags.length ? recordTags : undefined,
         createdAt: recordDateTime.toISOString(),
         ...currencyFields,
       });
@@ -650,6 +658,7 @@ export default function App() {
       categoryId: recordCategoryId,
       accountId: recordAccountId,
       note: recordNote,
+      tags: recordTags.length ? recordTags : undefined,
       createdAt: recordDateTime.toISOString(),
       ...currencyFields,
     });
@@ -659,6 +668,7 @@ export default function App() {
       // 分类置空并发出信号，由 Record 按最新历史重新预选
       setRecordAmount('');
       setRecordNote('');
+      setRecordTags([]);
       setRecordCategoryId(null);
       setRecordDateTime(new Date());
       setRecordResetSignal((n) => n + 1);
@@ -667,7 +677,7 @@ export default function App() {
     } else {
       handleRecordSuccess();
     }
-  }, [recordAmount, recordCategoryId, recordAccountId, recordType, recordNote, recordCurrency, recordDateTime, editTransaction, recordContinueMode, updateTransaction, addTransaction, setRecordAmount, setRecordNote, setRecordCategoryId, setRecordDateTime, setRecordResetSignal, showToast, t, handleRecordSuccess]);
+  }, [recordAmount, recordCategoryId, recordAccountId, recordType, recordNote, recordTags, recordCurrency, recordDateTime, editTransaction, recordContinueMode, updateTransaction, addTransaction, setRecordAmount, setRecordNote, setRecordTags, setRecordCategoryId, setRecordDateTime, setRecordResetSignal, showToast, t, handleRecordSuccess]);
 
   const handleQuickRecordSubmit = useCallback(() => {
     if (!quickRecordAmount || !quickRecordCategoryId || !quickRecordAccountId) return;
@@ -810,6 +820,8 @@ export default function App() {
             onQuickDate={setRecordDateTime}
             amount={recordAmount}
             note={recordNote}
+            tags={recordTags}
+            onTagsChange={setRecordTags}
             onAmountChange={setRecordAmount}
             onNoteChange={setRecordNote}
             categoryId={recordCategoryId}
