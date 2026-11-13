@@ -7,6 +7,7 @@ import { formatCurrency, formatDateTime } from '../utils/format';
 import { isSameLocalDate } from '../utils/date';
 import { parseSmartInput, findCategoryByIdentifier, findAccountByKeyword } from '../utils/smartParser';
 import { getFrequentCategories, getFrequentAmounts, predictCategory, recommendAccount } from '../utils/recommender';
+import { calcAmount } from '../utils/calcAmount';
 import { Check, Calendar, Clock, Wallet, Sparkles, ChevronRight, ChevronDown, ArrowLeft, Circle, CheckCircle2, Copy } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
 import { getCurrencySymbol, getRate, convertToCNY } from '../utils/currency';
@@ -20,6 +21,8 @@ interface RecordProps {
   selectedDateTime: Date;
   selectedAccountId: string | null;
   onShowDatePicker: () => void;
+  /** 快捷改日期（昨天/前天 chips），不打开日历 */
+  onQuickDate: (date: Date) => void;
   onShowTimePicker: () => void;
   onShowAccountPicker: () => void;
   amount: string;
@@ -42,11 +45,13 @@ interface RecordProps {
   resetSignal: number;
 }
 
-const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedDateTime, selectedAccountId, onShowDatePicker, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, currency, onCurrencyChange, onSubmit, continueMode, onContinueModeChange, resetSignal }: RecordProps) => {
+const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedDateTime, selectedAccountId, onShowDatePicker, onQuickDate, onShowTimePicker, onShowAccountPicker, amount, note, onAmountChange, onNoteChange, categoryId, type, onCategoryChange, onTypeChange, onAccountChange, currency, onCurrencyChange, onSubmit, continueMode, onContinueModeChange, resetSignal }: RecordProps) => {
   const { t } = useTranslation();
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [smartInput, setSmartInput] = useState('');
   const [showSmartResult, setShowSmartResult] = useState(false);
+  // 分类搜索（分类较多时快速过滤）
+  const [categoryQuery, setCategoryQuery] = useState('');
   const smartInputRef = useRef<HTMLInputElement>(null);
   // 记录进入时的金额，用于判断是否为 FAB 空进入（无预填）
   const initialAmountRef = useRef(amount);
@@ -108,6 +113,16 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
     // filteredCategories 派生自 categories + type
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, categories, type]);
+
+  // 分类搜索过滤（搜索时保留智能排序）
+  const searchedCategories = useMemo(() => {
+    const q = categoryQuery.trim().toLowerCase();
+    if (!q) return orderedCategories;
+    return orderedCategories.filter((c) => c.name.toLowerCase().includes(q));
+  }, [orderedCategories, categoryQuery]);
+
+  // 金额算式实时求值（12+8 → 20），纯数字/非法时为 null
+  const calcResult = useMemo(() => calcAmount(amount), [amount]);
 
   // 常用金额（重复金额优先、最近补位），最多 4 个；当前已输入的金额不重复展示
   const frequentAmounts = useMemo(
@@ -298,19 +313,47 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
 
         {/* 分类 */}
         <div className="card p-3.5">
-          <p className="text-sm font-medium mb-2.5" style={{ color: 'var(--ink-2)' }}>{t('record.selectCategory')}</p>
-          <div className="grid grid-cols-4 gap-2">
-            {orderedCategories.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                isSelected={categoryId === category.id}
-                isFrequent={frequentBadgeIds.has(category.id)}
-                frequentLabel={t('record.frequentBadge')}
-                onClick={() => onCategoryChange(category.id)}
-              />
-            ))}
+          <div className="flex items-center justify-between gap-2 mb-2.5">
+            <p className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{t('record.selectCategory')}</p>
+            {orderedCategories.length > 8 && (
+              <div className="relative flex-1 min-w-0 max-w-[150px]">
+                <input
+                  type="text"
+                  value={categoryQuery}
+                  onChange={(e) => setCategoryQuery(e.target.value)}
+                  placeholder={t('record.searchCategory')}
+                  className="w-full rounded-full px-3 py-1.5 text-xs outline-none"
+                  style={{ background: 'var(--paper)', color: 'var(--ink)' }}
+                />
+                {categoryQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setCategoryQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2"
+                    aria-label={t('common.clear')}
+                  >
+                    <Circle size={12} style={{ color: 'var(--ink-2)' }} />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
+          {searchedCategories.length > 0 ? (
+            <div className="grid grid-cols-4 gap-2">
+              {searchedCategories.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  isSelected={categoryId === category.id}
+                  isFrequent={frequentBadgeIds.has(category.id)}
+                  frequentLabel={t('record.frequentBadge')}
+                  onClick={() => onCategoryChange(category.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs py-4 text-center" style={{ color: 'var(--ink-2)' }}>{t('record.categoryNoMatch')}</p>
+          )}
           {hasCategoryError && (
             <p className="text-xs mt-3 text-center" style={{ color: 'var(--expense)' }}>{t('record.categoryRequired')}</p>
           )}
@@ -348,6 +391,12 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
           </div>
           {hasAmountError && (
             <p className="text-xs mt-2 text-center" style={{ color: 'var(--expense)' }}>{t('record.amountInvalid')}</p>
+          )}
+          {/* 算式实时求值预览：输入 12+8 时显示 = 20 */}
+          {!hasAmountError && calcResult !== null && (
+            <p className="text-xs mt-2 text-right amount-num" style={{ color: 'var(--primary)' }}>
+              = {formatCurrency(calcResult)}
+            </p>
           )}
           {cnyPreview !== null && (
             <p className="text-xs mt-1.5 text-center truncate" style={{ color: 'var(--ink-2)' }}>
@@ -410,6 +459,32 @@ const RecordComponent = ({ editTransaction, onBack, onCopyTransaction, selectedD
             </div>
             <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--ink-2)' }} />
           </button>
+
+          {/* 昨天 / 前天快捷补账（编辑模式不展示） */}
+          {!editTransaction && (
+            <div className="flex items-center gap-2 px-3.5 py-2" style={{ borderTop: '1px solid var(--line)' }}>
+              <span className="text-xs flex-shrink-0" style={{ color: 'var(--ink-2)' }}>{t('record.quickDateLabel')}</span>
+              {[1, 2].map((daysAgo) => {
+                const d = new Date();
+                d.setDate(d.getDate() - daysAgo);
+                return (
+                  <button
+                    key={daysAgo}
+                    type="button"
+                    onClick={() => onQuickDate(d)}
+                    className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium card-press active:scale-95 transition-transform"
+                    style={{
+                      background: isSameLocalDate(selectedDateTime, d) ? 'var(--primary-soft)' : 'var(--paper)',
+                      color: isSameLocalDate(selectedDateTime, d) ? 'var(--primary-ink)' : 'var(--ink-2)',
+                      border: '1px solid var(--line)',
+                    }}
+                  >
+                    {daysAgo === 1 ? t('record.yesterday') : t('record.twoDaysAgo')}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <button onClick={onShowTimePicker} className="w-full flex items-center gap-3 p-3.5 active:brightness-95" style={{ borderTop: '1px solid var(--line)' }}>
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--paper-deep)', color: 'var(--primary)' }}>

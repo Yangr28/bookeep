@@ -43,6 +43,7 @@ import { OnboardingModal } from './components/OnboardingModal';
 import { isFirstLaunch, markOnboarded } from './utils/storage';
 import { initialTransactions } from './data/initialData';
 import { convertToCNY, getRate } from './utils/currency';
+import { calcAmount } from './utils/calcAmount';
 import WidgetLaunch from './plugins/widgetLaunch';
 
 type FilterType = 'today-income' | 'today-expense' | 'month-income' | 'month-expense' | 'total-balance' | 'month-balance' | 'mom-compare';
@@ -621,7 +622,8 @@ export default function App() {
   const handleRecordSubmit = useCallback(() => {
     if (!recordAmount || !recordCategoryId || !recordAccountId) return;
 
-    const originalAmount = parseFloat(recordAmount);
+    // 支持金额算式（12+8 / 25*4）；纯数字时 calcAmount 返回 null，走 parseFloat 原路径
+    const originalAmount = calcAmount(recordAmount) ?? parseFloat(recordAmount);
     // 外币记账号按汇率折算成人民币存储；切回人民币时显式清空外币字段（编辑模式合并字段需要）
     const currencyFields = recordCurrency !== 'CNY' && isFinite(originalAmount)
       ? { currency: recordCurrency, originalAmount, exchangeRate: getRate(recordCurrency) }
@@ -805,6 +807,7 @@ export default function App() {
             onShowDatePicker={() => setShowRecordDatePicker(true)}
             onShowTimePicker={() => setShowRecordTimePicker(true)}
             onShowAccountPicker={() => setShowAccountPicker(true)}
+            onQuickDate={setRecordDateTime}
             amount={recordAmount}
             note={recordNote}
             onAmountChange={setRecordAmount}
