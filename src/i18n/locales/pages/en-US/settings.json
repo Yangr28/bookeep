@@ -31,6 +31,14 @@
     "exportExcel": "Export Excel",
     "exportExcelDesc": "Export transactions as an Excel workbook (.xlsx)",
     "exportExcelBusy": "Generating Excel…",
+    "excelPicker": {
+      "title": "Select categories",
+      "subtitle": "Export only the selected categories",
+      "selected": "{{count}} selected",
+      "selectAll": "Select all",
+      "clearAll": "Clear",
+      "confirm": "Export"
+    },
     "import": "Import data",
     "importDesc": "Restore data from a JSON file",
     "backups": "Exported data",

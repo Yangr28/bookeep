@@ -90,6 +90,9 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
   const [lockModal, setLockModal] = useState<'setup' | 'disable' | null>(null);
   const [lockEnabled, setLockEnabled] = useState(isAppLockEnabled());
   const [excelExporting, setExcelExporting] = useState(false);
+  // Excel 导出：分类选择弹层与所选分类
+  const [showExcelPicker, setShowExcelPicker] = useState(false);
+  const [excelCategoryIds, setExcelCategoryIds] = useState<string[]>([]);
   const [nativeVersion, setNativeVersion] = useState('');
   const [hotVersion, setHotVersion] = useState('');
 
@@ -205,11 +208,21 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
     }
   };
 
-  const handleExportExcel = async () => {
+  const handleExportExcel = async (categoryIds: string[]) => {
     if (excelExporting) return;
+    if (categoryIds.length === 0) return;
+    setShowExcelPicker(false);
     setExcelExporting(true);
     try {
-      await exportToExcel({ transactions, transfers, accounts, categories });
+      // 全选时保留完整流水与转账；只选部分分类时仅导出这些分类的收支，转账不含分类故不导出
+      const selected = new Set(categoryIds);
+      const allSelected = categoryIds.length === categories.length;
+      await exportToExcel({
+        transactions: allSelected ? transactions : transactions.filter((tx) => selected.has(tx.categoryId)),
+        transfers: allSelected ? transfers : [],
+        accounts,
+        categories,
+      });
       showToast('success', t('settings.toast.excelSuccessTitle'), t('settings.toast.excelSuccessMessage'));
     } catch (error) {
       console.error('Excel export error:', error);
@@ -888,7 +901,10 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
           </button>
 
           <button
-            onClick={handleExportExcel}
+            onClick={() => {
+              setExcelCategoryIds(categories.map((c) => c.id));
+              setShowExcelPicker(true);
+            }}
             disabled={excelExporting}
             className="w-full flex items-center gap-3 p-3.5 active:brightness-95 disabled:opacity-60"
             style={{ borderTop: '1px solid var(--line)' }}
@@ -1378,6 +1394,100 @@ export const Settings = ({ isTab = false, onBack, isDark, onToggleTheme, onCheck
                 style={{ background: 'var(--primary)' }}
               >
                 {t('settings.data.backupEncrypt.exportEncrypted')}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {/* Excel 导出：选择分类 */}
+      {showExcelPicker && createPortal(
+        <div
+          className="fixed inset-0 z-[110] flex items-end justify-center animate-fade-in"
+          style={{ background: 'rgba(43,41,37,0.45)' }}
+          onClick={() => setShowExcelPicker(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-card animate-slide-up"
+            style={{
+              background: 'var(--card-solid)',
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 pt-5 pb-3">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-button flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}
+                >
+                  <FileSpreadsheet size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('settings.data.excelPicker.title')}</h3>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>{t('settings.data.excelPicker.subtitle')}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-5 pb-3 flex items-center justify-between">
+              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>
+                {t('settings.data.excelPicker.selected', { count: excelCategoryIds.length })}
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setExcelCategoryIds(categories.map((c) => c.id))}
+                  className="text-xs font-medium"
+                  style={{ color: 'var(--primary)' }}
+                >
+                  {t('settings.data.excelPicker.selectAll')}
+                </button>
+                <button
+                  onClick={() => setExcelCategoryIds([])}
+                  className="text-xs font-medium"
+                  style={{ color: 'var(--ink-2)' }}
+                >
+                  {t('settings.data.excelPicker.clearAll')}
+                </button>
+              </div>
+            </div>
+
+            <div className="px-5 pb-4 flex flex-wrap gap-2 max-h-[42vh] overflow-y-auto">
+              {categories.map((c) => {
+                const active = excelCategoryIds.includes(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() =>
+                      setExcelCategoryIds((prev) =>
+                        prev.includes(c.id) ? prev.filter((id) => id !== c.id) : [...prev, c.id],
+                      )
+                    }
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium active:scale-95 transition-transform"
+                    style={{
+                      background: active ? 'var(--primary-soft)' : 'var(--paper)',
+                      color: active ? 'var(--primary-ink)' : 'var(--ink-2)',
+                      border: `1px solid ${active ? 'var(--primary)' : 'var(--line)'}`,
+                    }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c.color }} />
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="px-5 pt-3 flex gap-3" style={{ borderTop: '1px solid var(--line)' }}>
+              <button onClick={() => setShowExcelPicker(false)} className="btn-ghost flex-1">
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={() => handleExportExcel(excelCategoryIds)}
+                disabled={excelExporting || excelCategoryIds.length === 0}
+                className="btn-primary flex-1 disabled:opacity-50"
+              >
+                {excelExporting ? t('settings.data.exportExcelBusy') : t('settings.data.excelPicker.confirm')}
               </button>
             </div>
           </div>

@@ -31,6 +31,14 @@
     "exportExcel": "导出 Excel",
     "exportExcelDesc": "导出账单明细为 Excel 表格（.xlsx）",
     "exportExcelBusy": "正在生成 Excel…",
+    "excelPicker": {
+      "title": "选择导出分类",
+      "subtitle": "只导出所选分类的账单明细",
+      "selected": "已选 {{count}} 个分类",
+      "selectAll": "全选",
+      "clearAll": "清空",
+      "confirm": "导出"
+    },
     "import": "导入数据",
     "importDesc": "从 JSON 文件恢复数据",
     "backups": "已导出数据",
