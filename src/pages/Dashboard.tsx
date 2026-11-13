@@ -15,7 +15,7 @@ import { Settings, Plus, Sparkles, Search, Repeat, Bookmark, PiggyBank, ArrowLef
 import { RecordActionSheet } from '../components/RecordActionSheet';
 import { getNoteSuggestions } from '../utils/recommender';
 import { useCountUp } from '../hooks/useCountUp';
-import { TransactionType, Transaction } from '../types';
+import { TransactionType, Transaction, RecordTemplate } from '../types';
 
 // 仅首次启动进入首页时自动聚焦智能记账输入框；返回首页时不再弹出键盘
 let hasAutoFocusedOnLaunch = false;
@@ -35,6 +35,8 @@ interface DashboardProps {
   onDuplicateTransaction?: (transaction: Transaction) => void;
   /** 将记录保存为模板 */
   onCreateTemplate?: (transaction: Transaction) => void;
+  /** 模板一键入账（快捷工具卡内直接生成交易） */
+  onQuickTemplate?: (template: RecordTemplate) => void;
   /** 无缝上拉展开：跳转账单页，并携带首页最后一条记录及其在视口中的位置，用于同屏对齐 */
   onGoToRecords?: (anchor?: { id: string; offsetY: number }) => void;
   onGoToSettings?: () => void;
@@ -256,6 +258,7 @@ const DashboardComponent = ({
   onDeleteTransaction,
   onDuplicateTransaction,
   onCreateTemplate,
+  onQuickTemplate,
   onGoToRecords,
   onGoToSettings,
   onGoToSearch,
@@ -279,6 +282,7 @@ const DashboardComponent = ({
   const categories = useStore((state) => state.categories);
   const accounts = useStore((state) => state.accounts);
   const budgets = useStore((state) => state.budgets);
+  const templates = useStore((state) => state.templates);
   const calculateBudgetUsage = useStore((state) => state.calculateBudgetUsage);
   const homeCards = useStore((state) => state.homeCards);
   const reorderHomeCards = useStore((state) => state.reorderHomeCards);
@@ -808,7 +812,7 @@ const DashboardComponent = ({
           />
         );
       case 'quickTools':
-        return <QuickToolsCard tools={quickTools} layout={quickToolsLayout} />;
+        return <QuickToolsCard tools={quickTools} layout={quickToolsLayout} templates={templates} onQuickTemplate={onQuickTemplate} />;
       case 'today':
         return (
           <TodayOverviewCard

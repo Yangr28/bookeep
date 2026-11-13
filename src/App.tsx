@@ -24,7 +24,7 @@ import { UpdateModal } from './components/UpdateModal';
 import { AppLock, isAppLocked } from './components/AppLock';
 import { CalendarPicker } from './components/CalendarPicker';
 import { TimePicker } from './components/TimePicker';
-import { Transaction, TransactionType } from './types';
+import { Transaction, TransactionType, RecordTemplate } from './types';
 import { X, Wallet, CheckCircle } from 'lucide-react';
 import { App as CapApp } from '@capacitor/app';
 import { useStore } from './store/useStore';
@@ -401,8 +401,9 @@ export default function App() {
     }, 0);
   }, [handlePageChange, setSelectedAccountId]);
 
-  // 底部导航中央「记一笔」：重置记账状态后进入记账页（保留上次使用的账户）
-  const handleFabRecord = useCallback(() => {
+  // 底部导航中央「记一笔」：重置记账状态后进入记账页（保留上次使用的账户）；
+  // 长按触发 continuous=true，直接以「保存并继续」模式进入
+  const handleFabRecord = useCallback((continuous = false) => {
     setEditTransaction(null);
     setRecordAmount('');
     setRecordCategoryId(null);
@@ -410,8 +411,22 @@ export default function App() {
     setRecordType('expense');
     setRecordCurrency('CNY');
     setRecordDateTime(new Date());
+    setRecordContinueMode(continuous);
     handlePageChange('/record');
-  }, [handlePageChange, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setRecordCurrency, setRecordDateTime]);
+  }, [handlePageChange, setEditTransaction, setRecordAmount, setRecordCategoryId, setRecordNote, setRecordType, setRecordCurrency, setRecordDateTime, setRecordContinueMode]);
+
+  // 首页模板一键入账：不进记账页，直接生成交易并给成功反馈
+  const handleQuickTemplate = useCallback((template: RecordTemplate) => {
+    addTransaction({
+      type: template.type,
+      amount: template.amount,
+      categoryId: template.categoryId,
+      note: template.note,
+      accountId: template.accountId,
+      createdAt: new Date().toISOString(),
+    });
+    handleUseTemplateRecord();
+  }, [addTransaction, handleUseTemplateRecord]);
 
   // 首页智能输入解析后跳转到记账页并预填数据
   const handleQuickRecordToPage = useCallback((parsed: {
@@ -752,6 +767,7 @@ export default function App() {
             onDeleteTransaction={handleDeleteTransactionWithUndo}
             onDuplicateTransaction={handleCopyTransaction}
             onCreateTemplate={handleCreateTemplateFromTransaction}
+            onQuickTemplate={handleQuickTemplate}
             onGoToRecords={handleGoToRecords}
             onGoToSettings={() => handlePageChange('/settings')}
             onGoToSearch={() => handlePageChange('/search')}
@@ -963,7 +979,14 @@ export default function App() {
         />
       )}
 
-      {showBottomNav && <BottomNav currentPage={currentPage} onPageChange={handlePageChange} onRecord={handleFabRecord} />}
+      {showBottomNav && (
+        <BottomNav
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          onRecord={() => handleFabRecord(false)}
+          onRecordLongPress={() => handleFabRecord(true)}
+        />
+      )}
 
       {showCalendar && (
         <CalendarPicker

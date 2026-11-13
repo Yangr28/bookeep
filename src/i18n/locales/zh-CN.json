@@ -121,7 +121,8 @@
     "toolTransfer": "转账",
     "toolRecurring": "周期记账",
     "toolTemplates": "模板",
-    "toolBudget": "预算"
+    "toolBudget": "预算",
+    "quickTemplates": "一键入账"
   },
   "record": {
     "titleEdit": "编辑记录",

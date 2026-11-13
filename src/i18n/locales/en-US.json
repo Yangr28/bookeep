@@ -121,7 +121,8 @@
     "toolTransfer": "Transfer",
     "toolRecurring": "Recurring",
     "toolTemplates": "Templates",
-    "toolBudget": "Budget"
+    "toolBudget": "Budget",
+    "quickTemplates": "Quick templates"
   },
   "record": {
     "titleEdit": "Edit Transaction",

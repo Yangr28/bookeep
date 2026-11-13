@@ -1,12 +1,18 @@
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Home, ReceiptText, Wallet, User, Plus } from 'lucide-react';
 
 interface BottomNavProps {
   currentPage: string;
   onPageChange: (page: string) => void;
-  /** 中央「记一笔」按钮 */
+  /** 中央「记一笔」按钮（单击） */
   onRecord: () => void;
+  /** 中央按钮长按：以「保存并继续」模式进入记账页 */
+  onRecordLongPress?: () => void;
 }
+
+/** 长按触发时长（ms） */
+const LONG_PRESS_MS = 450;
 
 const navItems = [
   { id: '/', icon: Home, labelKey: 'nav.home' },
@@ -15,8 +21,38 @@ const navItems = [
   { id: '/profile', icon: User, labelKey: 'nav.profile' },
 ];
 
-export const BottomNav = ({ currentPage, onPageChange, onRecord }: BottomNavProps) => {
+export const BottomNav = ({ currentPage, onPageChange, onRecord, onRecordLongPress }: BottomNavProps) => {
   const { t } = useTranslation();
+  const pressTimerRef = useRef<number | null>(null);
+  const longPressFiredRef = useRef(false);
+
+  const clearPressTimer = () => {
+    if (pressTimerRef.current !== null) {
+      window.clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  };
+
+  const handlePointerDown = () => {
+    if (!onRecordLongPress) return;
+    longPressFiredRef.current = false;
+    pressTimerRef.current = window.setTimeout(() => {
+      pressTimerRef.current = null;
+      longPressFiredRef.current = true;
+      onRecordLongPress();
+    }, LONG_PRESS_MS);
+  };
+
+  const handlePointerUp = () => clearPressTimer();
+
+  const handleClick = () => {
+    // 长按已触发过则吞掉随后的 click，避免重复进入
+    if (longPressFiredRef.current) {
+      longPressFiredRef.current = false;
+      return;
+    }
+    onRecord();
+  };
 
   return (
     <nav
@@ -42,12 +78,17 @@ export const BottomNav = ({ currentPage, onPageChange, onRecord }: BottomNavProp
           />
         ))}
 
-        {/* 中央凸起记账按钮 */}
+        {/* 中央凸起记账按钮：单击记一笔，长按连续记账 */}
         <div className="w-[72px] flex-shrink-0 flex justify-center">
           <button
-            onClick={onRecord}
+            onClick={handleClick}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            onContextMenu={(e) => e.preventDefault()}
             aria-label={t('nav.record')}
-            className="w-14 h-14 rounded-full flex items-center justify-center text-white -mt-6 active:scale-95 transition-transform"
+            className="w-14 h-14 rounded-full flex items-center justify-center text-white -mt-6 active:scale-95 transition-transform select-none"
             style={{
               background: 'var(--primary)',
               backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0) 52%)',
